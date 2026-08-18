@@ -1,0 +1,53 @@
+name: Cloudflare Core Preview
+
+on:
+  push:
+    branches:
+      - architecture/cloudflare-core-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout isolated branch
+        uses: actions/checkout@v6
+
+      - name: Check Cloudflare deployment credentials
+        id: auth
+        shell: bash
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare deployment credentials are available."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare preview not deployed: CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID is not configured in GitHub Actions secrets."
+          fi
+
+      - name: Upload isolated Worker preview
+        id: deploy
+        if: steps.auth.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload --preview-alias gwap-core-v1
+
+      - name: Preview status
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.auth.outputs.ready }}" = "true" ]; then
+            echo "Preview upload was attempted. Inspect the Wrangler step output for the workers.dev preview URL."
+          else
+            echo "Preview remains isolated and production was not changed."
+          fi
