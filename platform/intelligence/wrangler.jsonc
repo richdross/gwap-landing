@@ -6,6 +6,7 @@
     "enabled": true
   },
   "vars": {
+    "SUPABASE_URL": "https://aqqhfpizbmgmrnupccoi.supabase.co",
     "ENABLE_WORKERS_AI": "false",
     "ENABLE_VECTORIZE": "false",
     "ENABLE_QUEUES": "false",
