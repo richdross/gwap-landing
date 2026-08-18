@@ -1,4 +1,4 @@
-import { runSignalSniper, sniperStatus } from "./sniper.js";
+import { compareSignalsAndPromote, runSignalSniper, sniperStatus } from "./sniper.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data, null, 2), {
   status,
@@ -172,6 +172,13 @@ export default {
       if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
       const body = (await readJson(request)) || {};
       const result = await runSignalSniper(env, { full: body.full !== false, geo: body.geo });
+      return json(result, result.ok ? 200 : 502);
+    }
+
+    if (url.pathname === "/sniper/compare" && request.method === "POST") {
+      const auth = authorizedIngest(request, env);
+      if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
+      const result = await compareSignalsAndPromote(env);
       return json(result, result.ok ? 200 : 502);
     }
 
