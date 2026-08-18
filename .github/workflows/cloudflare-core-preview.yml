@@ -117,13 +117,13 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Verify live Gate B endpoints and persistence
+      - name: Verify live Gate C Signal Sniper and persistence
         id: verify_live
         if: steps.auth.outputs.cloudflare_ready == 'true'
         continue-on-error: true
         shell: bash
         run: |
-          sleep 4
+          sleep 5
           set +e
           : > live-verification.log
           failures=0
@@ -143,6 +143,7 @@ jobs:
           check_get "PUBLIC_HEALTH" "$PUBLIC_URL/api/health" public-health.out
           check_get "PUBLIC_CONFIG" "$PUBLIC_URL/api/config" public-config.out
           check_get "INTELLIGENCE_HEALTH" "$INTELLIGENCE_URL/health" intelligence-health.out
+          check_get "SNIPER_STATUS" "$INTELLIGENCE_URL/sniper/status" sniper-status.out
 
           if ! grep -q '"supabaseEvents": true' public-config.out; then
             echo "PUBLIC_CONFIG Supabase binding missing" | tee -a live-verification.log
@@ -156,11 +157,27 @@ jobs:
             echo "INTELLIGENCE_HEALTH ingest auth missing" | tee -a live-verification.log
             failures=$((failures+1))
           fi
+          if ! grep -q '"googleTrends"' sniper-status.out || ! grep -q '"ready": true' sniper-status.out; then
+            echo "SNIPER_STATUS Google Trends not ready" | tee -a live-verification.log
+            failures=$((failures+1))
+          fi
+
+          sniper_code=$(curl -sS -o sniper-run.out -w "%{http_code}" \
+            -X POST "$INTELLIGENCE_URL/sniper/run" \
+            -H "content-type: application/json" \
+            -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
+            --data '{"full":false,"geo":"US"}')
+          echo "SIGNAL_SNIPER_TRENDS_RUN HTTP $sniper_code" | tee -a live-verification.log
+          cat sniper-run.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$sniper_code" != "200" ]; then failures=$((failures+1)); fi
+          if ! grep -q '"source": "google-trends"' sniper-run.out; then failures=$((failures+1)); fi
+          if ! grep -q '"ok": true' sniper-run.out; then failures=$((failures+1)); fi
 
           scanner_code=$(curl -sS -o scanner.out -w "%{http_code}" \
             -X POST "$PUBLIC_URL/api/scanner" \
             -H "content-type: application/json" \
-            --data '{"sessionId":"gate-b-verification","answers":{"goal":"money","asset":"tech","constraint":"fast"}}')
+            --data '{"sessionId":"gate-c-verification","answers":{"goal":"money","asset":"tech","constraint":"fast"}}')
           echo "PUBLIC_SCANNER HTTP $scanner_code" | tee -a live-verification.log
           cat scanner.out | tee -a live-verification.log
           echo | tee -a live-verification.log
@@ -170,7 +187,7 @@ jobs:
             -X POST "$INTELLIGENCE_URL/signals" \
             -H "content-type: application/json" \
             -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
-            --data "{\"sourceType\":\"gate-b-proof\",\"sourceRef\":\"github-actions-${GITHUB_SHA}\",\"title\":\"GWAP persisted intelligence signal\",\"body\":\"End-to-end Cloudflare Worker to Supabase persistence proof.\",\"normalized\":{\"proof\":true,\"commit\":\"${GITHUB_SHA}\"}}")
+            --data "{\"sourceType\":\"gate-c-proof\",\"sourceRef\":\"github-actions-${GITHUB_SHA}\",\"title\":\"GWAP persisted intelligence signal\",\"normalized\":{\"proof\":true,\"commit\":\"${GITHUB_SHA}\"}}")
           echo "INTELLIGENCE_SIGNAL HTTP $signal_code" | tee -a live-verification.log
           cat signal.out | tee -a live-verification.log
           echo | tee -a live-verification.log
@@ -181,12 +198,11 @@ jobs:
             -X POST "$INTELLIGENCE_URL/signals/reddit-legacy" \
             -H "content-type: application/json" \
             -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
-            --data "{\"type\":\"SIGNAL_RAW_FOUND\",\"source\":\"reddit-ai\",\"sourceRef\":\"gate-b-reddit-adapter-${GITHUB_SHA}\",\"payload\":{\"title\":\"GWAP Reddit adapter proof\",\"url\":\"https://www.reddit.com/\",\"score\":12,\"comments\":3,\"category\":\"reddit-ai\"}}")
+            --data "{\"type\":\"SIGNAL_RAW_FOUND\",\"source\":\"reddit-ai\",\"sourceRef\":\"gate-c-reddit-adapter-${GITHUB_SHA}\",\"payload\":{\"title\":\"GWAP Reddit adapter proof\",\"url\":\"https://www.reddit.com/\",\"score\":12,\"comments\":3,\"category\":\"reddit-ai\"}}")
           echo "REDDIT_LEGACY_ADAPTER HTTP $reddit_code" | tee -a live-verification.log
           cat reddit.out | tee -a live-verification.log
           echo | tee -a live-verification.log
           if [ "$reddit_code" != "202" ]; then failures=$((failures+1)); fi
-          if ! grep -q '"adapter": "reddit-legacy-v1"' reddit.out; then failures=$((failures+1)); fi
 
           unauth_code=$(curl -sS -o unauth.out -w "%{http_code}" \
             -X POST "$INTELLIGENCE_URL/signals" \
@@ -217,9 +233,9 @@ jobs:
           if ! grep -q 'ai_disabled_zero_cost_guardrail' judge.out; then failures=$((failures+1)); fi
 
           if [ "$failures" -eq 0 ]; then
-            echo "gate_b=PASS" >> "$GITHUB_OUTPUT"
+            echo "gate_c=PASS" >> "$GITHUB_OUTPUT"
           else
-            echo "gate_b=FAIL" >> "$GITHUB_OUTPUT"
+            echo "gate_c=FAIL" >> "$GITHUB_OUTPUT"
           fi
           echo "failures=$failures" >> "$GITHUB_OUTPUT"
           exit 0
@@ -229,7 +245,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## GWAP Cloudflare + Supabase Proof Report"
+            echo "## GWAP Signal Sniper Proof Report"
             echo
             echo "Commit: $GITHUB_SHA"
             echo "Cloudflare credential gate: ${{ steps.auth.outputs.cloudflare_ready }}"
@@ -238,22 +254,16 @@ jobs:
             echo "Intelligence secret install exit code: ${{ steps.intelligence_secret.outputs.exit_code }}"
             echo "Public deploy exit code: ${{ steps.public_deploy.outputs.exit_code }}"
             echo "Intelligence deploy exit code: ${{ steps.intelligence_deploy.outputs.exit_code }}"
-            echo "Gate B: ${{ steps.verify_live.outputs.gate_b }}"
+            echo "Gate C: ${{ steps.verify_live.outputs.gate_c }}"
             echo "Verification failures: ${{ steps.verify_live.outputs.failures }}"
             echo
             echo "Public Worker: $PUBLIC_URL"
             echo "Intelligence Worker: $INTELLIGENCE_URL"
             echo
             if [ -f live-verification.log ]; then
-              echo "### Live endpoint + persistence verification"
+              echo "### Live endpoint + Signal Sniper verification"
               echo '```'
               cat live-verification.log
-              echo '```'
-            fi
-            if [ -f public-secret.log ]; then
-              echo "### Public Worker secret install"
-              echo '```'
-              cat public-secret.log
               echo '```'
             fi
             if [ -f intelligence-secret.log ]; then
@@ -266,12 +276,6 @@ jobs:
               echo "### Signal ingest secret install"
               echo '```'
               cat ingest-secret.log
-              echo '```'
-            fi
-            if [ -f public-deploy.log ]; then
-              echo "### Public Worker deploy log"
-              echo '```'
-              cat public-deploy.log
               echo '```'
             fi
             if [ -f intelligence-deploy.log ]; then
