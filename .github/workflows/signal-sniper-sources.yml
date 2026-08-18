@@ -162,3 +162,5 @@ jobs:
             source-report.md
           if-no-files-found: warn
           retention-days: 7
+
+# GA4 proof trigger: service-account credential installed 2026-08-18
