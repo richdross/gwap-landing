@@ -83,7 +83,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          node platform/intelligence/scripts/ga4-collector.mjs | tee ga4-result.json
+          node platform/intelligence/scripts/ga4-collector.mjs 2>&1 | tee ga4-result.json
 
       - name: Compare signals and find convergence
         id: compare
@@ -127,7 +127,7 @@ jobs:
             fi
             if [ -f ga4-result.json ]; then
               echo "### GA4"
-              echo '```json'
+              echo '```text'
               cat ga4-result.json
               echo '```'
             fi
