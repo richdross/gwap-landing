@@ -92,8 +92,8 @@ async function accessToken() {
   return data.access_token;
 }
 
-async function runReport(token, body) {
-  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`, {
+async function analyticsRequest(token, method, body) {
+  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:${method}`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${token}`,
@@ -103,7 +103,7 @@ async function runReport(token, body) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`GA4 runReport HTTP ${response.status}: ${data?.error?.message || "unknown"}`);
+    throw new Error(`GA4 ${method} HTTP ${response.status}: ${data?.error?.message || "unknown"}`);
   }
   return data;
 }
@@ -121,14 +121,22 @@ async function ingest(payload) {
   return { ok: response.ok, status: response.status, data };
 }
 
+async function storeSignal(signal) {
+  const result = await ingest(signal);
+  if (result.ok && result.data.storage === "stored") return "stored";
+  if (result.ok && result.data.storage === "duplicate") return "duplicate";
+  return "failed";
+}
+
 const token = await accessToken();
 const today = dayBucket();
 let stored = 0;
 let duplicate = 0;
 let failed = 0;
+let realtimeUsed = false;
 const summaries = [];
 
-const pageReport = await runReport(token, {
+const pageReport = await analyticsRequest(token, "runReport", {
   dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
   dimensions: [{ name: "pagePath" }, { name: "pageTitle" }],
   metrics: [
@@ -146,7 +154,7 @@ for (const row of pageReport.rows || []) {
   const path = row.dimensionValues?.[0]?.value || "/";
   const title = row.dimensionValues?.[1]?.value || path;
   const metrics = row.metricValues || [];
-  const signal = {
+  const outcome = await storeSignal({
     sourceType: "ga4",
     sourceRef: `ga4:${propertyId}:page:${slug(path)}:${today}`,
     title,
@@ -165,14 +173,13 @@ for (const row of pageReport.rows || []) {
       userEngagementDuration: number(metrics[4]?.value),
       period: "7daysAgo:today",
     },
-  };
-  const result = await ingest(signal);
-  if (result.ok && result.data.storage === "stored") stored += 1;
-  else if (result.ok && result.data.storage === "duplicate") duplicate += 1;
+  });
+  if (outcome === "stored") stored += 1;
+  else if (outcome === "duplicate") duplicate += 1;
   else failed += 1;
 }
 
-const eventReport = await runReport(token, {
+const eventReport = await analyticsRequest(token, "runReport", {
   dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
   dimensions: [{ name: "eventName" }],
   metrics: [{ name: "eventCount" }, { name: "activeUsers" }],
@@ -183,7 +190,7 @@ const eventReport = await runReport(token, {
 for (const row of eventReport.rows || []) {
   const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
   const metrics = row.metricValues || [];
-  const signal = {
+  const outcome = await storeSignal({
     sourceType: "ga4",
     sourceRef: `ga4:${propertyId}:event:${slug(eventName)}:${today}`,
     title: `GA4 event: ${eventName}`,
@@ -198,20 +205,92 @@ for (const row of eventReport.rows || []) {
       activeUsers: number(metrics[1]?.value),
       period: "7daysAgo:today",
     },
-  };
-  const result = await ingest(signal);
-  if (result.ok && result.data.storage === "stored") stored += 1;
-  else if (result.ok && result.data.storage === "duplicate") duplicate += 1;
+  });
+  if (outcome === "stored") stored += 1;
+  else if (outcome === "duplicate") duplicate += 1;
   else failed += 1;
 }
 
-summaries.push({ pages: pageReport.rows?.length || 0, events: eventReport.rows?.length || 0 });
+const standardPages = pageReport.rows?.length || 0;
+const standardEvents = eventReport.rows?.length || 0;
+summaries.push({ mode: "standard", pages: standardPages, events: standardEvents });
+
+if (standardPages === 0 && standardEvents === 0) {
+  realtimeUsed = true;
+
+  const realtimePages = await analyticsRequest(token, "runRealtimeReport", {
+    dimensions: [{ name: "unifiedScreenName" }],
+    metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
+    limit: "50",
+  });
+
+  for (const row of realtimePages.rows || []) {
+    const screenName = row.dimensionValues?.[0]?.value || "unknown-page";
+    const metrics = row.metricValues || [];
+    const outcome = await storeSignal({
+      sourceType: "ga4",
+      sourceRef: `ga4:${propertyId}:realtime-page:${slug(screenName)}:${today}`,
+      title: screenName,
+      observedAt: new Date().toISOString(),
+      normalized: {
+        adapter: "ga4-data-api-realtime-github-v1",
+        signalKind: "page-behavior-realtime",
+        sniperKey: slug(screenName),
+        propertyId,
+        pageTitle: screenName,
+        screenPageViews: number(metrics[0]?.value),
+        activeUsers: number(metrics[1]?.value),
+        period: "last-30-minutes",
+      },
+    });
+    if (outcome === "stored") stored += 1;
+    else if (outcome === "duplicate") duplicate += 1;
+    else failed += 1;
+  }
+
+  const realtimeEvents = await analyticsRequest(token, "runRealtimeReport", {
+    dimensions: [{ name: "eventName" }],
+    metrics: [{ name: "eventCount" }, { name: "activeUsers" }],
+    limit: "50",
+  });
+
+  for (const row of realtimeEvents.rows || []) {
+    const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
+    const metrics = row.metricValues || [];
+    const outcome = await storeSignal({
+      sourceType: "ga4",
+      sourceRef: `ga4:${propertyId}:realtime-event:${slug(eventName)}:${today}`,
+      title: `GA4 realtime event: ${eventName}`,
+      observedAt: new Date().toISOString(),
+      normalized: {
+        adapter: "ga4-data-api-realtime-github-v1",
+        signalKind: "event-behavior-realtime",
+        sniperKey: slug(eventName),
+        propertyId,
+        eventName,
+        eventCount: number(metrics[0]?.value),
+        activeUsers: number(metrics[1]?.value),
+        period: "last-30-minutes",
+      },
+    });
+    if (outcome === "stored") stored += 1;
+    else if (outcome === "duplicate") duplicate += 1;
+    else failed += 1;
+  }
+
+  summaries.push({
+    mode: "realtime-fallback",
+    pages: realtimePages.rows?.length || 0,
+    events: realtimeEvents.rows?.length || 0,
+  });
+}
 
 console.log(JSON.stringify({
   ok: failed === 0,
   source: "ga4",
   mode: "active",
   propertyId,
+  realtimeUsed,
   stored,
   duplicate,
   failed,
