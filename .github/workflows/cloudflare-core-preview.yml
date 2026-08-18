@@ -23,36 +23,51 @@ jobs:
       - name: Checkout isolated branch
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Wrangler
+        run: npm install
+
       - name: Check Cloudflare deployment credentials
         id: auth
         shell: bash
         run: |
           if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
-            echo "Cloudflare API token is available; account ID is configured from the existing Cloudflare deployment metadata."
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "Cloudflare preview not deployed: CLOUDFLARE_API_TOKEN is not configured in GitHub Actions secrets."
           fi
 
       - name: Upload public Worker preview
         id: public_deploy
         if: steps.auth.outputs.ready == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 3acc9be3484d883bd49e2f2093560ca1
-          command: versions upload --preview-alias gwap-core-v1
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npx wrangler versions upload --preview-alias gwap-core-v1 > public-deploy.log 2>&1
+          code=$?
+          cat public-deploy.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Upload intelligence Worker preview
         id: intelligence_deploy
         if: steps.auth.outputs.ready == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 3acc9be3484d883bd49e2f2093560ca1
-          workingDirectory: platform/intelligence
-          command: versions upload --preview-alias gwap-intelligence-v1
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          cd platform/intelligence
+          npx --yes wrangler@4 versions upload --preview-alias gwap-intelligence-v1 > ../../intelligence-deploy.log 2>&1
+          code=$?
+          cd ../..
+          cat intelligence-deploy.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Write preview report
         if: always()
@@ -63,24 +78,26 @@ jobs:
             echo
             echo "Commit: $GITHUB_SHA"
             echo "Credential gate: ${{ steps.auth.outputs.ready }}"
+            echo "Public exit code: ${{ steps.public_deploy.outputs.exit_code }}"
+            echo "Intelligence exit code: ${{ steps.intelligence_deploy.outputs.exit_code }}"
             echo
-            if [ "${{ steps.auth.outputs.ready }}" = "true" ]; then
-              echo "Public Worker upload outcome: ${{ steps.public_deploy.outcome }}"
-              echo "Intelligence Worker upload outcome: ${{ steps.intelligence_deploy.outcome }}"
-              echo
-              echo "Public command output:"
+            if [ -f public-deploy.log ]; then
+              echo "### Public Worker log"
               echo '```'
-              echo '${{ steps.public_deploy.outputs.command-output }}'
+              cat public-deploy.log
               echo '```'
-              echo
-              echo "Intelligence command output:"
-              echo '```'
-              echo '${{ steps.intelligence_deploy.outputs.command-output }}'
-              echo '```'
-            else
-              echo "BLOCKED: GitHub Actions does not currently have CLOUDFLARE_API_TOKEN."
-              echo "Production was not changed."
             fi
+            if [ -f intelligence-deploy.log ]; then
+              echo "### Intelligence Worker log"
+              echo '```'
+              cat intelligence-deploy.log
+              echo '```'
+            fi
+            if [ "${{ steps.auth.outputs.ready }}" != "true" ]; then
+              echo "BLOCKED: GitHub Actions does not currently have CLOUDFLARE_API_TOKEN."
+            fi
+            echo
+            echo "Production was not changed."
           } > preview-report.md
 
       - name: Publish report to PR #1
