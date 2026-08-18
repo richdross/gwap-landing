@@ -1,3 +1,5 @@
+import { runSignalSniper, sniperStatus } from "./sniper.js";
+
 const json = (data, status = 200) => new Response(JSON.stringify(data, null, 2), {
   status,
   headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -137,6 +139,7 @@ function intelligenceCapabilities(env) {
     supabase: Boolean(env.SUPABASE_URL && supabaseKey(env)),
     signalIngestAuth: Boolean(env.SIGNAL_INGEST_KEY),
     redditLegacyAdapter: true,
+    signalSniper: sniperStatus(env),
     workersAI: Boolean(env.AI) && env.ENABLE_WORKERS_AI === "true",
     vectorize: Boolean(env.VECTOR_INDEX) && env.ENABLE_VECTORIZE === "true",
     queue: Boolean(env.SIGNAL_QUEUE) && env.ENABLE_QUEUES === "true",
@@ -158,6 +161,18 @@ export default {
         capabilities: intelligenceCapabilities(env),
         timestamp: new Date().toISOString(),
       });
+    }
+
+    if (url.pathname === "/sniper/status" && request.method === "GET") {
+      return json({ ok: true, sniper: sniperStatus(env) });
+    }
+
+    if (url.pathname === "/sniper/run" && request.method === "POST") {
+      const auth = authorizedIngest(request, env);
+      if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
+      const body = (await readJson(request)) || {};
+      const result = await runSignalSniper(env, { full: body.full !== false, geo: body.geo });
+      return json(result, result.ok ? 200 : 502);
     }
 
     if (url.pathname === "/signals" && request.method === "POST") {
@@ -184,6 +199,22 @@ export default {
     }
 
     return json({ ok: false, error: "not_found" }, 404);
+  },
+
+  async scheduled(controller, env, ctx) {
+    if (env.ENABLE_SIGNAL_SNIPER === "false") return;
+    const date = new Date(controller.scheduledTime || Date.now());
+    const full = date.getUTCHours() % 6 === 0;
+    ctx.waitUntil(runSignalSniper(env, { full }).then((result) => {
+      console.log("GWAP Signal Sniper scheduled run", JSON.stringify({
+        full,
+        ok: result.ok,
+        trendsStored: result.trends?.stored || 0,
+        youtubeMode: result.youtube?.mode || (result.youtube?.ok ? "active" : "error"),
+        ga4Mode: result.ga4?.mode || (result.ga4?.ok ? "active" : "error"),
+        promoted: result.convergence?.promoted?.length || 0,
+      }));
+    }));
   },
 
   async queue(batch, env) {
