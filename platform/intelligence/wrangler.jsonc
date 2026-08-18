@@ -5,8 +5,14 @@
   "observability": {
     "enabled": true
   },
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
   "vars": {
     "SUPABASE_URL": "https://aqqhfpizbmgmrnupccoi.supabase.co",
+    "ENABLE_SIGNAL_SNIPER": "true",
+    "SNIPER_GEO": "US",
+    "SNIPER_SEEDS": "AI tools|automation|small business AI|creator economy|SaaS|online business",
     "ENABLE_WORKERS_AI": "false",
     "ENABLE_VECTORIZE": "false",
     "ENABLE_QUEUES": "false",
