@@ -1,4 +1,5 @@
-import { compareSignalsAndPromote, runSignalSniper, sniperStatus } from "./sniper.js";
+import { runSignalSniper, sniperStatus } from "./sniper.js";
+import { compareSignalsAndPromoteStrict } from "./convergence.js";
 
 const json = (data, status = 200) => new Response(JSON.stringify(data, null, 2), {
   status,
@@ -21,9 +22,7 @@ function supabaseHeaders(env, prefer = "return=minimal") {
     "content-type": "application/json",
     prefer,
   };
-  if (!key.startsWith("sb_secret_")) {
-    headers.authorization = `Bearer ${key}`;
-  }
+  if (!key.startsWith("sb_secret_")) headers.authorization = `Bearer ${key}`;
   return headers;
 }
 
@@ -44,15 +43,11 @@ async function findExistingSignal(env, sourceType, sourceRef) {
 }
 
 async function storeSignal(env, signal) {
-  if (!env.SUPABASE_URL || !supabaseKey(env)) {
-    return { ok: false, mode: "not-configured" };
-  }
-
+  if (!env.SUPABASE_URL || !supabaseKey(env)) return { ok: false, mode: "not-configured" };
   if (signal.source_ref) {
     const existing = await findExistingSignal(env, signal.source_type, signal.source_ref);
     if (existing) return { ok: true, mode: "duplicate", id: existing.id };
   }
-
   const response = await fetch(`${env.SUPABASE_URL}/rest/v1/gwap_signals`, {
     method: "POST",
     headers: supabaseHeaders(env),
@@ -64,9 +59,7 @@ async function storeSignal(env, signal) {
 function authorizedIngest(request, env) {
   if (!env.SIGNAL_INGEST_KEY) return { ok: false, status: 503, error: "signal_ingest_not_configured" };
   const supplied = request.headers.get("x-gwap-ingest-key");
-  if (!supplied || supplied !== env.SIGNAL_INGEST_KEY) {
-    return { ok: false, status: 401, error: "unauthorized_signal_ingest" };
-  }
+  if (!supplied || supplied !== env.SIGNAL_INGEST_KEY) return { ok: false, status: 401, error: "unauthorized_signal_ingest" };
   return { ok: true };
 }
 
@@ -90,7 +83,6 @@ function legacyRedditSignal(body) {
   const url = typeof payload.url === "string" ? payload.url : null;
   const explicitRef = typeof body.sourceRef === "string" ? body.sourceRef : null;
   if (!title && !url && !explicitRef) return null;
-
   return {
     source_type: "reddit",
     source_ref: (explicitRef || url)?.slice(0, 500) || null,
@@ -112,20 +104,14 @@ function legacyRedditSignal(body) {
 async function persistSignal(request, env, adapter) {
   const auth = authorizedIngest(request, env);
   if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
-
   const body = await readJson(request);
   const signal = adapter(body);
   if (!signal) return json({ ok: false, error: "invalid_signal" }, 400);
-
   const storage = await storeSignal(env, signal);
-  if (!storage.ok && storage.mode !== "not-configured") {
-    return json({ ok: false, error: "signal_storage_failed", storage }, 502);
-  }
-
+  if (!storage.ok && storage.mode !== "not-configured") return json({ ok: false, error: "signal_storage_failed", storage }, 502);
   if (env.SIGNAL_QUEUE && env.ENABLE_QUEUES === "true" && storage.mode === "stored") {
     await env.SIGNAL_QUEUE.send({ type: "signal.received", signal });
   }
-
   return json({
     ok: true,
     storage: storage.mode,
@@ -152,21 +138,10 @@ function intelligenceCapabilities(env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-
     if (url.pathname === "/health") {
-      return json({
-        ok: true,
-        service: "gwap-intelligence",
-        costMode: "zero-incremental-cost",
-        capabilities: intelligenceCapabilities(env),
-        timestamp: new Date().toISOString(),
-      });
+      return json({ ok: true, service: "gwap-intelligence", costMode: "zero-incremental-cost", capabilities: intelligenceCapabilities(env), timestamp: new Date().toISOString() });
     }
-
-    if (url.pathname === "/sniper/status" && request.method === "GET") {
-      return json({ ok: true, sniper: sniperStatus(env) });
-    }
-
+    if (url.pathname === "/sniper/status" && request.method === "GET") return json({ ok: true, sniper: sniperStatus(env) });
     if (url.pathname === "/sniper/run" && request.method === "POST") {
       const auth = authorizedIngest(request, env);
       if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
@@ -174,52 +149,32 @@ export default {
       const result = await runSignalSniper(env, { full: body.full !== false, geo: body.geo });
       return json(result, result.ok ? 200 : 502);
     }
-
     if (url.pathname === "/sniper/compare" && request.method === "POST") {
       const auth = authorizedIngest(request, env);
       if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
-      const result = await compareSignalsAndPromote(env);
+      const result = await compareSignalsAndPromoteStrict(env);
       return json(result, result.ok ? 200 : 502);
     }
-
-    if (url.pathname === "/signals" && request.method === "POST") {
-      return persistSignal(request, env, canonicalSignal);
-    }
-
-    if (url.pathname === "/signals/reddit-legacy" && request.method === "POST") {
-      return persistSignal(request, env, legacyRedditSignal);
-    }
-
+    if (url.pathname === "/signals" && request.method === "POST") return persistSignal(request, env, canonicalSignal);
+    if (url.pathname === "/signals/reddit-legacy" && request.method === "POST") return persistSignal(request, env, legacyRedditSignal);
     if (url.pathname === "/judge" && request.method === "POST") {
       const body = await readJson(request);
       if (!body) return json({ ok: false, error: "invalid_request" }, 400);
-
       if (!(env.AI && env.ENABLE_WORKERS_AI === "true")) {
-        return json({
-          ok: false,
-          error: "ai_disabled_zero_cost_guardrail",
-          message: "Workers AI is not enabled for this environment. Enable only after free-tier guardrails are verified.",
-        }, 503);
+        return json({ ok: false, error: "ai_disabled_zero_cost_guardrail", message: "Workers AI is not enabled for this environment. Enable only after free-tier guardrails are verified." }, 503);
       }
-
       return json({ ok: false, error: "judgment_model_not_selected" }, 501);
     }
-
     return json({ ok: false, error: "not_found" }, 404);
   },
 
   async scheduled(controller, env, ctx) {
     if (env.ENABLE_SIGNAL_SNIPER === "false") return;
-    const date = new Date(controller.scheduledTime || Date.now());
-    const full = date.getUTCHours() % 6 === 0;
-    ctx.waitUntil(runSignalSniper(env, { full }).then((result) => {
-      console.log("GWAP Signal Sniper scheduled run", JSON.stringify({
-        full,
+    ctx.waitUntil(compareSignalsAndPromoteStrict(env).then((result) => {
+      console.log("GWAP Signal Sniper convergence run", JSON.stringify({
         ok: result.ok,
-        trendsStored: result.trends?.stored || 0,
-        youtubeMode: result.youtube?.mode || (result.youtube?.ok ? "active" : "error"),
-        ga4Mode: result.ga4?.mode || (result.ga4?.ok ? "active" : "error"),
-        promoted: result.convergence?.promoted?.length || 0,
+        relevantTrendKeys: result.relevantTrendKeys || 0,
+        promoted: result.promoted?.length || 0,
       }));
     }));
   },
