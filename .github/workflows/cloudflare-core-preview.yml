@@ -41,20 +41,20 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload public Worker preview
+      - name: Bootstrap public Worker service
         id: public_deploy
         if: steps.auth.outputs.ready == 'true'
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          npx wrangler versions upload --preview-alias gwap-core-v1 > public-deploy.log 2>&1
+          npx wrangler deploy > public-deploy.log 2>&1
           code=$?
           cat public-deploy.log
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Upload intelligence Worker preview
+      - name: Bootstrap intelligence Worker service
         id: intelligence_deploy
         if: steps.auth.outputs.ready == 'true'
         continue-on-error: true
@@ -62,7 +62,7 @@ jobs:
         run: |
           set +e
           cd platform/intelligence
-          npx --yes wrangler@4 versions upload --preview-alias gwap-intelligence-v1 > ../../intelligence-deploy.log 2>&1
+          npx --yes wrangler@4 deploy > ../../intelligence-deploy.log 2>&1
           code=$?
           cd ../..
           cat intelligence-deploy.log
@@ -97,7 +97,7 @@ jobs:
               echo "BLOCKED: GitHub Actions does not currently have CLOUDFLARE_API_TOKEN."
             fi
             echo
-            echo "Production was not changed."
+            echo "Production routes were not changed; these are isolated workers.dev services only."
           } > preview-report.md
 
       - name: Publish report to PR #1
