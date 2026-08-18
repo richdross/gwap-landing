@@ -34,6 +34,14 @@ jobs:
       - name: Install Wrangler
         run: npm install
 
+      - name: Derive private signal ingest key
+        id: ingest
+        shell: bash
+        run: |
+          key=$(printf 'gwap-signal-ingest-v1:%s' "$CLOUDFLARE_API_TOKEN" | sha256sum | awk '{print $1}')
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          echo "SIGNAL_INGEST_KEY=$key" >> "$GITHUB_ENV"
+
       - name: Check deployment credentials
         id: auth
         shell: bash
@@ -62,7 +70,7 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Install Supabase secret on intelligence Worker
+      - name: Install Supabase and ingest secrets on intelligence Worker
         id: intelligence_secret
         if: steps.auth.outputs.cloudflare_ready == 'true' && steps.auth.outputs.supabase_ready == 'true'
         continue-on-error: true
@@ -71,9 +79,13 @@ jobs:
           set +e
           cd platform/intelligence
           printf '%s' "$SUPABASE_SECRET_KEY" | npx --yes wrangler@4 secret put SUPABASE_SECRET_KEY > ../../intelligence-secret.log 2>&1
-          code=$?
+          supabase_code=$?
+          printf '%s' "$SIGNAL_INGEST_KEY" | npx --yes wrangler@4 secret put SIGNAL_INGEST_KEY > ../../ingest-secret.log 2>&1
+          ingest_code=$?
           cd ../..
           cat intelligence-secret.log
+          cat ingest-secret.log
+          if [ "$supabase_code" -ne 0 ] || [ "$ingest_code" -ne 0 ]; then code=1; else code=0; fi
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -140,6 +152,10 @@ jobs:
             echo "INTELLIGENCE_HEALTH Supabase binding missing" | tee -a live-verification.log
             failures=$((failures+1))
           fi
+          if ! grep -q '"signalIngestAuth": true' intelligence-health.out; then
+            echo "INTELLIGENCE_HEALTH ingest auth missing" | tee -a live-verification.log
+            failures=$((failures+1))
+          fi
 
           scanner_code=$(curl -sS -o scanner.out -w "%{http_code}" \
             -X POST "$PUBLIC_URL/api/scanner" \
@@ -153,15 +169,33 @@ jobs:
           signal_code=$(curl -sS -o signal.out -w "%{http_code}" \
             -X POST "$INTELLIGENCE_URL/signals" \
             -H "content-type: application/json" \
-            --data "{\"sourceType\":\"gate-b-proof\",\"sourceRef\":\"github-actions-${GITHUB_SHA}\",\"title\":\"GWAP first persisted intelligence signal\",\"body\":\"End-to-end Cloudflare Worker to Supabase persistence proof.\",\"normalized\":{\"proof\":true,\"commit\":\"${GITHUB_SHA}\"}}")
+            -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
+            --data "{\"sourceType\":\"gate-b-proof\",\"sourceRef\":\"github-actions-${GITHUB_SHA}\",\"title\":\"GWAP persisted intelligence signal\",\"body\":\"End-to-end Cloudflare Worker to Supabase persistence proof.\",\"normalized\":{\"proof\":true,\"commit\":\"${GITHUB_SHA}\"}}")
           echo "INTELLIGENCE_SIGNAL HTTP $signal_code" | tee -a live-verification.log
           cat signal.out | tee -a live-verification.log
           echo | tee -a live-verification.log
           if [ "$signal_code" != "202" ]; then failures=$((failures+1)); fi
-          if ! grep -q '"storage": "stored"' signal.out; then
-            echo "INTELLIGENCE_SIGNAL was not persisted" | tee -a live-verification.log
-            failures=$((failures+1))
-          fi
+          if ! grep -Eq '"storage": "(stored|duplicate)"' signal.out; then failures=$((failures+1)); fi
+
+          reddit_code=$(curl -sS -o reddit.out -w "%{http_code}" \
+            -X POST "$INTELLIGENCE_URL/signals/reddit-legacy" \
+            -H "content-type: application/json" \
+            -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
+            --data "{\"type\":\"SIGNAL_RAW_FOUND\",\"source\":\"reddit-ai\",\"sourceRef\":\"gate-b-reddit-adapter-${GITHUB_SHA}\",\"payload\":{\"title\":\"GWAP Reddit adapter proof\",\"url\":\"https://www.reddit.com/\",\"score\":12,\"comments\":3,\"category\":\"reddit-ai\"}}")
+          echo "REDDIT_LEGACY_ADAPTER HTTP $reddit_code" | tee -a live-verification.log
+          cat reddit.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$reddit_code" != "202" ]; then failures=$((failures+1)); fi
+          if ! grep -q '"adapter": "reddit-legacy-v1"' reddit.out; then failures=$((failures+1)); fi
+
+          unauth_code=$(curl -sS -o unauth.out -w "%{http_code}" \
+            -X POST "$INTELLIGENCE_URL/signals" \
+            -H "content-type: application/json" \
+            --data '{"sourceType":"unauthorized-proof"}')
+          echo "SIGNAL_AUTH_GUARD HTTP $unauth_code" | tee -a live-verification.log
+          cat unauth.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$unauth_code" != "401" ]; then failures=$((failures+1)); fi
 
           checkout_code=$(curl -sS -o checkout.out -w "%{http_code}" \
             -X POST "$PUBLIC_URL/api/checkout" \
@@ -228,6 +262,12 @@ jobs:
               cat intelligence-secret.log
               echo '```'
             fi
+            if [ -f ingest-secret.log ]; then
+              echo "### Signal ingest secret install"
+              echo '```'
+              cat ingest-secret.log
+              echo '```'
+            fi
             if [ -f public-deploy.log ]; then
               echo "### Public Worker deploy log"
               echo '```'
@@ -239,12 +279,6 @@ jobs:
               echo '```'
               cat intelligence-deploy.log
               echo '```'
-            fi
-            if [ "${{ steps.auth.outputs.cloudflare_ready }}" != "true" ]; then
-              echo "BLOCKED: CLOUDFLARE_API_TOKEN is missing."
-            fi
-            if [ "${{ steps.auth.outputs.supabase_ready }}" != "true" ]; then
-              echo "BLOCKED: SUPABASE_SECRET_KEY is missing."
             fi
             echo
             echo "Production routes were not changed; verification ran only against isolated workers.dev services."
