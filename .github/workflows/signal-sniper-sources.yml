@@ -16,6 +16,8 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   collect:
@@ -58,6 +60,7 @@ jobs:
 
       - name: Collect Google Trends into GWAP
         id: trends
+        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -65,6 +68,7 @@ jobs:
 
       - name: Collect YouTube into GWAP
         id: youtube
+        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -72,6 +76,7 @@ jobs:
 
       - name: Compare signals and find convergence
         id: compare
+        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -81,10 +86,50 @@ jobs:
             -H "x-gwap-ingest-key: $SIGNAL_INGEST_KEY" \
             --data '{}')
           cat convergence-result.json
-          if [ "$code" != "200" ]; then
-            echo "Signal convergence failed with HTTP $code"
-            exit 4
-          fi
+          echo "HTTP $code" > convergence-http.txt
+          if [ "$code" != "200" ]; then exit 4; fi
+
+      - name: Write source proof report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## GWAP Signal Sniper Source Report"
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Trends step: ${{ steps.trends.outcome }}"
+            echo "YouTube step: ${{ steps.youtube.outcome }}"
+            echo "Convergence step: ${{ steps.compare.outcome }}"
+            echo
+            if [ -f trends-result.json ]; then
+              echo "### Google Trends"
+              echo '```json'
+              cat trends-result.json
+              echo '```'
+            fi
+            if [ -f youtube-result.json ]; then
+              echo "### YouTube"
+              echo '```json'
+              cat youtube-result.json
+              echo '```'
+            fi
+            if [ -f convergence-result.json ]; then
+              echo "### Convergence"
+              echo '```json'
+              cat convergence-result.json
+              echo '```'
+            fi
+            if [ -f convergence-http.txt ]; then cat convergence-http.txt; fi
+            echo
+            echo "Production routes were not changed."
+          } > source-report.md
+
+      - name: Publish source report to PR #1
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh pr comment 1 --body-file source-report.md
 
       - name: Upload collector proof
         if: always()
@@ -95,5 +140,6 @@ jobs:
             trends-result.json
             youtube-result.json
             convergence-result.json
+            source-report.md
           if-no-files-found: warn
           retention-days: 7
