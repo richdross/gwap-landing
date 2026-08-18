@@ -163,4 +163,4 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-# GA4 proof trigger: realtime collection verified 2026-08-18
+# GA4 proof trigger: Analytics Data API enabled 2026-08-18
