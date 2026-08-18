@@ -135,20 +135,29 @@ async function verifyTurnstile(request, env, token) {
   return data.success ? { ok: true, mode: "verified" } : { ok: false, error: "turnstile_failed" };
 }
 
+function supabaseKey(env) {
+  return env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY || null;
+}
+
 async function supabaseInsert(env, table, row) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const key = supabaseKey(env);
+  if (!env.SUPABASE_URL || !key) {
     return { ok: false, mode: "not-configured" };
   }
 
   try {
+    const headers = {
+      apikey: key,
+      "content-type": "application/json",
+      prefer: "return=minimal",
+    };
+    if (!key.startsWith("sb_secret_")) {
+      headers.authorization = `Bearer ${key}`;
+    }
+
     const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}`, {
       method: "POST",
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "content-type": "application/json",
-        prefer: "return=minimal",
-      },
+      headers,
       body: JSON.stringify(row),
     });
     return response.ok
@@ -230,7 +239,7 @@ export default {
           scannerApi: true,
           eventApi: true,
           turnstile: Boolean(env.TURNSTILE_SECRET_KEY),
-          supabaseEvents: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+          supabaseEvents: Boolean(env.SUPABASE_URL && supabaseKey(env)),
           stripeCheckout: Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID),
         },
       });
