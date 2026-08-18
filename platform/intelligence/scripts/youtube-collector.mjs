@@ -133,11 +133,7 @@ async function youtubeSearch(query) {
 
 async function youtubeVideos(ids) {
   if (!ids.length) return [];
-  const params = new URLSearchParams({
-    part: "snippet,statistics",
-    id: ids.join(","),
-    key: apiKey,
-  });
+  const params = new URLSearchParams({ part: "snippet,statistics", id: ids.join(","), key: apiKey });
   const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(`videos:HTTP ${response.status}:${data?.error?.message || "unknown"}`);
@@ -165,10 +161,7 @@ async function youtubeComments(videoId) {
 async function ingestSignal(payload) {
   const response = await fetch(`${endpoint}/signals`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-gwap-ingest-key": ingestKey,
-    },
+    headers: { "content-type": "application/json", "x-gwap-ingest-key": ingestKey },
     body: JSON.stringify(payload),
   });
   const data = await response.json().catch(() => ({}));
@@ -181,11 +174,7 @@ const relevantTrends = trends
   .sort((a, b) => (b.relevance - a.relevance) || (b.traffic - a.traffic))
   .slice(0, 3)
   .map((item) => item.title);
-const highTrafficTrends = trends
-  .sort((a, b) => b.traffic - a.traffic)
-  .slice(0, 2)
-  .map((item) => item.title);
-const queries = [...new Set([...relevantTrends, ...highTrafficTrends, ...DEFAULT_SEEDS])].slice(0, 6);
+const queries = [...new Set([...relevantTrends, ...DEFAULT_SEEDS])].slice(0, 6);
 
 const bucket = sixHourBucket();
 let stored = 0;
@@ -241,7 +230,6 @@ for (const query of queries) {
         failed += 1;
       }
     }
-
     results.push({ query, videos: videos.length, commentsSampled: comments.length, painMentions: painCount, stored: queryStored, duplicate: queryDuplicate });
   } catch (error) {
     failed += 1;
@@ -252,6 +240,7 @@ for (const query of queries) {
 console.log(JSON.stringify({
   ok: failed === 0,
   source: "youtube",
+  relevantTrendQueries: relevantTrends,
   queryCount: queries.length,
   queries,
   stored,
