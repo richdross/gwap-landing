@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '23 * * * *'
+  push:
+    branches:
+      - architecture/cloudflare-core-v1
+    paths:
+      - '.github/workflows/signal-sniper-sources.yml'
+      - 'platform/intelligence/scripts/trends-collector.mjs'
 
 permissions:
   contents: read
