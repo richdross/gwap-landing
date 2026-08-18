@@ -11,32 +11,132 @@ function supabaseKey(env) {
   return env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY || null;
 }
 
-async function supabaseInsert(env, table, row) {
+function supabaseHeaders(env, prefer = "return=minimal") {
   const key = supabaseKey(env);
-  if (!env.SUPABASE_URL || !key) {
-    return { ok: false, mode: "not-configured" };
-  }
-
+  if (!key) return null;
   const headers = {
     apikey: key,
     "content-type": "application/json",
-    prefer: "return=minimal",
+    prefer,
   };
   if (!key.startsWith("sb_secret_")) {
     headers.authorization = `Bearer ${key}`;
   }
+  return headers;
+}
 
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}`, {
+async function findExistingSignal(env, sourceType, sourceRef) {
+  if (!env.SUPABASE_URL || !sourceRef) return null;
+  const headers = supabaseHeaders(env);
+  if (!headers) return null;
+  const params = new URLSearchParams({
+    select: "id,source_type,source_ref",
+    source_type: `eq.${sourceType}`,
+    source_ref: `eq.${sourceRef}`,
+    limit: "1",
+  });
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/gwap_signals?${params}`, { headers });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+}
+
+async function storeSignal(env, signal) {
+  if (!env.SUPABASE_URL || !supabaseKey(env)) {
+    return { ok: false, mode: "not-configured" };
+  }
+
+  if (signal.source_ref) {
+    const existing = await findExistingSignal(env, signal.source_type, signal.source_ref);
+    if (existing) return { ok: true, mode: "duplicate", id: existing.id };
+  }
+
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/gwap_signals`, {
     method: "POST",
-    headers,
-    body: JSON.stringify(row),
+    headers: supabaseHeaders(env),
+    body: JSON.stringify(signal),
   });
   return response.ok ? { ok: true, mode: "stored" } : { ok: false, mode: "error", status: response.status };
+}
+
+function authorizedIngest(request, env) {
+  if (!env.SIGNAL_INGEST_KEY) return { ok: false, status: 503, error: "signal_ingest_not_configured" };
+  const supplied = request.headers.get("x-gwap-ingest-key");
+  if (!supplied || supplied !== env.SIGNAL_INGEST_KEY) {
+    return { ok: false, status: 401, error: "unauthorized_signal_ingest" };
+  }
+  return { ok: true };
+}
+
+function canonicalSignal(body) {
+  if (!body || typeof body.sourceType !== "string") return null;
+  return {
+    source_type: body.sourceType.slice(0, 80),
+    source_ref: typeof body.sourceRef === "string" ? body.sourceRef.slice(0, 500) : null,
+    title: typeof body.title === "string" ? body.title.slice(0, 500) : null,
+    body: typeof body.body === "string" ? body.body.slice(0, 20000) : null,
+    url: typeof body.url === "string" ? body.url.slice(0, 2000) : null,
+    observed_at: body.observedAt || new Date().toISOString(),
+    normalized: body.normalized && typeof body.normalized === "object" ? body.normalized : {},
+  };
+}
+
+function legacyRedditSignal(body) {
+  if (!body || typeof body !== "object") return null;
+  const payload = body.payload && typeof body.payload === "object" ? body.payload : body;
+  const title = typeof payload.title === "string" ? payload.title : null;
+  const url = typeof payload.url === "string" ? payload.url : null;
+  const explicitRef = typeof body.sourceRef === "string" ? body.sourceRef : null;
+  if (!title && !url && !explicitRef) return null;
+
+  return {
+    source_type: "reddit",
+    source_ref: (explicitRef || url)?.slice(0, 500) || null,
+    title: title?.slice(0, 500) || null,
+    body: typeof payload.body === "string" ? payload.body.slice(0, 20000) : null,
+    url: url?.slice(0, 2000) || null,
+    observed_at: payload.observedAt || body.observedAt || new Date().toISOString(),
+    normalized: {
+      adapter: "reddit-legacy-v1",
+      legacyEventType: typeof body.type === "string" ? body.type : "SIGNAL_RAW_FOUND",
+      legacySource: typeof body.source === "string" ? body.source : "reddit-ai",
+      category: typeof payload.category === "string" ? payload.category : "reddit-ai",
+      score: Number.isFinite(payload.score) ? payload.score : null,
+      comments: Number.isFinite(payload.comments) ? payload.comments : null,
+    },
+  };
+}
+
+async function persistSignal(request, env, adapter) {
+  const auth = authorizedIngest(request, env);
+  if (!auth.ok) return json({ ok: false, error: auth.error }, auth.status);
+
+  const body = await readJson(request);
+  const signal = adapter(body);
+  if (!signal) return json({ ok: false, error: "invalid_signal" }, 400);
+
+  const storage = await storeSignal(env, signal);
+  if (!storage.ok && storage.mode !== "not-configured") {
+    return json({ ok: false, error: "signal_storage_failed", storage }, 502);
+  }
+
+  if (env.SIGNAL_QUEUE && env.ENABLE_QUEUES === "true" && storage.mode === "stored") {
+    await env.SIGNAL_QUEUE.send({ type: "signal.received", signal });
+  }
+
+  return json({
+    ok: true,
+    storage: storage.mode,
+    queued: Boolean(env.SIGNAL_QUEUE && env.ENABLE_QUEUES === "true" && storage.mode === "stored"),
+    adapter: adapter === legacyRedditSignal ? "reddit-legacy-v1" : "canonical-v1",
+  }, 202);
 }
 
 function intelligenceCapabilities(env) {
   return {
     supabase: Boolean(env.SUPABASE_URL && supabaseKey(env)),
+    signalIngestAuth: Boolean(env.SIGNAL_INGEST_KEY),
+    redditLegacyAdapter: true,
     workersAI: Boolean(env.AI) && env.ENABLE_WORKERS_AI === "true",
     vectorize: Boolean(env.VECTOR_INDEX) && env.ENABLE_VECTORIZE === "true",
     queue: Boolean(env.SIGNAL_QUEUE) && env.ENABLE_QUEUES === "true",
@@ -61,31 +161,11 @@ export default {
     }
 
     if (url.pathname === "/signals" && request.method === "POST") {
-      const body = await readJson(request);
-      if (!body || typeof body.sourceType !== "string") {
-        return json({ ok: false, error: "invalid_signal" }, 400);
-      }
+      return persistSignal(request, env, canonicalSignal);
+    }
 
-      const signal = {
-        source_type: body.sourceType.slice(0, 80),
-        source_ref: typeof body.sourceRef === "string" ? body.sourceRef.slice(0, 500) : null,
-        title: typeof body.title === "string" ? body.title.slice(0, 500) : null,
-        body: typeof body.body === "string" ? body.body.slice(0, 20000) : null,
-        url: typeof body.url === "string" ? body.url.slice(0, 2000) : null,
-        observed_at: body.observedAt || new Date().toISOString(),
-        normalized: body.normalized && typeof body.normalized === "object" ? body.normalized : {},
-      };
-
-      const storage = await supabaseInsert(env, "gwap_signals", signal);
-      if (!storage.ok && storage.mode !== "not-configured") {
-        return json({ ok: false, error: "signal_storage_failed", storage }, 502);
-      }
-
-      if (env.SIGNAL_QUEUE && env.ENABLE_QUEUES === "true") {
-        await env.SIGNAL_QUEUE.send({ type: "signal.received", signal });
-      }
-
-      return json({ ok: true, storage: storage.mode, queued: Boolean(env.SIGNAL_QUEUE && env.ENABLE_QUEUES === "true") }, 202);
+    if (url.pathname === "/signals/reddit-legacy" && request.method === "POST") {
+      return persistSignal(request, env, legacyRedditSignal);
     }
 
     if (url.pathname === "/judge" && request.method === "POST") {
