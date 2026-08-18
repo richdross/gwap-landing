@@ -7,18 +7,28 @@ async function readJson(request) {
   try { return await request.json(); } catch { return null; }
 }
 
+function supabaseKey(env) {
+  return env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY || null;
+}
+
 async function supabaseInsert(env, table, row) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const key = supabaseKey(env);
+  if (!env.SUPABASE_URL || !key) {
     return { ok: false, mode: "not-configured" };
   }
+
+  const headers = {
+    apikey: key,
+    "content-type": "application/json",
+    prefer: "return=minimal",
+  };
+  if (!key.startsWith("sb_secret_")) {
+    headers.authorization = `Bearer ${key}`;
+  }
+
   const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "content-type": "application/json",
-      prefer: "return=minimal",
-    },
+    headers,
     body: JSON.stringify(row),
   });
   return response.ok ? { ok: true, mode: "stored" } : { ok: false, mode: "error", status: response.status };
@@ -26,7 +36,7 @@ async function supabaseInsert(env, table, row) {
 
 function intelligenceCapabilities(env) {
   return {
-    supabase: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+    supabase: Boolean(env.SUPABASE_URL && supabaseKey(env)),
     workersAI: Boolean(env.AI) && env.ENABLE_WORKERS_AI === "true",
     vectorize: Boolean(env.VECTOR_INDEX) && env.ENABLE_VECTORIZE === "true",
     queue: Boolean(env.SIGNAL_QUEUE) && env.ENABLE_QUEUES === "true",
