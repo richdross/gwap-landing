@@ -8,18 +8,20 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
       - name: Checkout isolated branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Check Cloudflare deployment credentials
         id: auth
@@ -33,8 +35,8 @@ jobs:
             echo "Cloudflare preview not deployed: CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID is not configured in GitHub Actions secrets."
           fi
 
-      - name: Upload isolated Worker preview
-        id: deploy
+      - name: Upload public Worker preview
+        id: public_deploy
         if: steps.auth.outputs.ready == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
@@ -42,12 +44,48 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: versions upload --preview-alias gwap-core-v1
 
-      - name: Preview status
+      - name: Upload intelligence Worker preview
+        id: intelligence_deploy
+        if: steps.auth.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: platform/intelligence
+          command: versions upload --preview-alias gwap-intelligence-v1
+
+      - name: Write preview report
         if: always()
         shell: bash
         run: |
-          if [ "${{ steps.auth.outputs.ready }}" = "true" ]; then
-            echo "Preview upload was attempted. Inspect the Wrangler step output for the workers.dev preview URL."
-          else
-            echo "Preview remains isolated and production was not changed."
-          fi
+          {
+            echo "## GWAP Cloudflare Preview Report"
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo "Credential gate: ${{ steps.auth.outputs.ready }}"
+            echo
+            if [ "${{ steps.auth.outputs.ready }}" = "true" ]; then
+              echo "Public Worker upload outcome: ${{ steps.public_deploy.outcome }}"
+              echo "Intelligence Worker upload outcome: ${{ steps.intelligence_deploy.outcome }}"
+              echo
+              echo "Public command output:"
+              echo '```'
+              echo '${{ steps.public_deploy.outputs.command-output }}'
+              echo '```'
+              echo
+              echo "Intelligence command output:"
+              echo '```'
+              echo '${{ steps.intelligence_deploy.outputs.command-output }}'
+              echo '```'
+            else
+              echo "BLOCKED: GitHub Actions does not currently have CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID."
+              echo "Production was not changed."
+            fi
+          } > preview-report.md
+
+      - name: Publish report to PR #1
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh pr comment 1 --body-file preview-report.md
