@@ -1,0 +1,26 @@
+name: Cloudflare Core Verify
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [architecture/cloudflare-core-v1]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify Worker syntax and Wrangler config
+        run: npm run verify
