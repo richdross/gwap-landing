@@ -17,10 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Install dependencies
         run: npm install
 
-      - name: Verify Worker syntax and Wrangler config
+      - name: Verify public Worker syntax and Wrangler config
         run: npm run verify
+
+      - name: Verify intelligence Worker syntax
+        if: ${{ hashFiles('platform/intelligence/src/worker.js') != '' }}
+        run: node --check platform/intelligence/src/worker.js
