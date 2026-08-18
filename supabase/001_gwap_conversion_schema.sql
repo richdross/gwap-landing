@@ -7,7 +7,7 @@ create table if not exists public.gwap_scanner_runs (
   session_id text,
   goal text not null,
   asset text not null,
-  constraint text not null,
+  "constraint" text not null,
   move_key text not null,
   result jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
