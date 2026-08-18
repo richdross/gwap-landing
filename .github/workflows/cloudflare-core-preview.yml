@@ -18,6 +18,8 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 3acc9be3484d883bd49e2f2093560ca1
+      PUBLIC_URL: https://gwapgang-core.richdross.workers.dev
+      INTELLIGENCE_URL: https://gwap-intelligence-v1.richdross.workers.dev
 
     steps:
       - name: Checkout isolated branch
@@ -41,7 +43,7 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Bootstrap public Worker service
+      - name: Deploy public Worker service
         id: public_deploy
         if: steps.auth.outputs.ready == 'true'
         continue-on-error: true
@@ -54,7 +56,7 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Bootstrap intelligence Worker service
+      - name: Deploy intelligence Worker service
         id: intelligence_deploy
         if: steps.auth.outputs.ready == 'true'
         continue-on-error: true
@@ -69,6 +71,59 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Verify live Gate A endpoints
+        id: verify_live
+        if: steps.auth.outputs.ready == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          sleep 3
+          set +e
+          : > live-verification.log
+          failures=0
+
+          check_get() {
+            name="$1"
+            url="$2"
+            body_file="$3"
+            code=$(curl -sS -o "$body_file" -w "%{http_code}" "$url")
+            echo "$name HTTP $code" | tee -a live-verification.log
+            cat "$body_file" | tee -a live-verification.log
+            echo | tee -a live-verification.log
+            if [ "$code" != "200" ]; then failures=$((failures+1)); fi
+          }
+
+          check_get "PUBLIC_ROOT" "$PUBLIC_URL/" public-root.out
+          check_get "PUBLIC_HEALTH" "$PUBLIC_URL/api/health" public-health.out
+          check_get "PUBLIC_CONFIG" "$PUBLIC_URL/api/config" public-config.out
+          check_get "INTELLIGENCE_HEALTH" "$INTELLIGENCE_URL/health" intelligence-health.out
+
+          scanner_code=$(curl -sS -o scanner.out -w "%{http_code}" \
+            -X POST "$PUBLIC_URL/api/scanner" \
+            -H "content-type: application/json" \
+            --data '{"sessionId":"gate-a-verification","answers":{"goal":"money","asset":"tech","constraint":"fast"}}')
+          echo "PUBLIC_SCANNER HTTP $scanner_code" | tee -a live-verification.log
+          cat scanner.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$scanner_code" != "200" ]; then failures=$((failures+1)); fi
+
+          checkout_code=$(curl -sS -o checkout.out -w "%{http_code}" \
+            -X POST "$PUBLIC_URL/api/checkout" \
+            -H "content-type: application/json" \
+            --data '{}')
+          echo "CHECKOUT_GUARD HTTP $checkout_code" | tee -a live-verification.log
+          cat checkout.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$checkout_code" != "503" ]; then failures=$((failures+1)); fi
+
+          if [ "$failures" -eq 0 ]; then
+            echo "gate_a=PASS" >> "$GITHUB_OUTPUT"
+          else
+            echo "gate_a=FAIL" >> "$GITHUB_OUTPUT"
+          fi
+          echo "failures=$failures" >> "$GITHUB_OUTPUT"
+          exit 0
+
       - name: Write preview report
         if: always()
         shell: bash
@@ -78,17 +133,28 @@ jobs:
             echo
             echo "Commit: $GITHUB_SHA"
             echo "Credential gate: ${{ steps.auth.outputs.ready }}"
-            echo "Public exit code: ${{ steps.public_deploy.outputs.exit_code }}"
-            echo "Intelligence exit code: ${{ steps.intelligence_deploy.outputs.exit_code }}"
+            echo "Public deploy exit code: ${{ steps.public_deploy.outputs.exit_code }}"
+            echo "Intelligence deploy exit code: ${{ steps.intelligence_deploy.outputs.exit_code }}"
+            echo "Gate A: ${{ steps.verify_live.outputs.gate_a }}"
+            echo "Verification failures: ${{ steps.verify_live.outputs.failures }}"
             echo
+            echo "Public Worker: $PUBLIC_URL"
+            echo "Intelligence Worker: $INTELLIGENCE_URL"
+            echo
+            if [ -f live-verification.log ]; then
+              echo "### Live endpoint verification"
+              echo '```'
+              cat live-verification.log
+              echo '```'
+            fi
             if [ -f public-deploy.log ]; then
-              echo "### Public Worker log"
+              echo "### Public Worker deploy log"
               echo '```'
               cat public-deploy.log
               echo '```'
             fi
             if [ -f intelligence-deploy.log ]; then
-              echo "### Intelligence Worker log"
+              echo "### Intelligence Worker deploy log"
               echo '```'
               cat intelligence-deploy.log
               echo '```'
