@@ -1,198 +1,102 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="GWAP Gang turns goals, assets and constraints into clearer opportunities and executable Greenprints.">
-<title>GWAP Gang — Intelligence → Execution</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gwap Gang — Build. Ship. Get Paid.</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0d0c;--panel:#111512;--panel2:#151a16;--text:#f4f7f5;--muted:#a7b0aa;
-  --line:#29302b;--green:#7CFF4F;--green2:#b7ff9e;--cream:#e9e6da;--shadow:0 24px 70px rgba(0,0,0,.35)
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #000;
+  color: #00ff88;
+  font-family: 'Orbitron', sans-serif;
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:
-    radial-gradient(circle at 12% 8%,rgba(124,255,79,.12),transparent 25%),
-    radial-gradient(circle at 88% 0%,rgba(255,255,255,.07),transparent 22%),
-    linear-gradient(180deg,#0b0d0c 0%,#0d100e 45%,#090b0a 100%);
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
 }
-a{color:inherit}
-.shell{max-width:1220px;margin:auto;padding:0 22px}
-nav{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08)}
-.brand{font-weight:900;letter-spacing:.12em;font-size:14px}.brand b{color:var(--green)}
-.navright{display:flex;gap:12px;align-items:center}
-.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:9px 12px;border-radius:999px}
-.hero{padding:88px 0 58px;display:grid;grid-template-columns:1.18fr .82fr;gap:42px;align-items:end}
-.eyebrow{color:var(--green);font-size:12px;font-weight:850;letter-spacing:.18em;text-transform:uppercase}
-h1{font-size:clamp(52px,8vw,104px);line-height:.89;letter-spacing:-.055em;margin:18px 0 24px;max-width:920px}
-h1 span{color:var(--cream)}
-.lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:760px}
-.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-.btn{border:1px solid var(--line);padding:14px 18px;border-radius:12px;text-decoration:none;font-weight:850;cursor:pointer;background:transparent;color:var(--text)}
-.btn.primary{background:var(--green);border-color:var(--green);color:#091008}
-.btn:hover{transform:translateY(-1px)}
-.sidecard{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));border-radius:24px;padding:24px;box-shadow:var(--shadow)}
-.sidecard .big{font-size:30px;line-height:1.12;font-weight:800;margin:9px 0 18px}.sidecard p{color:var(--muted);line-height:1.55}
-.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.flow div{border:1px solid var(--line);border-radius:12px;padding:12px 9px;text-align:center;font-size:11px;color:var(--muted)}
-.flow strong{display:block;color:var(--green);font-size:14px;margin-bottom:4px}
-.proof{display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:17px 0;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-.proof i{font-style:normal;color:var(--green)}
-.section{padding:84px 0}.section-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:28px}
-.section h2{font-size:clamp(36px,5vw,68px);letter-spacing:-.045em;line-height:.95;margin:10px 0 0}.section-head p{max-width:520px;color:var(--muted);line-height:1.6}
-.scanner{border:1px solid var(--line);border-radius:28px;overflow:hidden;background:rgba(11,14,12,.76);box-shadow:var(--shadow)}
-.scanner-top{display:flex;justify-content:space-between;gap:18px;padding:18px 22px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}
-.steps{display:flex;gap:8px}.dot{width:8px;height:8px;border-radius:50%;background:#303631}.dot.active{background:var(--green)}
-.scanner-body{padding:clamp(24px,5vw,56px)}
-.question{font-size:clamp(28px,4vw,48px);letter-spacing:-.035em;margin:0 0 26px}
-.options{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.option{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:16px;padding:18px;text-align:left;cursor:pointer;font-size:15px;min-height:82px}
-.option:hover,.option.selected{border-color:rgba(124,255,79,.75);background:#151e16}.option small{display:block;color:var(--muted);margin-top:6px;line-height:1.35}
-.controls{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px}.hint{color:var(--muted);font-size:12px}
-.result{display:none}.result.show{display:block}.result-card{border:1px solid rgba(124,255,79,.35);background:linear-gradient(135deg,rgba(124,255,79,.10),rgba(255,255,255,.015));border-radius:20px;padding:25px}
-.score{font-size:12px;color:var(--green);font-weight:850;letter-spacing:.14em}.move{font-size:clamp(30px,4vw,52px);line-height:1;letter-spacing:-.04em;margin:12px 0 14px}
-.why{color:var(--muted);line-height:1.6;max-width:780px}.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.result-grid div{background:rgba(0,0,0,.18);border:1px solid var(--line);padding:16px;border-radius:14px}.result-grid b{display:block;margin-bottom:7px}.result-grid span{color:var(--muted);font-size:13px;line-height:1.4}
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{border:1px solid var(--line);border-radius:18px;padding:22px;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008))}
-.card .num{color:var(--green);font-size:12px;font-weight:900;letter-spacing:.16em}.card h3{font-size:22px;margin:12px 0 8px}.card p{color:var(--muted);line-height:1.55}
-.final{padding:80px 0 100px}.finalbox{border:1px solid var(--line);border-radius:28px;padding:clamp(28px,6vw,68px);background:linear-gradient(135deg,#131713,#0a0d0b);text-align:center}
-.finalbox h2{font-size:clamp(42px,6vw,78px);margin:12px auto 22px;max-width:850px}.finalbox p{color:var(--muted);max-width:670px;margin:0 auto 26px;line-height:1.6}
-footer{border-top:1px solid var(--line);padding:26px 0 45px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-@media(max-width:900px){.hero{grid-template-columns:1fr}.options,.cards,.result-grid{grid-template-columns:1fr}.section-head{display:block}.flow{grid-template-columns:repeat(2,1fr)}}
+.card {
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+}
+h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+.tagline {
+  color: #ccc;
+  margin-bottom: 30px;
+}
+.hero {
+  font-size: 1.2rem;
+  color: #aaa;
+  margin-bottom: 40px;
+}
+.cta {
+  display: inline-block;
+  background: #00ff88;
+  color: #000;
+  padding: 16px 40px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: 0.2s ease;
+}
+.cta:hover {
+  background: #00cc6a;
+}
+.features {
+  margin-top: 60px;
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.features li {
+  margin: 12px 0;
+  color: #ccc;
+}
+footer {
+  margin-top: 80px;
+  font-size: 0.8rem;
+  color: #555;
+}
 </style>
 </head>
+
 <body>
-<div class="shell">
-<nav>
-  <div class="brand">GWAP <b>GANG</b></div>
-  <div class="navright"><span class="pill">PUBLIC LAB / 2026</span><a class="btn" href="#scanner">RUN SCANNER</a></div>
-</nav>
+<div class="wrap">
+  <div class="card">
+    <h1>Gwap Gang</h1>
+    <div class="tagline">Build. Ship. Get Paid.</div>
 
-<section class="hero">
-  <div>
-    <div class="eyebrow">GWAP GANG / INTELLIGENCE → EXECUTION</div>
-    <h1>Stop prompting.<br><span>Start making moves.</span></h1>
-    <p class="lead">GWAP turns your goals, assets, constraints, and real-world signals into clearer opportunities, executable Greenprints, and systems designed to produce outcomes.</p>
-    <div class="ctas">
-      <a class="btn primary" href="#scanner">SCAN MY OPPORTUNITY</a>
-      <a class="btn" href="#system">SEE THE SYSTEM</a>
+    <div class="hero">
+      Founder-built automation systems that turn digital ideas into income.<br>
+      Stripe-powered. License-gated. Cloud deployed.
     </div>
+
+    <!-- 🔥 REPLACE WITH YOUR STRIPE PAYMENT LINK -->
+    <a class="cta" href="https://buy.stripe.com/YOUR_LINK_HERE" target="_blank">
+      Get Access
+    </a>
+
+    <ul class="features">
+      <li>⚡ Instant license delivery</li>
+      <li>🔒 Payment-gated access</li>
+      <li>☁️ Cloud-hosted backend</li>
+      <li>🧠 Built by a real founder</li>
+    </ul>
+
+    <footer>
+      © 2026 Gwap Gang. All rights reserved.
+    </footer>
   </div>
-  <aside class="sidecard">
-    <div class="eyebrow">THE GWAP LOOP</div>
-    <div class="big">AI should produce outcomes, not more work.</div>
-    <p>Most AI stops at generation. GWAP is being built to move from information to judgment, execution, proof, and learning.</p>
-    <div class="flow">
-      <div><strong>01</strong>SIGNAL</div><div><strong>02</strong>JUDGMENT</div><div><strong>03</strong>EXECUTION</div><div><strong>04</strong>PROOF</div>
-    </div>
-  </aside>
-</section>
-
-<div class="proof"><span><i>●</i> Opportunity intelligence</span><span>•</span><span>Greenprints</span><span>•</span><span>Automation</span><span>•</span><span>Proof-driven systems</span></div>
-
-<section class="section" id="scanner">
-  <div class="section-head">
-    <div><div class="eyebrow">OPPORTUNITY SCANNER / BETA</div><h2>You do not need<br>a better prompt.</h2></div>
-    <p>Give GWAP three things: what you want, what you already have, and what is stopping you. V1 returns a focused direction immediately.</p>
-  </div>
-
-  <div class="scanner">
-    <div class="scanner-top"><span>3 INPUTS → 1 MOVE</span><div class="steps"><i class="dot active"></i><i class="dot"></i><i class="dot"></i></div></div>
-    <div class="scanner-body">
-      <div id="quiz">
-        <div class="question" id="question"></div>
-        <div class="options" id="options"></div>
-        <div class="controls"><span class="hint" id="hint">Choose the closest answer.</span><button class="btn" id="back" style="visibility:hidden">BACK</button></div>
-      </div>
-
-      <div class="result" id="result">
-        <div class="result-card">
-          <div class="score">GWAP FIRST-MOVE SIGNAL</div>
-          <div class="move" id="move"></div>
-          <p class="why" id="why"></p>
-          <div class="result-grid">
-            <div><b>WHY NOW</b><span id="whyNow"></span></div>
-            <div><b>DO NOT DO</b><span id="dont"></span></div>
-            <div><b>WIN CONDITION</b><span id="win"></span></div>
-          </div>
-          <div class="ctas"><button class="btn primary" onclick="document.getElementById('final').scrollIntoView()">BUILD MY GREENPRINT</button><button class="btn" id="restart">RUN AGAIN</button></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="system">
-  <div class="section-head">
-    <div><div class="eyebrow">WHAT GWAP IS BUILDING</div><h2>Generation is cheap.<br>Systems are not.</h2></div>
-    <p>GWAP is focused on layers that are harder to reproduce with a single prompt: owned signals, persistent context, execution, verification, and outcome memory.</p>
-  </div>
-  <div class="cards">
-    <div class="card"><div class="num">01 / SIGNAL</div><h3>Find what matters.</h3><p>Collect evidence from markets, communities, users, products, APIs, and behavior instead of starting from a blank prompt.</p></div>
-    <div class="card"><div class="num">02 / JUDGMENT</div><h3>Choose the move.</h3><p>Rank opportunities against urgency, reachability, assets, constraints, defensibility, and speed to value.</p></div>
-    <div class="card"><div class="num">03 / EXECUTION</div><h3>Turn insight into action.</h3><p>Greenprints and automation convert decisions into specific missions, deliverables, tests, and measurable outcomes.</p></div>
-  </div>
-</section>
-
-<section class="final" id="final">
-  <div class="finalbox">
-    <div class="eyebrow">GWAP GREENPRINT</div>
-    <h2>Your next move should not end as another idea.</h2>
-    <p>GWAP is being built for creators, entrepreneurs, operators, and builders who want intelligence connected to execution. Public beta access is opening through this front door.</p>
-    <a class="btn primary" href="#scanner">RUN THE OPPORTUNITY SCANNER</a>
-  </div>
-</section>
-
-<footer><span>© 2026 GWAP GANG. BUILD IN PUBLIC.</span><span>SIGNAL → JUDGMENT → EXECUTION → PROOF</span></footer>
 </div>
-
-<script>
-const questions=[
- {key:"goal",q:"What are you trying to do right now?",opts:[
-  ["money","Make money","Generate revenue as quickly as possible."],["customers","Get customers","Turn attention into qualified buyers."],["build","Build something","Choose and ship the right product."],
-  ["automate","Automate work","Remove repetitive founder labor."],["audience","Grow an audience","Build owned distribution."],["clarity","Figure out my next move","Reduce options and choose."]
- ]},
- {key:"asset",q:"What is your strongest asset today?",opts:[
-  ["skills","Skills","You can already deliver a useful outcome."],["business","Existing business","You have an operating base to improve."],["audience","Audience","You already have attention or reach."],
-  ["site","Website / product","Something exists that can be sold or improved."],["customers","Customers","You have real behavior and feedback."],["tech","Automation / technical ability","You can build systems quickly."],
-  ["scratch","Starting from scratch","No major asset yet — simplicity matters."]
- ]},
- {key:"constraint",q:"What is the main thing blocking you?",opts:[
-  ["fast","Need money quickly","Speed matters more than scale right now."],["audience","No audience","Distribution is the bottleneck."],["money","Little money to invest","The move must be capital-light."],
-  ["time","Limited time","The move needs leverage and reuse."],["offer","Don’t know what to sell","Offer clarity comes first."],["ideas","Too many ideas","Selection is the bottleneck."],
-  ["customers","Need customers","Acquisition matters more than building."]
- ]}
-];
-let step=0, answers={};
-const q=document.getElementById("question"),opts=document.getElementById("options"),dots=[...document.querySelectorAll(".dot")],back=document.getElementById("back"),quiz=document.getElementById("quiz"),result=document.getElementById("result");
-function render(){
- q.textContent=questions[step].q; opts.innerHTML="";
- dots.forEach((d,i)=>d.classList.toggle("active",i===step));
- questions[step].opts.forEach(([v,t,s])=>{
-  const b=document.createElement("button"); b.className="option"; b.innerHTML=`<strong>${t}</strong><small>${s}</small>`;
-  b.onclick=()=>{answers[questions[step].key]=v;if(step<2){step++;render()}else{showResult()}};
-  opts.appendChild(b)
- });
- back.style.visibility=step?"visible":"hidden";
-}
-function showResult(){
- quiz.style.display="none";result.classList.add("show");
- let move="Productize one painful outcome and sell it before expanding the system.";
- let why="Your answers suggest the highest-value move is narrowing the problem, packaging a concrete result, and testing demand before adding more infrastructure.";
- let now="A real buyer gives better data than another planning cycle.";
- let dont="Do not build a broad platform or add tools before the offer earns attention.";
- let win="One clear offer, one live page, and the first qualified customer action.";
- if(answers.constraint==="customers"||answers.goal==="customers"){move="Turn your strongest existing asset into one specific customer-acquisition offer.";why="Your bottleneck is distribution, not invention. The fastest learning comes from putting one concrete outcome in front of reachable buyers.";now="Existing assets can become proof and a reason to start conversations.";dont="Do not disappear into another product rebuild.";win="10 qualified conversations and at least one paid or strongly validated next step."}
- if(answers.constraint==="ideas"||answers.goal==="clarity"){move="Kill the option stack: choose one offer using pain × reachability × speed to revenue.";why="Your constraint is selection. More ideas increase drag. A scored decision and a short market test will create more intelligence than another brainstorm.";now="Decision latency is costing more than imperfect execution.";dont="Do not start a second project until the first receives market evidence.";win="One selected offer and one public demand test."}
- if(answers.goal==="automate"){move="Automate one repeated workflow that directly affects revenue, delivery, or customer response time.";why="Automation pays when it removes recurring work tied to a measurable business outcome—not when it merely adds another technical system.";now="A narrow workflow can prove leverage quickly.";dont="Do not automate a process that has not been proven manually.";win="A verified workflow that saves time or increases throughput every week."}
- if(answers.asset==="audience"){move="Sell a small, specific outcome to the audience you already own before building a larger product.";why="Distribution is usually the expensive part. You already have it, so the fastest test is a focused offer with a clear transformation.";now="Existing attention can produce revenue and product evidence immediately.";dont="Do not hide behind a long build cycle.";win="First purchases, deposits, or qualified hand-raises from the current audience."}
- if(answers.asset==="tech" && answers.goal==="money"){move="Productize a narrow automation service with a fixed outcome and fixed scope.";why="Technical ability is monetizable fastest when buyers can understand the result without understanding the machinery.";now="You can deliver before building a full SaaS product.";dont="Do not lead with AI features or architecture.";win="One buyer pays for a clearly defined automated outcome."}
- document.getElementById("move").textContent=move;document.getElementById("why").textContent=why;document.getElementById("whyNow").textContent=now;document.getElementById("dont").textContent=dont;document.getElementById("win").textContent=win;
-}
-back.onclick=()=>{if(step>0){step--;render()}};
-document.getElementById("restart").onclick=()=>{answers={};step=0;result.classList.remove("show");quiz.style.display="block";render()};
-render();
-</script>
 </body>
 </html>
