@@ -18,6 +18,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 3acc9be3484d883bd49e2f2093560ca1
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       PUBLIC_URL: https://gwapgang-core.richdross.workers.dev
       INTELLIGENCE_URL: https://gwap-intelligence-v1.richdross.workers.dev
 
@@ -33,19 +34,52 @@ jobs:
       - name: Install Wrangler
         run: npm install
 
-      - name: Check Cloudflare deployment credentials
+      - name: Check deployment credentials
         id: auth
         shell: bash
         run: |
           if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "cloudflare_ready=true" >> "$GITHUB_OUTPUT"
           else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "cloudflare_ready=false" >> "$GITHUB_OUTPUT"
           fi
+          if [ -n "$SUPABASE_SECRET_KEY" ]; then
+            echo "supabase_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "supabase_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Supabase secret on public Worker
+        id: public_secret
+        if: steps.auth.outputs.cloudflare_ready == 'true' && steps.auth.outputs.supabase_ready == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          printf '%s' "$SUPABASE_SECRET_KEY" | npx wrangler secret put SUPABASE_SECRET_KEY > public-secret.log 2>&1
+          code=$?
+          cat public-secret.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Install Supabase secret on intelligence Worker
+        id: intelligence_secret
+        if: steps.auth.outputs.cloudflare_ready == 'true' && steps.auth.outputs.supabase_ready == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          cd platform/intelligence
+          printf '%s' "$SUPABASE_SECRET_KEY" | npx --yes wrangler@4 secret put SUPABASE_SECRET_KEY > ../../intelligence-secret.log 2>&1
+          code=$?
+          cd ../..
+          cat intelligence-secret.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Deploy public Worker service
         id: public_deploy
-        if: steps.auth.outputs.ready == 'true'
+        if: steps.auth.outputs.cloudflare_ready == 'true'
         continue-on-error: true
         shell: bash
         run: |
@@ -58,7 +92,7 @@ jobs:
 
       - name: Deploy intelligence Worker service
         id: intelligence_deploy
-        if: steps.auth.outputs.ready == 'true'
+        if: steps.auth.outputs.cloudflare_ready == 'true'
         continue-on-error: true
         shell: bash
         run: |
@@ -71,13 +105,13 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Verify live Gate A endpoints
+      - name: Verify live Gate B endpoints and persistence
         id: verify_live
-        if: steps.auth.outputs.ready == 'true'
+        if: steps.auth.outputs.cloudflare_ready == 'true'
         continue-on-error: true
         shell: bash
         run: |
-          sleep 3
+          sleep 4
           set +e
           : > live-verification.log
           failures=0
@@ -98,14 +132,36 @@ jobs:
           check_get "PUBLIC_CONFIG" "$PUBLIC_URL/api/config" public-config.out
           check_get "INTELLIGENCE_HEALTH" "$INTELLIGENCE_URL/health" intelligence-health.out
 
+          if ! grep -q '"supabaseEvents": true' public-config.out; then
+            echo "PUBLIC_CONFIG Supabase binding missing" | tee -a live-verification.log
+            failures=$((failures+1))
+          fi
+          if ! grep -q '"supabase": true' intelligence-health.out; then
+            echo "INTELLIGENCE_HEALTH Supabase binding missing" | tee -a live-verification.log
+            failures=$((failures+1))
+          fi
+
           scanner_code=$(curl -sS -o scanner.out -w "%{http_code}" \
             -X POST "$PUBLIC_URL/api/scanner" \
             -H "content-type: application/json" \
-            --data '{"sessionId":"gate-a-verification","answers":{"goal":"money","asset":"tech","constraint":"fast"}}')
+            --data '{"sessionId":"gate-b-verification","answers":{"goal":"money","asset":"tech","constraint":"fast"}}')
           echo "PUBLIC_SCANNER HTTP $scanner_code" | tee -a live-verification.log
           cat scanner.out | tee -a live-verification.log
           echo | tee -a live-verification.log
           if [ "$scanner_code" != "200" ]; then failures=$((failures+1)); fi
+
+          signal_code=$(curl -sS -o signal.out -w "%{http_code}" \
+            -X POST "$INTELLIGENCE_URL/signals" \
+            -H "content-type: application/json" \
+            --data "{\"sourceType\":\"gate-b-proof\",\"sourceRef\":\"github-actions-${GITHUB_SHA}\",\"title\":\"GWAP first persisted intelligence signal\",\"body\":\"End-to-end Cloudflare Worker to Supabase persistence proof.\",\"normalized\":{\"proof\":true,\"commit\":\"${GITHUB_SHA}\"}}")
+          echo "INTELLIGENCE_SIGNAL HTTP $signal_code" | tee -a live-verification.log
+          cat signal.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$signal_code" != "202" ]; then failures=$((failures+1)); fi
+          if ! grep -q '"storage": "stored"' signal.out; then
+            echo "INTELLIGENCE_SIGNAL was not persisted" | tee -a live-verification.log
+            failures=$((failures+1))
+          fi
 
           checkout_code=$(curl -sS -o checkout.out -w "%{http_code}" \
             -X POST "$PUBLIC_URL/api/checkout" \
@@ -116,10 +172,20 @@ jobs:
           echo | tee -a live-verification.log
           if [ "$checkout_code" != "503" ]; then failures=$((failures+1)); fi
 
+          judge_code=$(curl -sS -o judge.out -w "%{http_code}" \
+            -X POST "$INTELLIGENCE_URL/judge" \
+            -H "content-type: application/json" \
+            --data '{"signal":"proof"}')
+          echo "AI_ZERO_COST_GUARD HTTP $judge_code" | tee -a live-verification.log
+          cat judge.out | tee -a live-verification.log
+          echo | tee -a live-verification.log
+          if [ "$judge_code" != "503" ]; then failures=$((failures+1)); fi
+          if ! grep -q 'ai_disabled_zero_cost_guardrail' judge.out; then failures=$((failures+1)); fi
+
           if [ "$failures" -eq 0 ]; then
-            echo "gate_a=PASS" >> "$GITHUB_OUTPUT"
+            echo "gate_b=PASS" >> "$GITHUB_OUTPUT"
           else
-            echo "gate_a=FAIL" >> "$GITHUB_OUTPUT"
+            echo "gate_b=FAIL" >> "$GITHUB_OUTPUT"
           fi
           echo "failures=$failures" >> "$GITHUB_OUTPUT"
           exit 0
@@ -129,22 +195,37 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## GWAP Cloudflare Preview Report"
+            echo "## GWAP Cloudflare + Supabase Proof Report"
             echo
             echo "Commit: $GITHUB_SHA"
-            echo "Credential gate: ${{ steps.auth.outputs.ready }}"
+            echo "Cloudflare credential gate: ${{ steps.auth.outputs.cloudflare_ready }}"
+            echo "Supabase credential gate: ${{ steps.auth.outputs.supabase_ready }}"
+            echo "Public secret install exit code: ${{ steps.public_secret.outputs.exit_code }}"
+            echo "Intelligence secret install exit code: ${{ steps.intelligence_secret.outputs.exit_code }}"
             echo "Public deploy exit code: ${{ steps.public_deploy.outputs.exit_code }}"
             echo "Intelligence deploy exit code: ${{ steps.intelligence_deploy.outputs.exit_code }}"
-            echo "Gate A: ${{ steps.verify_live.outputs.gate_a }}"
+            echo "Gate B: ${{ steps.verify_live.outputs.gate_b }}"
             echo "Verification failures: ${{ steps.verify_live.outputs.failures }}"
             echo
             echo "Public Worker: $PUBLIC_URL"
             echo "Intelligence Worker: $INTELLIGENCE_URL"
             echo
             if [ -f live-verification.log ]; then
-              echo "### Live endpoint verification"
+              echo "### Live endpoint + persistence verification"
               echo '```'
               cat live-verification.log
+              echo '```'
+            fi
+            if [ -f public-secret.log ]; then
+              echo "### Public Worker secret install"
+              echo '```'
+              cat public-secret.log
+              echo '```'
+            fi
+            if [ -f intelligence-secret.log ]; then
+              echo "### Intelligence Worker secret install"
+              echo '```'
+              cat intelligence-secret.log
               echo '```'
             fi
             if [ -f public-deploy.log ]; then
@@ -159,11 +240,14 @@ jobs:
               cat intelligence-deploy.log
               echo '```'
             fi
-            if [ "${{ steps.auth.outputs.ready }}" != "true" ]; then
-              echo "BLOCKED: GitHub Actions does not currently have CLOUDFLARE_API_TOKEN."
+            if [ "${{ steps.auth.outputs.cloudflare_ready }}" != "true" ]; then
+              echo "BLOCKED: CLOUDFLARE_API_TOKEN is missing."
+            fi
+            if [ "${{ steps.auth.outputs.supabase_ready }}" != "true" ]; then
+              echo "BLOCKED: SUPABASE_SECRET_KEY is missing."
             fi
             echo
-            echo "Production routes were not changed; these are isolated workers.dev services only."
+            echo "Production routes were not changed; verification ran only against isolated workers.dev services."
           } > preview-report.md
 
       - name: Publish report to PR #1
