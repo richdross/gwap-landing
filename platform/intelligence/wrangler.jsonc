@@ -1,0 +1,16 @@
+{
+  "name": "gwap-intelligence-v1",
+  "main": "./src/worker.js",
+  "compatibility_date": "2026-08-18",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "ENABLE_WORKERS_AI": "false",
+    "ENABLE_VECTORIZE": "false",
+    "ENABLE_QUEUES": "false",
+    "ENABLE_WORKFLOWS": "false",
+    "ENABLE_BROWSER_RUN": "false",
+    "ENABLE_AGENTS": "false"
+  }
+}
