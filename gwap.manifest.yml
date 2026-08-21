@@ -1,0 +1,34 @@
+schema_version: "0.1"
+
+gwap:
+  id: landing
+  name: GWAP Landing
+  lifecycle: candidate
+  owner: gwap
+
+planes:
+  - execution
+
+capabilities:
+  - id: public.frontdoor
+    version: "1"
+  - id: opportunity.scan
+    version: "1"
+
+interfaces:
+  github:
+    workflows: []
+
+dependencies:
+  services:
+    - cloudflare
+  capabilities: []
+
+verification:
+  required: true
+
+permissions:
+  registry:
+    discover: true
+  execution:
+    allowed: false
