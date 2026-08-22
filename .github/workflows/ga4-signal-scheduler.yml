@@ -1,0 +1,73 @@
+name: GWAP GA4 Signal Scheduler
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gwap-ga4-signal-scheduler
+  cancel-in-progress: false
+
+jobs:
+  collect-ga4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GA4_PROPERTY_ID: '550617706'
+      GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+      INTELLIGENCE_URL: https://gwap-intelligence-v1.richdross.workers.dev
+
+    steps:
+      - name: Checkout isolated collector branch
+        uses: actions/checkout@v4
+        with:
+          ref: architecture/cloudflare-core-v1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Derive protected ingest key
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN is missing"
+            exit 2
+          fi
+          key=$(printf 'gwap-signal-ingest-v1:%s' "$CLOUDFLARE_API_TOKEN" | sha256sum | awk '{print $1}')
+          echo "SIGNAL_INGEST_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Check GA4 credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$GA4_SERVICE_ACCOUNT_JSON" ]; then
+            echo "GA4_SERVICE_ACCOUNT_JSON is missing"
+            exit 2
+          fi
+
+      - name: Collect GA4 behavior into GWAP
+        shell: bash
+        run: |
+          set -euo pipefail
+          node platform/intelligence/scripts/ga4-collector.mjs | tee ga4-result.json
+
+      - name: Upload GA4 proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga4-signal-proof-${{ github.run_id }}
+          path: ga4-result.json
+          if-no-files-found: warn
+          retention-days: 7
+
+# Scheduler intentionally lives on main so GitHub cron can trigger it.
+# Runtime code is checked out from architecture/cloudflare-core-v1.
+# This workflow does not deploy or modify production routes.
