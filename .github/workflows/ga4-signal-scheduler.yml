@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '23 * * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ga4-signal-scheduler.yml'
 
 permissions:
   contents: read
