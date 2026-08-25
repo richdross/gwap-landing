@@ -1,4 +1,4 @@
-schema_version: "0.1"
+schema_version: "0.2"
 
 gwap:
   id: landing
@@ -7,13 +7,110 @@ gwap:
   owner: gwap
 
 planes:
+  - intelligence
   - execution
 
 capabilities:
   - id: public.frontdoor
     version: "1"
+    description: Presents the public GWAP landing experience and a visitor-facing access call to action.
+    category: execution
+    actions:
+      - serve
+    inputs:
+      - name: http.request
+        type: request
+        required: true
+        description: Browser request for the root landing page.
+    outputs:
+      - name: landing.page
+        type: artifact
+        description: Static HTML public landing experience with an access call to action.
+    routing:
+      intents:
+        - view.public.frontdoor
+        - request.gwap.access
+      use_when: A visitor needs the repository-defined public landing page.
+      avoid_when: >-
+        Do not treat the placeholder checkout URL as a functional conversion path or claim a deployed public URL without separate external verification.
+    implementation:
+      status: implemented
+      paths:
+        - index.html
+    interfaces:
+      - type: web
+        locator: /
+        method: GET
+        implementation_path: index.html
+    dependencies:
+      services:
+        - cloudflare
+      capabilities: []
+    verification:
+      status: unverified
+      evidence: []
+    readiness:
+      status: candidate
+      confidence: low
+    cost:
+      class: existing-service
+      notes: The static page uses the existing hosting and domain service when deployed.
+    risk:
+      level: medium
+      effects:
+        - publish
+      approval: before-execute
+    provenance:
+      origin: gwap-native
+      license: unknown
+
   - id: opportunity.scan
     version: "1"
+    description: Declares the intended ability to accept visitor input and return an evaluated GWAP opportunity result.
+    category: intelligence
+    actions:
+      - analyze
+      - decide
+    inputs:
+      - name: visitor.context
+        type: object
+        required: true
+        description: Intended visitor-provided context for opportunity evaluation.
+    outputs:
+      - name: opportunity.result
+        type: object
+        description: Intended evaluated opportunity result and supporting judgment.
+    routing:
+      intents:
+        - scan.opportunity
+        - evaluate.business.idea
+      use_when: Use only for discovery of the declared future capability until an implementation exists.
+      avoid_when: >-
+        Do not route runtime requests because no Opportunity Scanner implementation or interface exists on the scanned ref, and do not invent an implementation path or claim scanner output.
+    implementation:
+      status: declared
+      paths: []
+    interfaces: []
+    dependencies:
+      services: []
+      capabilities: []
+    verification:
+      status: unverified
+      evidence: []
+    readiness:
+      status: experimental
+      confidence: low
+    cost:
+      class: unknown
+      notes: No implementation exists from which runtime or service cost can be determined.
+    risk:
+      level: low
+      effects:
+        - user-data
+      approval: none
+    provenance:
+      origin: gwap-native
+      license: unknown
 
 interfaces:
   github:
