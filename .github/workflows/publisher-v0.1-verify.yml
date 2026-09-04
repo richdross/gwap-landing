@@ -1,0 +1,47 @@
+name: GWAP Publisher V0.1 Verify
+
+on:
+  pull_request:
+    paths:
+      - '.eleventy.js'
+      - '.pages.yml'
+      - 'package.json'
+      - '_includes/**'
+      - 'blog/**'
+      - 'content/blog/**'
+      - 'public/images/blog/**'
+      - '.github/workflows/publisher-v0.1-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Eleventy
+        run: npm install --no-audit --no-fund
+
+      - name: Build site
+        run: npm run build
+
+      - name: Verify publishing outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f _site/index.html
+          test -f _site/blog/index.html
+          test -d _site/images/blog
+          grep -q 'Gwap Gang — Build. Ship. Get Paid.' _site/index.html
+          grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
+          echo 'GWAP Publisher V0.1 build verification PASS'
