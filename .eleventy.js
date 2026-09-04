@@ -1,6 +1,6 @@
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("index.html");
-  eleventyConfig.addPassthroughCopy("public");
+  eleventyConfig.addPassthroughCopy({ "public": "/" });
 
   eleventyConfig.addFilter("readableDate", (date) => {
     return new Intl.DateTimeFormat("en-US", {
