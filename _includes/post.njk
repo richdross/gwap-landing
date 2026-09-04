@@ -6,6 +6,47 @@
   <title>{{ title }} — GWAP Gang</title>
   <meta name="description" content="{{ description }}">
   <link rel="canonical" href="https://gwapgang.com{{ page.url }}">
+  <link rel="alternate" type="application/rss+xml" title="GWAP Intelligence RSS" href="https://gwapgang.com/feed.xml">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="GWAP Gang">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ description }}">
+  <meta property="og:url" content="https://gwapgang.com{{ page.url }}">
+  {% if image %}<meta property="og:image" content="https://gwapgang.com{{ image }}">{% endif %}
+  <meta property="article:published_time" content="{{ date | isoDate }}">
+  <meta property="article:author" content="{{ author }}">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }}">
+  <meta name="twitter:description" content="{{ description }}">
+  {% if image %}<meta name="twitter:image" content="https://gwapgang.com{{ image }}">{% endif %}
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ title | json | safe }},
+    "description": {{ description | json | safe }},
+    "datePublished": {{ date | isoDate | json | safe }},
+    "dateModified": {{ date | isoDate | json | safe }},
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://gwapgang.com{{ page.url }}"
+    },
+    "author": {
+      "@type": "Person",
+      "name": {{ author | json | safe }}
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "GWAP Gang",
+      "url": "https://gwapgang.com/"
+    }{% if image %},
+    "image": ["https://gwapgang.com{{ image }}"]{% endif %}
+  }
+  </script>
+
   <style>
     :root {
       color-scheme: dark;
