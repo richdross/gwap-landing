@@ -7,7 +7,7 @@ description: AI can copy the recipe, but it still can’t give you the sauce. A
   GWAP Gang perspective on why originality, lived experience, and real creative
   judgment still matter in the age of AI.
 ---
-### Welcome to GWAP Gang  a movement for people who intend to use the future without disappearing inside of it.
+### Welcome to GWAP Gang a movement for people who intend to use the future without disappearing inside of it.
 
 Something strange is happening on the internet.
 
