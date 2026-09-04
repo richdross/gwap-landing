@@ -9,6 +9,20 @@ module.exports = function (eleventyConfig) {
     }).format(date);
   });
 
+  eleventyConfig.addFilter("isoDate", (date) => {
+    return new Date(date).toISOString();
+  });
+
+  eleventyConfig.addFilter("isoDateOnly", (date) => {
+    return new Date(date).toISOString().slice(0, 10);
+  });
+
+  eleventyConfig.addFilter("rfc822Date", (date) => {
+    return new Date(date).toUTCString();
+  });
+
+  eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+
   return {
     dir: {
       input: ".",
