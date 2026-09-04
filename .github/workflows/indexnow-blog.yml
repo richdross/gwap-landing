@@ -1,0 +1,75 @@
+name: GWAP Blog IndexNow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/blog/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Build changed blog URL list
+        id: urls
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_SHA="${{ github.event.before }}"
+          HEAD_SHA="${{ github.sha }}"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            mapfile -t FILES < <(find content/blog -maxdepth 1 -type f -name '*.md' -printf '%f\n' | sort)
+          else
+            mapfile -t FILES < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'content/blog/*.md' | xargs -r -n1 basename | sort -u)
+          fi
+
+          URLS='["https://gwapgang.com/blog/"]'
+          for file in "${FILES[@]:-}"; do
+            [[ -z "$file" ]] && continue
+            slug="${file%.md}"
+            URLS=$(jq --arg url "https://gwapgang.com/blog/${slug}/" '. + [$url] | unique' <<<"$URLS")
+          done
+
+          echo "url_list=$(jq -c . <<<"$URLS")" >> "$GITHUB_OUTPUT"
+          echo "Submitting: $URLS"
+
+      - name: Wait for Cloudflare deployment window
+        run: sleep 45
+
+      - name: Submit changed URLs to IndexNow
+        env:
+          URL_LIST: ${{ steps.urls.outputs.url_list }}
+          INDEXNOW_KEY: d8652ae7f4c724dd81741d30ff0441a5
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg host "gwapgang.com" \
+            --arg key "$INDEXNOW_KEY" \
+            --arg keyLocation "https://gwapgang.com/${INDEXNOW_KEY}.txt" \
+            --argjson urlList "$URL_LIST" \
+            '{host:$host,key:$key,keyLocation:$keyLocation,urlList:$urlList}' > indexnow-payload.json
+
+          http_code=$(curl -sS -o indexnow-response.txt -w '%{http_code}' \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary @indexnow-payload.json \
+            https://api.indexnow.org/indexnow)
+
+          cat indexnow-response.txt || true
+          echo "IndexNow HTTP $http_code"
+
+          case "$http_code" in
+            200|202) exit 0 ;;
+            *) exit 1 ;;
+          esac

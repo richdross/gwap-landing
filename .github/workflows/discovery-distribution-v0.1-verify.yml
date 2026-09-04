@@ -1,0 +1,60 @@
+name: GWAP Discovery Distribution V0.1 Verify
+
+on:
+  pull_request:
+    paths:
+      - '.eleventy.js'
+      - '_includes/post.njk'
+      - 'sitemap.njk'
+      - 'feed.njk'
+      - 'public/robots.txt'
+      - 'public/d8652ae7f4c724dd81741d30ff0441a5.txt'
+      - '.github/workflows/indexnow-blog.yml'
+      - '.github/workflows/discovery-distribution-v0.1-verify.yml'
+      - 'content/blog/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build site
+        run: npm run build
+
+      - name: Verify discovery outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARTICLE='_site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html'
+
+          test -f _site/sitemap.xml
+          test -f _site/feed.xml
+          test -f _site/robots.txt
+          test -f _site/d8652ae7f4c724dd81741d30ff0441a5.txt
+          test -f "$ARTICLE"
+
+          grep -q 'https://gwapgang.com/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/' _site/sitemap.xml
+          grep -q 'https://gwapgang.com/sitemap.xml' _site/robots.txt
+          grep -q 'GWAP Intelligence' _site/feed.xml
+          grep -q 'application/ld+json' "$ARTICLE"
+          grep -q 'property="og:type" content="article"' "$ARTICLE"
+          grep -q 'name="twitter:card" content="summary_large_image"' "$ARTICLE"
+          grep -q 'rel="alternate" type="application/rss+xml"' "$ARTICLE"
+          grep -q '^d8652ae7f4c724dd81741d30ff0441a5$' _site/d8652ae7f4c724dd81741d30ff0441a5.txt
+
+          echo 'GWAP Discovery & Distribution V0.1 verification PASS'

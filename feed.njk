@@ -1,0 +1,22 @@
+---
+permalink: /feed.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>GWAP Intelligence</title>
+    <link>https://gwapgang.com/blog/</link>
+    <description>Build logs, money systems, AI field notes and founder lessons from GWAP Gang.</description>
+    <language>en-us</language>
+    {% for post in collections.posts | reverse %}
+    <item>
+      <title>{{ post.data.title }}</title>
+      <link>https://gwapgang.com{{ post.url }}</link>
+      <guid isPermaLink="true">https://gwapgang.com{{ post.url }}</guid>
+      <pubDate>{{ post.date | rfc822Date }}</pubDate>
+      <description>{{ post.data.description }}</description>
+    </item>
+    {% endfor %}
+  </channel>
+</rss>
