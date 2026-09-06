@@ -1,0 +1,8 @@
+# GWAP Gang crawler baseline
+# Cloudflare Bot Preference Sync may prepend managed AI-specific directives.
+# Keep the site generally crawlable for search/discovery.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://gwapgang.com/sitemap.xml
