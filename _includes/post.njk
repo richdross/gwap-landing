@@ -36,7 +36,14 @@
     },
     "author": {
       "@type": "Person",
-      "name": {{ author | json | safe }}
+      "name": {{ author | json | safe }},
+      "url": "https://gwapgang.com{{ authorUrl }}",
+      "jobTitle": {{ authorRole | json | safe }},
+      "worksFor": {
+        "@type": "Organization",
+        "name": "GWAP Gang",
+        "url": "https://gwapgang.com/"
+      }
     },
     "publisher": {
       "@type": "Organization",
@@ -99,6 +106,9 @@
       font-size:.95rem;
     }
     .meta strong { color:var(--text); font-weight:700; }
+    .meta .author-link { color:var(--text); text-decoration:none; font-weight:700; }
+    .meta .author-link:hover { color:var(--accent); }
+    .author-role { color:var(--muted); }
     .dot { color:var(--line); }
     .hero-wrap { margin:0 0 54px; }
     .hero {
@@ -165,7 +175,11 @@
       <div class="eyebrow">GWAP Intelligence</div>
       <h1>{{ title }}</h1>
       {% if description %}<p class="dek">{{ description }}</p>{% endif %}
-      <div class="meta"><strong>{{ author }}</strong><span class="dot">•</span><span>{{ date | readableDate }}</span></div>
+      <div class="meta">
+        <a class="author-link" href="{{ authorUrl }}">{{ author }}</a>
+        {% if authorRole %}<span class="author-role">{{ authorRole }}</span>{% endif %}
+        <span class="dot">•</span><span>{{ date | readableDate }}</span>
+      </div>
       {% if image %}<div class="hero-wrap"><img class="hero" src="{{ image }}" alt="{{ title }}"></div>{% endif %}
       <div class="reading-shell"><div class="body">{{ content | safe }}</div></div>
       <div class="post-end"><a class="back" href="/blog/">← Back to GWAP Blog</a></div>

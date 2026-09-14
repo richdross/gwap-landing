@@ -1,5 +1,8 @@
 {
   "layout": "post.njk",
   "permalink": "/blog/{{ page.fileSlug }}/index.html",
-  "tags": ["posts"]
+  "tags": ["posts"],
+  "author": "Rich Ross",
+  "authorRole": "Founder, GWAP Gang",
+  "authorUrl": "/author/rich-ross/"
 }
