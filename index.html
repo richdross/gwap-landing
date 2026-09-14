@@ -1,103 +1,518 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="msvalidate.01" content="3B096CD996556C4E9074EE0F67D11A61" />
-<title>Gwap Gang — Build. Ship. Get Paid.</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #000;
-  color: #00ff88;
-  font-family: 'Orbitron', sans-serif;
-}
-.wrap {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-}
-.card {
-  max-width: 900px;
-  width: 100%;
-  text-align: center;
-}
-h1 {
-  font-size: 3rem;
-  margin-bottom: 10px;
-}
-.tagline {
-  color: #ccc;
-  margin-bottom: 30px;
-}
-.hero {
-  font-size: 1.2rem;
-  color: #aaa;
-  margin-bottom: 40px;
-}
-.cta {
-  display: inline-block;
-  background: #00ff88;
-  color: #000;
-  padding: 16px 40px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 1.1rem;
-  transition: 0.2s ease;
-}
-.cta:hover {
-  background: #00cc6a;
-}
-.features {
-  margin-top: 60px;
-  text-align: left;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.features li {
-  margin: 12px 0;
-  color: #ccc;
-}
-footer {
-  margin-top: 80px;
-  font-size: 0.8rem;
-  color: #555;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="msvalidate.01" content="3B096CD996556C4E9074EE0F67D11A61" />
+  <title>GWAP Gang — AI Business Intelligence & Automation</title>
+  <meta name="description" content="GWAP Gang turns business questions into practical intelligence, automation opportunities, and prioritized next moves. Get the $49 AI Business Intelligence Report pilot." />
+  <meta name="theme-color" content="#050706" />
+  <meta property="og:title" content="GWAP Gang — Build Smarter. Move Faster." />
+  <meta property="og:description" content="Practical AI business intelligence for founders and small businesses. Find competitor gaps, revenue opportunities, automation wins, and your next 30-day moves." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://gwapgang.com/" />
+  <link rel="canonical" href="https://gwapgang.com/" />
+  <style>
+    :root {
+      --bg: #050706;
+      --panel: #0b100d;
+      --panel-2: #0f1511;
+      --line: rgba(178, 255, 41, 0.17);
+      --text: #f3f7f4;
+      --muted: #9aa69f;
+      --green: #77ff44;
+      --lime: #c6ff2e;
+      --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 80% -10%, rgba(119,255,68,.11), transparent 28rem),
+        radial-gradient(circle at 0% 35%, rgba(198,255,46,.06), transparent 23rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; }
+    .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: rgba(5, 7, 6, .78);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      font-size: 1.05rem;
+    }
+    .brand-mark {
+      width: 29px;
+      height: 29px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #081006;
+      background: linear-gradient(135deg, var(--green), var(--lime));
+      box-shadow: 0 0 30px rgba(119,255,68,.23);
+      font-size: .78rem;
+      font-weight: 1000;
+    }
+    .nav-links { display: flex; align-items: center; gap: 23px; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: .92rem;
+      font-weight: 700;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta, .btn-primary, .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-weight: 850;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .nav-cta {
+      min-height: 42px;
+      padding: 0 17px;
+      border-radius: 11px;
+      color: #091008 !important;
+      background: var(--lime);
+    }
+    .nav-cta:hover, .btn-primary:hover, .btn-secondary:hover { transform: translateY(-2px); }
+
+    .hero {
+      padding: 96px 0 70px;
+      display: grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      color: var(--lime);
+      font: 800 .78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 18px rgba(119,255,68,.75);
+    }
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(3rem, 7vw, 6.25rem);
+      line-height: .98;
+      letter-spacing: -.065em;
+    }
+    .gradient-text {
+      color: transparent;
+      background: linear-gradient(90deg, #fff 0%, #dfffab 42%, var(--green) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .hero-copy {
+      max-width: 690px;
+      margin: 26px 0 0;
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      color: #b2bdb6;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    .btn-primary, .btn-secondary { min-height: 54px; padding: 0 24px; border-radius: 13px; }
+    .btn-primary { color: #071006; background: linear-gradient(135deg, var(--lime), var(--green)); }
+    .btn-secondary { color: var(--text); border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.035); }
+    .micro {
+      margin-top: 14px;
+      color: #78847d;
+      font-size: .83rem;
+    }
+
+    .offer-card {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(15,22,17,.96), rgba(8,12,10,.96));
+      box-shadow: var(--shadow);
+    }
+    .offer-card::after {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      right: -110px;
+      top: -130px;
+      border-radius: 50%;
+      background: rgba(119,255,68,.12);
+      filter: blur(14px);
+    }
+    .pilot {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      padding: 6px 10px;
+      border: 1px solid rgba(198,255,46,.2);
+      border-radius: 999px;
+      color: var(--lime);
+      background: rgba(198,255,46,.05);
+      font: 800 .72rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .offer-card h2 { position: relative; z-index: 1; margin: 19px 0 7px; font-size: 1.65rem; line-height: 1.15; letter-spacing: -.035em; }
+    .price { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 8px; margin: 5px 0 20px; }
+    .price strong { font-size: 3.2rem; line-height: 1; letter-spacing: -.06em; }
+    .price span { color: var(--muted); font-size: .88rem; }
+    .offer-list { position: relative; z-index: 1; list-style: none; padding: 0; margin: 0 0 23px; display: grid; gap: 12px; }
+    .offer-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: #c0cac3; font-size: .94rem; }
+    .check { color: var(--green); font-weight: 1000; }
+    .offer-card .btn-primary { position: relative; z-index: 1; width: 100%; }
+    .delivery { position: relative; z-index: 1; margin: 12px 0 0; text-align: center; color: #77827b; font-size: .78rem; }
+
+    .trust-strip {
+      padding: 18px 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      color: #8d9991;
+      font-size: .86rem;
+    }
+    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .trust-grid div { text-align: center; }
+    .trust-grid strong { color: #dfe6e1; }
+
+    section { padding: 92px 0; }
+    .section-head { max-width: 760px; margin-bottom: 42px; }
+    .kicker { margin-bottom: 10px; color: var(--green); font: 800 .76rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .13em; text-transform: uppercase; }
+    h2.section-title { margin: 0; font-size: clamp(2.1rem, 4vw, 3.7rem); line-height: 1.05; letter-spacing: -.05em; }
+    .section-copy { margin: 16px 0 0; color: var(--muted); font-size: 1.04rem; }
+
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      padding: 26px;
+      border-radius: 19px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.018));
+    }
+    .card-num { color: var(--lime); font: 800 .72rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .12em; }
+    .card h3 { margin: 17px 0 8px; font-size: 1.15rem; letter-spacing: -.025em; }
+    .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+
+    .process { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; counter-reset: steps; }
+    .step {
+      position: relative;
+      padding: 30px 26px;
+      border-top: 1px solid rgba(198,255,46,.28);
+      background: linear-gradient(180deg, rgba(198,255,46,.035), transparent);
+    }
+    .step::before {
+      counter-increment: steps;
+      content: "0" counter(steps);
+      display: block;
+      margin-bottom: 35px;
+      color: var(--lime);
+      font: 800 .77rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .step h3 { margin: 0 0 9px; font-size: 1.2rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .94rem; }
+
+    .split {
+      display: grid;
+      grid-template-columns: .92fr 1.08fr;
+      gap: 55px;
+      align-items: center;
+    }
+    .signal-box {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .signal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .signal-row:last-child { border-bottom: 0; }
+    .signal-row span { color: #a7b2aa; font-size: .9rem; }
+    .signal-row strong { color: var(--lime); font-size: .9rem; }
+
+    .insights { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
+    .insight {
+      display: block;
+      padding: 27px;
+      border-radius: 19px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: var(--panel-2);
+      text-decoration: none;
+    }
+    .insight:hover { border-color: rgba(198,255,46,.22); }
+    .insight small { color: var(--green); font: 800 .72rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-transform: uppercase; letter-spacing: .1em; }
+    .insight h3 { margin: 13px 0 8px; font-size: 1.2rem; line-height: 1.25; letter-spacing: -.025em; }
+    .insight p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .final-cta {
+      margin-bottom: 92px;
+      padding: 46px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 32px;
+      border: 1px solid rgba(198,255,46,.18);
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(119,255,68,.14), transparent 19rem),
+        linear-gradient(135deg, #0c120e, #090d0b);
+      box-shadow: var(--shadow);
+    }
+    .final-cta h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.02; letter-spacing: -.05em; }
+    .final-cta p { max-width: 650px; margin: 12px 0 0; color: var(--muted); }
+
+    footer { border-top: 1px solid rgba(255,255,255,.06); padding: 31px 0 42px; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 25px; color: #747f78; font-size: .84rem; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
+    .footer-links a { text-decoration: none; color: #919d95; }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .hero, .split { grid-template-columns: 1fr; }
+      .hero { gap: 42px; padding-top: 72px; }
+      .offer-card { max-width: 620px; }
+      .cards, .process { grid-template-columns: 1fr; }
+      .trust-grid { grid-template-columns: 1fr 1fr; row-gap: 16px; }
+      .final-cta { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 26px, 1160px); }
+      .nav-links > a:not(.nav-cta) { display: none; }
+      .hero { padding: 58px 0 52px; }
+      section { padding: 70px 0; }
+      h1 { font-size: clamp(3rem, 15vw, 4.65rem); }
+      .hero-actions, .hero-actions a { width: 100%; }
+      .trust-grid { grid-template-columns: 1fr; }
+      .insights { grid-template-columns: 1fr; }
+      .final-cta { padding: 31px 24px; margin-bottom: 70px; }
+      .footer-inner { flex-direction: column; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>Gwap Gang</h1>
-    <div class="tagline">Build. Ship. Get Paid.</div>
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="shell nav-inner">
+      <a class="brand" href="/" aria-label="GWAP Gang home">
+        <span class="brand-mark">G</span>
+        <span>GWAP GANG</span>
+      </a>
+      <div class="nav-links">
+        <a href="#intelligence">Intelligence</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="/blog/">Insights</a>
+        <a class="nav-cta" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get the $49 Report</a>
+      </div>
+    </div>
+  </nav>
 
-    <div class="hero">
-      Founder-built automation systems that turn digital ideas into income.<br>
-      Stripe-powered. License-gated. Cloud deployed.
+  <main>
+    <div class="shell hero">
+      <div>
+        <div class="eyebrow">Business intelligence for people who actually build</div>
+        <h1>See the move <span class="gradient-text">before you make it.</span></h1>
+        <p class="hero-copy">GWAP Gang uses AI, automation, and practical business analysis to expose competitor gaps, revenue opportunities, wasted effort, and the highest-leverage moves hiding inside your business.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get My Business Intelligence Report — $49</a>
+          <a class="btn-secondary" href="#intelligence">See What’s Inside</a>
+        </div>
+        <p class="micro">One-time pilot price · Secure Stripe checkout · Delivered within 3 business days</p>
+      </div>
+
+      <aside class="offer-card" aria-label="GWAP AI Business Intelligence Report offer">
+        <span class="pilot">V0.1 Pilot Offer</span>
+        <h2>GWAP AI Business Intelligence Report</h2>
+        <div class="price"><strong>$49</strong><span>one-time pilot</span></div>
+        <ul class="offer-list">
+          <li><span class="check">✓</span><span>Competitor gaps and positioning opportunities</span></li>
+          <li><span class="check">✓</span><span>Conversion friction and missed customer opportunities</span></li>
+          <li><span class="check">✓</span><span>Local search and AI-discovery opportunities</span></li>
+          <li><span class="check">✓</span><span>Revenue ideas matched to your current business</span></li>
+          <li><span class="check">✓</span><span>Prioritized 30-day action plan</span></li>
+        </ul>
+        <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Start My Report</a>
+        <p class="delivery">Checkout asks for your website and primary business objective.</p>
+      </aside>
     </div>
 
-    <!-- 🔥 REPLACE WITH YOUR STRIPE PAYMENT LINK -->
-    <a class="cta" href="https://buy.stripe.com/YOUR_LINK_HERE" target="_blank">
-      Get Access
-    </a>
+    <div class="trust-strip">
+      <div class="shell trust-grid">
+        <div><strong>Practical</strong> over theoretical</div>
+        <div><strong>Prioritized</strong> over overwhelming</div>
+        <div><strong>Revenue-aware</strong> by design</div>
+        <div><strong>Built by founders</strong> for operators</div>
+      </div>
+    </div>
 
-    <ul class="features">
-      <li>⚡ Instant license delivery</li>
-      <li>🔒 Payment-gated access</li>
-      <li>☁️ Cloud-hosted backend</li>
-      <li>🧠 Built by a real founder</li>
-    </ul>
+    <section id="intelligence">
+      <div class="shell">
+        <div class="section-head">
+          <div class="kicker">What you actually get</div>
+          <h2 class="section-title">Not another pile of AI advice. A map of where the money and leverage are.</h2>
+          <p class="section-copy">Your report is structured to answer the questions that matter before you burn another week on random tactics, tools, or content.</p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <span class="card-num">01 / MARKET</span>
+            <h3>Competitive intelligence</h3>
+            <p>See where competitors are stronger, where they are vulnerable, and what your market may be leaving open.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">02 / CONVERSION</span>
+            <h3>Friction and missed opportunities</h3>
+            <p>Identify places where your website, offer, positioning, or customer journey may be costing you attention or revenue.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">03 / DISCOVERY</span>
+            <h3>Search + AI visibility</h3>
+            <p>Surface opportunities to become easier to find across traditional search, local discovery, and emerging AI answer surfaces.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">04 / AUTOMATION</span>
+            <h3>AI automation opportunities</h3>
+            <p>Spot repetitive work that may be worth automating first instead of buying another tool you do not need.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">05 / REVENUE</span>
+            <h3>Revenue ideas</h3>
+            <p>Generate practical monetization plays connected to the business you already have—not fantasy startup ideas detached from reality.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">06 / EXECUTION</span>
+            <h3>30-day priority plan</h3>
+            <p>Turn the analysis into a ranked sequence of moves so you know what to do first, what can wait, and what is probably noise.</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
-    <footer>
-      © 2026 Gwap Gang. All rights reserved.
-    </footer>
-  </div>
-</div>
+    <section id="how-it-works">
+      <div class="shell">
+        <div class="section-head">
+          <div class="kicker">How it works</div>
+          <h2 class="section-title">Three steps. No strategy-theater maze.</h2>
+        </div>
+        <div class="process">
+          <article class="step">
+            <h3>Checkout + context</h3>
+            <p>Submit your website and the primary business objective you want the report to focus on.</p>
+          </article>
+          <article class="step">
+            <h3>GWAP analyzes the business</h3>
+            <p>Your business is reviewed through a business-intelligence lens: competition, conversion, discovery, automation, and revenue.</p>
+          </article>
+          <article class="step">
+            <h3>You get the prioritized report</h3>
+            <p>Receive the finished intelligence report within three business days, including a concrete 30-day action plan.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell split">
+        <div>
+          <div class="kicker">GWAP operating principle</div>
+          <h2 class="section-title">Use AI to reduce uncertainty—not multiply busywork.</h2>
+          <p class="section-copy">GWAP Gang is building practical systems around business intelligence, automation, content, and digital revenue. The point is not to add more software to your life. The point is to help you see what matters and move on it faster.</p>
+          <div class="hero-actions">
+            <a class="btn-secondary" href="/author/rich-ross/">About Rich Ross</a>
+            <a class="btn-secondary" href="/blog/">Read GWAP Insights</a>
+          </div>
+        </div>
+        <div class="signal-box" aria-label="GWAP decision framework">
+          <div class="signal-row"><span>Real customer pain</span><strong>PRIORITIZE</strong></div>
+          <div class="signal-row"><span>Fast path to revenue</span><strong>PRIORITIZE</strong></div>
+          <div class="signal-row"><span>Automation leverage</span><strong>PRIORITIZE</strong></div>
+          <div class="signal-row"><span>Long-term ownership</span><strong>PRIORITIZE</strong></div>
+          <div class="signal-row"><span>Complexity for its own sake</span><strong>CUT</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell">
+        <div class="section-head">
+          <div class="kicker">From the playbook</div>
+          <h2 class="section-title">Useful ideas before you spend another dollar.</h2>
+        </div>
+        <div class="insights">
+          <a class="insight" href="/blog/what-small-businesses-should-automate-first-with-ai/">
+            <small>AI Automation</small>
+            <h3>What Small Businesses Should Automate First With AI</h3>
+            <p>Start with the work that creates real leverage instead of automating everything just because you can.</p>
+          </a>
+          <a class="insight" href="/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/">
+            <small>AI + Originality</small>
+            <h3>AI Can Copy the Recipe. It Still Can’t Give You the Sauce.</h3>
+            <p>Why access to the same models does not automatically create the same ideas, judgment, voice, or value.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell final-cta">
+      <div>
+        <div class="kicker">Ready to stop guessing?</div>
+        <h2>Put your business under the microscope.</h2>
+        <p>Get the $49 GWAP AI Business Intelligence Report pilot and walk away with a clearer picture of your opportunities and your next 30 days.</p>
+      </div>
+      <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get the $49 Report</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <div>© 2026 GWAP Gang · Build smarter. Move with purpose.</div>
+      <div class="footer-links">
+        <a href="/blog/">Insights</a>
+        <a href="/author/rich-ross/">Rich Ross</a>
+        <a href="mailto:intelligence@gwapgang.com">intelligence@gwapgang.com</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
