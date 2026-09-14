@@ -1,3 +1,13 @@
+# GWAP Gang crawler baseline
+# Cloudflare may prepend managed AI-specific directives.
+# Keep search/discovery open while opting out of Apple foundation-model training.
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
 User-agent: *
 Allow: /
 
