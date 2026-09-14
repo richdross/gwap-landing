@@ -1,6 +1,8 @@
 ---
 title: AI Can Copy the Recipe. It Still Can't Give You the Sauce.
-author: Rich — GWAP Gang
+author: Rich Ross
+authorRole: Founder, GWAP Gang
+authorUrl: /author/rich-ross/
 date: 2026-09-04
 image: /images/blog/chatgpt-image-jun-7-2026-062819-pm.png
 description: AI can copy the recipe, but it still can’t give you the sauce. A
