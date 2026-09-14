@@ -4,26 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="msvalidate.01" content="3B096CD996556C4E9074EE0F67D11A61" />
-  <title>GWAP Gang — AI Business Intelligence & Automation</title>
-  <meta name="description" content="GWAP Gang turns business questions into practical intelligence, automation opportunities, and prioritized next moves. Get the $49 AI Business Intelligence Report pilot." />
-  <meta name="theme-color" content="#050706" />
-  <meta property="og:title" content="GWAP Gang — Build Smarter. Move Faster." />
-  <meta property="og:description" content="Practical AI business intelligence for founders and small businesses. Find competitor gaps, revenue opportunities, automation wins, and your next 30-day moves." />
+  <title>GWAP Gang — Intelligence. Automation. Revenue.</title>
+  <meta name="description" content="GWAP Gang is a creative technology and business intelligence company helping founders and small businesses find leverage, automate intelligently, and turn ideas into working revenue systems." />
+  <meta name="theme-color" content="#070907" />
+  <meta property="og:title" content="GWAP Gang — See the Move Before You Make It" />
+  <meta property="og:description" content="Business intelligence, AI automation, creator technology, and revenue systems for ambitious operators." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://gwapgang.com/" />
   <link rel="canonical" href="https://gwapgang.com/" />
   <style>
     :root {
-      --bg: #050706;
-      --panel: #0b100d;
-      --panel-2: #0f1511;
-      --line: rgba(178, 255, 41, 0.17);
-      --text: #f3f7f4;
-      --muted: #9aa69f;
-      --green: #77ff44;
-      --lime: #c6ff2e;
-      --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
-      --radius: 24px;
+      --bg: #070907;
+      --bg2: #0a0d0a;
+      --surface: #0d110d;
+      --surface2: #111611;
+      --ink: #f2efe7;
+      --muted: #a2a79f;
+      --faint: #6d746c;
+      --line: rgba(241, 239, 231, 0.14);
+      --line-green: rgba(160, 255, 75, 0.35);
+      --green: #9cff45;
+      --green2: #c8ff69;
+      --black: #050605;
+      --max: 1240px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -31,304 +36,444 @@
     body {
       margin: 0;
       min-width: 320px;
+      color: var(--ink);
       background:
-        radial-gradient(circle at 80% -10%, rgba(119,255,68,.11), transparent 28rem),
-        radial-gradient(circle at 0% 35%, rgba(198,255,46,.06), transparent 23rem),
+        radial-gradient(circle at 72% 0%, rgba(156,255,69,.07), transparent 28rem),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px),
         var(--bg);
-      color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.6;
+      background-size: auto, 38px 38px, 38px 38px, auto;
+      font-family: var(--sans);
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     a { color: inherit; }
-    .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    button, input, textarea { font: inherit; }
+    .shell { width: min(var(--max), calc(100% - 48px)); margin: 0 auto; }
+    .rule { border-top: 1px solid var(--line); }
 
     .nav {
       position: sticky;
       top: 0;
-      z-index: 20;
-      backdrop-filter: blur(18px);
-      background: rgba(5, 7, 6, .78);
-      border-bottom: 1px solid rgba(255,255,255,.06);
+      z-index: 50;
+      background: rgba(7,9,7,.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
     }
     .nav-inner {
       min-height: 72px;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
       gap: 24px;
     }
     .brand {
       display: inline-flex;
-      align-items: center;
-      gap: 11px;
+      flex-direction: column;
+      width: max-content;
       text-decoration: none;
-      font-weight: 900;
-      letter-spacing: -.04em;
-      font-size: 1.05rem;
+      line-height: 1;
     }
-    .brand-mark {
-      width: 29px;
-      height: 29px;
-      display: grid;
-      place-items: center;
-      border-radius: 9px;
-      color: #081006;
-      background: linear-gradient(135deg, var(--green), var(--lime));
-      box-shadow: 0 0 30px rgba(119,255,68,.23);
-      font-size: .78rem;
-      font-weight: 1000;
+    .brand strong {
+      font-size: 1.45rem;
+      letter-spacing: -.055em;
+      font-weight: 950;
     }
-    .nav-links { display: flex; align-items: center; gap: 23px; }
+    .brand small {
+      margin-top: 5px;
+      color: #a9aea5;
+      font: 700 .56rem/1 var(--mono);
+      letter-spacing: .18em;
+    }
+    .nav-links { display: flex; gap: 30px; align-items: center; }
     .nav-links a {
+      color: #c8ccc5;
       text-decoration: none;
-      color: var(--muted);
-      font-size: .92rem;
-      font-weight: 700;
+      font-size: .86rem;
+      font-weight: 650;
     }
-    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover { color: var(--green); }
+    .nav-action { justify-self: end; }
 
-    .nav-cta, .btn-primary, .btn-secondary {
+    .btn {
+      min-height: 48px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 10px;
+      padding: 0 20px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
       text-decoration: none;
       font-weight: 850;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      cursor: pointer;
+      transition: .2s ease;
     }
-    .nav-cta {
-      min-height: 42px;
-      padding: 0 17px;
-      border-radius: 11px;
-      color: #091008 !important;
-      background: var(--lime);
-    }
-    .nav-cta:hover, .btn-primary:hover, .btn-secondary:hover { transform: translateY(-2px); }
+    .btn:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.28); }
+    .btn-primary { color: #081006; background: var(--green); border-color: var(--green); }
+    .btn-primary:hover { background: var(--green2); border-color: var(--green2); }
+    .btn-ghost { background: rgba(255,255,255,.025); }
+    .arrow { font-family: var(--mono); font-size: .85em; }
 
     .hero {
-      padding: 96px 0 70px;
-      display: grid;
-      grid-template-columns: 1.12fr .88fr;
-      gap: 64px;
-      align-items: center;
-    }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      margin-bottom: 18px;
-      color: var(--lime);
-      font: 800 .78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-    .eyebrow::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 18px rgba(119,255,68,.75);
-    }
-    h1 {
-      margin: 0;
-      max-width: 820px;
-      font-size: clamp(3rem, 7vw, 6.25rem);
-      line-height: .98;
-      letter-spacing: -.065em;
-    }
-    .gradient-text {
-      color: transparent;
-      background: linear-gradient(90deg, #fff 0%, #dfffab 42%, var(--green) 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-    }
-    .hero-copy {
-      max-width: 690px;
-      margin: 26px 0 0;
-      font-size: clamp(1.05rem, 2vw, 1.25rem);
-      color: #b2bdb6;
-    }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
-    .btn-primary, .btn-secondary { min-height: 54px; padding: 0 24px; border-radius: 13px; }
-    .btn-primary { color: #071006; background: linear-gradient(135deg, var(--lime), var(--green)); }
-    .btn-secondary { color: var(--text); border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.035); }
-    .micro {
-      margin-top: 14px;
-      color: #78847d;
-      font-size: .83rem;
-    }
-
-    .offer-card {
       position: relative;
       overflow: hidden;
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(15,22,17,.96), rgba(8,12,10,.96));
-      box-shadow: var(--shadow);
+      min-height: 690px;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      align-items: center;
+      gap: 34px;
+      border-bottom: 1px solid var(--line);
     }
-    .offer-card::after {
+    .hero::before {
       content: "";
       position: absolute;
-      width: 240px;
-      height: 240px;
-      right: -110px;
-      top: -130px;
-      border-radius: 50%;
-      background: rgba(119,255,68,.12);
-      filter: blur(14px);
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent 0 58%, rgba(156,255,69,.035) 58% 58.15%, transparent 58.15% 100%);
     }
-    .pilot {
-      position: relative;
-      z-index: 1;
-      display: inline-flex;
-      padding: 6px 10px;
-      border: 1px solid rgba(198,255,46,.2);
-      border-radius: 999px;
-      color: var(--lime);
-      background: rgba(198,255,46,.05);
-      font: 800 .72rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    .hero-copy { padding: 84px 0 78px; position: relative; z-index: 2; }
+    .hero-topline {
+      margin-bottom: 24px;
+      color: #9ea49c;
+      font: 700 .69rem/1.4 var(--mono);
+      letter-spacing: .18em;
       text-transform: uppercase;
-      letter-spacing: .08em;
     }
-    .offer-card h2 { position: relative; z-index: 1; margin: 19px 0 7px; font-size: 1.65rem; line-height: 1.15; letter-spacing: -.035em; }
-    .price { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 8px; margin: 5px 0 20px; }
-    .price strong { font-size: 3.2rem; line-height: 1; letter-spacing: -.06em; }
-    .price span { color: var(--muted); font-size: .88rem; }
-    .offer-list { position: relative; z-index: 1; list-style: none; padding: 0; margin: 0 0 23px; display: grid; gap: 12px; }
-    .offer-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: #c0cac3; font-size: .94rem; }
-    .check { color: var(--green); font-weight: 1000; }
-    .offer-card .btn-primary { position: relative; z-index: 1; width: 100%; }
-    .delivery { position: relative; z-index: 1; margin: 12px 0 0; text-align: center; color: #77827b; font-size: .78rem; }
-
-    .trust-strip {
-      padding: 18px 0;
-      border-top: 1px solid rgba(255,255,255,.06);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      color: #8d9991;
-      font-size: .86rem;
+    .hero-topline span { color: var(--green); }
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(3.85rem, 7.4vw, 7.35rem);
+      line-height: .84;
+      letter-spacing: -.075em;
+      text-transform: uppercase;
+      font-weight: 950;
     }
-    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .trust-grid div { text-align: center; }
-    .trust-grid strong { color: #dfe6e1; }
-
-    section { padding: 92px 0; }
-    .section-head { max-width: 760px; margin-bottom: 42px; }
-    .kicker { margin-bottom: 10px; color: var(--green); font: 800 .76rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .13em; text-transform: uppercase; }
-    h2.section-title { margin: 0; font-size: clamp(2.1rem, 4vw, 3.7rem); line-height: 1.05; letter-spacing: -.05em; }
-    .section-copy { margin: 16px 0 0; color: var(--muted); font-size: 1.04rem; }
-
-    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .card {
-      padding: 26px;
-      border-radius: 19px;
-      border: 1px solid rgba(255,255,255,.07);
-      background: linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.018));
+    h1 em { color: var(--green); font-style: normal; }
+    .hero-copy p {
+      max-width: 620px;
+      margin: 28px 0 0;
+      color: #bdc1ba;
+      font-size: 1.06rem;
+      line-height: 1.7;
     }
-    .card-num { color: var(--lime); font: 800 .72rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; letter-spacing: .12em; }
-    .card h3 { margin: 17px 0 8px; font-size: 1.15rem; letter-spacing: -.025em; }
-    .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .hero-flow {
+      margin-top: 36px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      color: #858b84;
+      font: 700 .64rem/1 var(--mono);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .hero-flow b { color: #c6cbc4; font-weight: 700; }
+    .hero-flow .flow-arrow { color: var(--green); }
 
-    .process { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; counter-reset: steps; }
-    .step {
+    .signal-stage {
       position: relative;
-      padding: 30px 26px;
-      border-top: 1px solid rgba(198,255,46,.28);
-      background: linear-gradient(180deg, rgba(198,255,46,.035), transparent);
+      min-height: 610px;
+      display: grid;
+      place-items: center;
     }
-    .step::before {
-      counter-increment: steps;
-      content: "0" counter(steps);
-      display: block;
-      margin-bottom: 35px;
-      color: var(--lime);
-      font: 800 .77rem/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    .signal-stage::before,
+    .signal-stage::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.11);
     }
-    .step h3 { margin: 0 0 9px; font-size: 1.2rem; }
-    .step p { margin: 0; color: var(--muted); font-size: .94rem; }
+    .signal-stage::before { width: 430px; height: 430px; }
+    .signal-stage::after { width: 520px; height: 260px; transform: rotate(28deg); }
+    .orb {
+      position: relative;
+      width: min(390px, 72vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      background:
+        radial-gradient(circle at 40% 34%, rgba(255,255,255,.22), transparent 9%),
+        radial-gradient(circle at 62% 59%, rgba(156,255,69,.52), transparent 4%),
+        radial-gradient(circle at 30% 70%, rgba(156,255,69,.2), transparent 18%),
+        conic-gradient(from 90deg, #0f150f, #1b231a, #090c09, #142112, #0b0e0b, #1b211b, #0f150f);
+      box-shadow: inset -30px -40px 80px #000, inset 25px 25px 65px rgba(255,255,255,.035), 0 0 110px rgba(156,255,69,.09);
+    }
+    .orb::before,
+    .orb::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      border: 1px dashed rgba(198,255,105,.42);
+      transform: rotate(35deg);
+    }
+    .orb::after { inset: 26%; border-style: solid; opacity: .5; transform: rotate(-24deg); }
+    .orb-lines { position: absolute; inset: 0; opacity: .5; background: repeating-linear-gradient(32deg, transparent 0 23px, rgba(156,255,69,.12) 24px 25px, transparent 26px 51px); }
+    .stage-note {
+      position: absolute;
+      right: 0;
+      bottom: 40px;
+      max-width: 150px;
+      color: #7b8279;
+      font: 700 .62rem/1.55 var(--mono);
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
 
-    .split {
+    .manifesto {
+      display: grid;
+      grid-template-columns: 120px 1.2fr .95fr .65fr;
+      gap: 28px;
+      align-items: center;
+      min-height: 160px;
+      padding: 28px 0;
+    }
+    .manifesto-label { color: var(--green); font: 800 .64rem/1.6 var(--mono); letter-spacing: .15em; text-transform: uppercase; }
+    .manifesto h2 { margin: 0; font-size: clamp(2.15rem, 4vw, 4rem); line-height: .95; letter-spacing: -.055em; text-transform: uppercase; }
+    .manifesto p { margin: 0; color: #b3b8b1; font-size: 1rem; }
+    .manifesto-tag { color: var(--green); font: 800 .76rem/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+
+    .product {
+      padding: 88px 0;
+      display: grid;
+      grid-template-columns: .8fr 1.28fr .7fr;
+      gap: 50px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .product-cover {
+      width: min(280px, 100%);
+      aspect-ratio: .72;
+      margin: 0 auto;
+      padding: 32px 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(255,255,255,.18);
+      background:
+        linear-gradient(160deg, transparent 0 50%, rgba(156,255,69,.08) 51% 52%, transparent 53% 100%),
+        linear-gradient(180deg, #121612, #060806);
+      box-shadow: 22px 25px 0 #030403, 26px 29px 60px rgba(0,0,0,.55);
+    }
+    .product-cover small { font: 800 .63rem/1.3 var(--mono); letter-spacing: .14em; color: #c6cbc3; }
+    .product-cover strong { max-width: 220px; font-size: clamp(1.75rem, 3vw, 2.65rem); line-height: .93; letter-spacing: -.055em; text-transform: uppercase; }
+    .product-cover span { color: var(--green); font: 700 .66rem/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .product-info small, .section-code { color: #9ca29a; font: 700 .65rem/1.4 var(--mono); letter-spacing: .17em; text-transform: uppercase; }
+    .product-info h2 { margin: 12px 0 12px; font-size: clamp(2.4rem, 4.6vw, 4.85rem); line-height: .91; letter-spacing: -.06em; text-transform: uppercase; }
+    .product-info .sub { margin: 0 0 18px; font-size: 1.18rem; color: #d0d4cd; }
+    .product-info p { color: #aeb4ad; max-width: 640px; }
+    .checklist { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 9px; }
+    .checklist li { color: #d4d8d1; }
+    .checklist li::before { content: "✓"; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 10px; color: #0a1008; background: var(--green); font-size: .68rem; font-weight: 1000; }
+    .price-stack { align-self: stretch; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid var(--line); padding-left: 36px; }
+    .price-big { font-size: clamp(4rem, 7vw, 6.4rem); line-height: .9; letter-spacing: -.075em; font-weight: 950; }
+    .price-note { margin: 8px 0 24px; color: #868d85; font: 700 .65rem/1 var(--mono); text-transform: uppercase; letter-spacing: .12em; }
+    .price-stack .btn { width: 100%; }
+    .secure { margin-top: 12px; color: #818780; font-size: .75rem; text-align: center; }
+
+    .command-section { padding: 96px 0; border-bottom: 1px solid var(--line); }
+    .command-head { display: grid; grid-template-columns: 1fr .85fr; gap: 60px; align-items: end; margin-bottom: 40px; }
+    .command-head h2 { margin: 10px 0 0; font-size: clamp(3rem, 6vw, 6.5rem); line-height: .87; letter-spacing: -.07em; text-transform: uppercase; }
+    .command-head p { margin: 0 0 8px; color: #aeb4ad; font-size: 1.05rem; }
+
+    .command-shell {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(7,10,7,.78);
+      box-shadow: 0 30px 90px rgba(0,0,0,.35);
+    }
+    .command-topbar {
+      display: grid;
+      grid-template-columns: 1.3fr repeat(3, .75fr);
+      border-bottom: 1px solid var(--line);
+    }
+    .command-cell { min-height: 108px; padding: 20px 22px; border-right: 1px solid var(--line); }
+    .command-cell:last-child { border-right: 0; }
+    .command-cell.primary { background: linear-gradient(135deg, rgba(156,255,69,.1), transparent); }
+    .command-label { color: var(--green); font: 800 .61rem/1.4 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    .command-value { margin-top: 9px; font-size: .95rem; font-weight: 800; line-height: 1.35; }
+    .command-note { margin-top: 6px; color: #787f77; font-size: .75rem; }
+
+    .builder {
       display: grid;
       grid-template-columns: .92fr 1.08fr;
+      min-height: 500px;
+    }
+    .builder-form, .builder-output { padding: 32px; }
+    .builder-form { border-right: 1px solid var(--line); }
+    .builder h3 { margin: 0 0 8px; font-size: 1.4rem; letter-spacing: -.03em; }
+    .builder-intro { margin: 0 0 24px; color: #8f968e; font-size: .9rem; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { display: grid; gap: 8px; }
+    .field.wide { grid-column: 1 / -1; }
+    label { color: #b7bdb5; font: 700 .68rem/1.3 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+    input, textarea {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 0;
+      background: #090c09;
+      color: var(--ink);
+      padding: 13px 14px;
+      outline: none;
+    }
+    input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+    textarea { min-height: 98px; resize: vertical; }
+    .builder-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+    .output-empty { min-height: 100%; display: grid; place-items: center; text-align: center; color: #6f766e; padding: 45px; }
+    .output-empty strong { display: block; color: #c7cbc5; font-size: 1.2rem; margin-bottom: 8px; }
+    .result { display: none; }
+    .result.active { display: block; }
+    .output-empty.hidden { display: none; }
+    .scoreline { display: flex; align-items: end; justify-content: space-between; gap: 18px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .scoreline small { color: #898f87; font: 700 .64rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .score { color: var(--green); font-size: 4.8rem; line-height: .78; letter-spacing: -.08em; font-weight: 950; }
+    .result h4 { margin: 24px 0 8px; font-size: 1.55rem; letter-spacing: -.035em; }
+    .result p { color: #b5bbb4; }
+    .result-grid { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .metric { padding: 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .metric span { display: block; color: #777e76; font: 700 .59rem/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .metric strong { display: block; margin-top: 7px; font-size: 1.1rem; }
+    .next-test { margin-top: 24px; padding: 18px; border-left: 3px solid var(--green); background: rgba(156,255,69,.055); }
+    .next-test small { color: var(--green); font: 800 .62rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+    .next-test p { margin: 8px 0 0; }
+    .full-cc { margin-top: 18px; display: inline-flex; color: var(--green); font-weight: 850; text-decoration: none; }
+
+    .pillars { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+    .pillar { min-height: 230px; padding: 34px 30px; border-right: 1px solid var(--line); }
+    .pillar:last-child { border-right: 0; }
+    .pillar .num { color: var(--green); font: 800 .72rem/1 var(--mono); }
+    .pillar h3 { margin: 26px 0 12px; font-size: 1.5rem; line-height: .98; letter-spacing: -.04em; text-transform: uppercase; }
+    .pillar p { margin: 0; color: #939991; font-size: .9rem; }
+
+    .insights { padding: 90px 0; border-bottom: 1px solid var(--line); }
+    .section-row { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 30px; }
+    .section-row h2 { margin: 8px 0 0; font-size: clamp(2.2rem, 4vw, 4rem); line-height: .95; letter-spacing: -.055em; text-transform: uppercase; }
+    .section-row a { color: #c4c9c2; text-decoration: none; font-size: .85rem; }
+    .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .insight { min-height: 260px; padding: 28px; text-decoration: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: .2s ease; }
+    .insight:hover { background: rgba(156,255,69,.04); }
+    .insight time { color: #747b73; font: 700 .62rem/1 var(--mono); letter-spacing: .1em; }
+    .insight h3 { margin: 42px 0 14px; max-width: 520px; font-size: 1.7rem; line-height: 1.02; letter-spacing: -.045em; }
+    .insight p { max-width: 520px; margin: 0; color: #969c94; font-size: .9rem; }
+    .read { display: inline-block; margin-top: 24px; color: var(--green); font: 800 .7rem/1 var(--mono); }
+
+    .founder {
+      padding: 92px 0;
+      display: grid;
+      grid-template-columns: .76fr 1fr .72fr;
       gap: 55px;
       align-items: center;
+      border-bottom: 1px solid var(--line);
     }
-    .signal-box {
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
-    .signal-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 16px 0;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .signal-row:last-child { border-bottom: 0; }
-    .signal-row span { color: #a7b2aa; font-size: .9rem; }
-    .signal-row strong { color: var(--lime); font-size: .9rem; }
-
-    .insights { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
-    .insight {
-      display: block;
-      padding: 27px;
-      border-radius: 19px;
-      border: 1px solid rgba(255,255,255,.07);
-      background: var(--panel-2);
-      text-decoration: none;
-    }
-    .insight:hover { border-color: rgba(198,255,46,.22); }
-    .insight small { color: var(--green); font: 800 .72rem/1.2 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-transform: uppercase; letter-spacing: .1em; }
-    .insight h3 { margin: 13px 0 8px; font-size: 1.2rem; line-height: 1.25; letter-spacing: -.025em; }
-    .insight p { margin: 0; color: var(--muted); font-size: .9rem; }
-
-    .final-cta {
-      margin-bottom: 92px;
-      padding: 46px;
+    .founder-monogram {
+      min-height: 320px;
       display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 32px;
-      border: 1px solid rgba(198,255,46,.18);
-      border-radius: 28px;
+      place-items: center;
+      border: 1px solid var(--line);
       background:
-        radial-gradient(circle at 100% 0%, rgba(119,255,68,.14), transparent 19rem),
-        linear-gradient(135deg, #0c120e, #090d0b);
-      box-shadow: var(--shadow);
+        linear-gradient(135deg, transparent 49.5%, rgba(156,255,69,.22) 50%, transparent 50.5%),
+        #0a0d0a;
+      font-size: clamp(5rem, 10vw, 10rem);
+      font-weight: 950;
+      letter-spacing: -.09em;
     }
-    .final-cta h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.02; letter-spacing: -.05em; }
-    .final-cta p { max-width: 650px; margin: 12px 0 0; color: var(--muted); }
+    .founder-copy small { color: #8f968e; font: 700 .64rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+    .founder-copy h2 { margin: 10px 0 16px; font-size: clamp(2.6rem, 5vw, 5rem); line-height: .88; letter-spacing: -.065em; text-transform: uppercase; }
+    .founder-copy p { color: #aeb4ad; max-width: 580px; }
+    .founder-copy a { color: var(--green); text-decoration: none; font-weight: 850; }
+    .founder-quote { padding-left: 30px; border-left: 1px solid var(--line-green); font-size: 1.75rem; line-height: 1.15; font-style: italic; letter-spacing: -.035em; }
+    .founder-quote b { color: var(--green); }
 
-    footer { border-top: 1px solid rgba(255,255,255,.06); padding: 31px 0 42px; }
-    .footer-inner { display: flex; justify-content: space-between; gap: 25px; color: #747f78; font-size: .84rem; }
-    .footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
-    .footer-links a { text-decoration: none; color: #919d95; }
-    .footer-links a:hover { color: var(--text); }
-
-    @media (max-width: 900px) {
-      .hero, .split { grid-template-columns: 1fr; }
-      .hero { gap: 42px; padding-top: 72px; }
-      .offer-card { max-width: 620px; }
-      .cards, .process { grid-template-columns: 1fr; }
-      .trust-grid { grid-template-columns: 1fr 1fr; row-gap: 16px; }
-      .final-cta { grid-template-columns: 1fr; }
+    .closing {
+      min-height: 250px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 38px;
+      align-items: center;
     }
-    @media (max-width: 680px) {
-      .shell { width: min(100% - 26px, 1160px); }
-      .nav-links > a:not(.nav-cta) { display: none; }
-      .hero { padding: 58px 0 52px; }
-      section { padding: 70px 0; }
-      h1 { font-size: clamp(3rem, 15vw, 4.65rem); }
-      .hero-actions, .hero-actions a { width: 100%; }
-      .trust-grid { grid-template-columns: 1fr; }
-      .insights { grid-template-columns: 1fr; }
-      .final-cta { padding: 31px 24px; margin-bottom: 70px; }
+    .closing-brand strong { display: block; font-size: 2rem; letter-spacing: -.06em; }
+    .closing-brand span { color: #7e857d; font: 700 .58rem/1 var(--mono); letter-spacing: .16em; }
+    .closing-center { text-align: center; }
+    .closing-center h2 { margin: 0; font-size: clamp(2.8rem, 5vw, 5.1rem); line-height: .9; letter-spacing: -.07em; text-transform: uppercase; }
+    .closing-center p { color: #858b84; margin: 11px 0 0; }
+    .closing-action { justify-self: end; width: 100%; max-width: 300px; }
+    .closing-action .btn { width: 100%; }
+    .closing-action a.mail { display: block; margin-top: 12px; color: #858b84; font-size: .75rem; text-align: center; }
+
+    footer { padding: 26px 0 34px; border-top: 1px solid var(--line); color: #6f766e; font-size: .73rem; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
+    .footer-links { display: flex; gap: 16px; flex-wrap: wrap; }
+    .footer-links a { color: #838a82; text-decoration: none; }
+
+    @media (max-width: 1020px) {
+      .nav-inner { grid-template-columns: 1fr auto; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; min-height: 0; }
+      .signal-stage { min-height: 500px; border-top: 1px solid var(--line); }
+      .manifesto { grid-template-columns: 100px 1fr 1fr; }
+      .manifesto-tag { display: none; }
+      .product { grid-template-columns: .72fr 1.28fr; }
+      .price-stack { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); padding: 28px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; }
+      .price-stack .btn { width: auto; justify-self: end; }
+      .secure { display: none; }
+      .command-head { grid-template-columns: 1fr; gap: 22px; }
+      .command-topbar { grid-template-columns: 1fr 1fr; }
+      .command-cell:nth-child(2) { border-right: 0; }
+      .command-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .builder { grid-template-columns: 1fr; }
+      .builder-form { border-right: 0; border-bottom: 1px solid var(--line); }
+      .pillars { grid-template-columns: 1fr 1fr; }
+      .pillar:nth-child(2) { border-right: 0; }
+      .pillar:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .founder { grid-template-columns: .7fr 1fr; }
+      .founder-quote { grid-column: 1 / -1; }
+      .closing { grid-template-columns: 1fr; text-align: center; padding: 60px 0; }
+      .closing-action { justify-self: center; }
+    }
+
+    @media (max-width: 700px) {
+      .shell { width: min(100% - 28px, var(--max)); }
+      .nav-inner { min-height: 64px; }
+      .brand strong { font-size: 1.17rem; }
+      .brand small { display: none; }
+      .nav-action .btn { min-height: 40px; padding: 0 13px; font-size: .78rem; }
+      .hero-copy { padding: 62px 0 48px; }
+      h1 { font-size: clamp(3.6rem, 18vw, 5.5rem); }
+      .hero-actions .btn { width: 100%; }
+      .signal-stage { min-height: 390px; }
+      .signal-stage::before { width: 300px; height: 300px; }
+      .signal-stage::after { width: 340px; height: 180px; }
+      .stage-note { display: none; }
+      .manifesto { grid-template-columns: 1fr; padding: 44px 0; }
+      .manifesto-label { display: none; }
+      .product { grid-template-columns: 1fr; padding: 66px 0; }
+      .product-cover { width: 230px; }
+      .price-stack { grid-template-columns: 1fr; text-align: center; }
+      .price-stack .btn { justify-self: stretch; }
+      .command-section { padding: 68px 0; }
+      .command-head h2 { font-size: clamp(3.3rem, 16vw, 5rem); }
+      .command-topbar { grid-template-columns: 1fr; }
+      .command-cell { border-right: 0 !important; border-bottom: 1px solid var(--line); }
+      .command-cell:last-child { border-bottom: 0; }
+      .builder-form, .builder-output { padding: 22px; }
+      .fields { grid-template-columns: 1fr; }
+      .field.wide { grid-column: auto; }
+      .builder-actions { flex-direction: column; }
+      .result-grid { grid-template-columns: 1fr; }
+      .pillars { grid-template-columns: 1fr; }
+      .pillar { border-right: 0; border-bottom: 1px solid var(--line); }
+      .pillar:last-child { border-bottom: 0; }
+      .insight-grid { grid-template-columns: 1fr; }
+      .section-row { align-items: start; flex-direction: column; }
+      .founder { grid-template-columns: 1fr; }
+      .founder-monogram { min-height: 240px; }
       .footer-inner { flex-direction: column; }
     }
   </style>
@@ -336,183 +481,280 @@
 <body>
   <nav class="nav" aria-label="Primary navigation">
     <div class="shell nav-inner">
-      <a class="brand" href="/" aria-label="GWAP Gang home">
-        <span class="brand-mark">G</span>
-        <span>GWAP GANG</span>
+      <a class="brand" href="/">
+        <strong>GWAP GANG</strong>
+        <small>CREATIVE TECHNOLOGY. REAL LEVERAGE.</small>
       </a>
       <div class="nav-links">
         <a href="#intelligence">Intelligence</a>
-        <a href="#how-it-works">How It Works</a>
+        <a href="#command-center">Command Center</a>
+        <a href="#systems">Systems</a>
         <a href="/blog/">Insights</a>
-        <a class="nav-cta" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get the $49 Report</a>
+        <a href="#about">About</a>
+      </div>
+      <div class="nav-action">
+        <a class="btn btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get Intelligence <span class="arrow">→</span></a>
       </div>
     </div>
   </nav>
 
   <main>
     <div class="shell hero">
-      <div>
-        <div class="eyebrow">Business intelligence for people who actually build</div>
-        <h1>See the move <span class="gradient-text">before you make it.</span></h1>
-        <p class="hero-copy">GWAP Gang uses AI, automation, and practical business analysis to expose competitor gaps, revenue opportunities, wasted effort, and the highest-leverage moves hiding inside your business.</p>
+      <section class="hero-copy" aria-labelledby="hero-title">
+        <div class="hero-topline">Strategy <span>×</span> Automation <span>×</span> Content <span>×</span> Revenue</div>
+        <h1 id="hero-title">See the move <em>before</em> you make it.</h1>
+        <p>GWAP Gang is a creative technology and business intelligence company helping ambitious operators see leverage, automate intelligently, and turn ideas into working revenue systems.</p>
         <div class="hero-actions">
-          <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get My Business Intelligence Report — $49</a>
-          <a class="btn-secondary" href="#intelligence">See What’s Inside</a>
+          <a class="btn btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get Your $49 AI Report <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#command-center">Try the Revenue Command Center <span class="arrow">↓</span></a>
         </div>
-        <p class="micro">One-time pilot price · Secure Stripe checkout · Delivered within 3 business days</p>
-      </div>
+        <div class="hero-flow"><b>Ideas</b><span class="flow-arrow">→</span><b>Intelligence</b><span class="flow-arrow">→</span><b>Automation</b><span class="flow-arrow">→</span><b>Revenue</b></div>
+      </section>
 
-      <aside class="offer-card" aria-label="GWAP AI Business Intelligence Report offer">
-        <span class="pilot">V0.1 Pilot Offer</span>
+      <div class="signal-stage" aria-hidden="true">
+        <div class="orb"><div class="orb-lines"></div></div>
+        <div class="stage-note">People<br>Ideas<br>Systems<br>Revenue<br><br>More leverage for a more interesting world.</div>
+      </div>
+    </div>
+
+    <div class="rule">
+      <div class="shell manifesto">
+        <div class="manifesto-label">GWAP<br>/ Manifesto</div>
+        <h2>Intelligence builds freedom.</h2>
+        <p>We build intelligence, automation, content, and revenue systems for creators, founders, and forward-thinking businesses.</p>
+        <div class="manifesto-tag">Same creativity.<br>New advantage.</div>
+      </div>
+    </div>
+
+    <section class="shell product" id="intelligence">
+      <div class="product-cover" aria-label="GWAP AI Business Intelligence Report mockup">
+        <small>GWAP GANG</small>
+        <strong>AI Business Intelligence Report</strong>
+        <span>Competitors. Opportunities. AI. Revenue. Action.</span>
+      </div>
+      <div class="product-info">
+        <small>Featured Intelligence</small>
         <h2>GWAP AI Business Intelligence Report</h2>
-        <div class="price"><strong>$49</strong><span>one-time pilot</span></div>
-        <ul class="offer-list">
-          <li><span class="check">✓</span><span>Competitor gaps and positioning opportunities</span></li>
-          <li><span class="check">✓</span><span>Conversion friction and missed customer opportunities</span></li>
-          <li><span class="check">✓</span><span>Local search and AI-discovery opportunities</span></li>
-          <li><span class="check">✓</span><span>Revenue ideas matched to your current business</span></li>
-          <li><span class="check">✓</span><span>Prioritized 30-day action plan</span></li>
+        <p class="sub">Real insights. Real opportunities. A real plan.</p>
+        <p>A custom AI-powered analysis of your business, delivered within three business days and focused on the places where leverage, automation, discovery, and revenue may be hiding.</p>
+        <ul class="checklist">
+          <li>Competitor intelligence</li>
+          <li>Missed opportunities</li>
+          <li>AI automation opportunities</li>
+          <li>Revenue ideas</li>
+          <li>Prioritized 30-day action plan</li>
         </ul>
-        <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Start My Report</a>
-        <p class="delivery">Checkout asks for your website and primary business objective.</p>
-      </aside>
-    </div>
-
-    <div class="trust-strip">
-      <div class="shell trust-grid">
-        <div><strong>Practical</strong> over theoretical</div>
-        <div><strong>Prioritized</strong> over overwhelming</div>
-        <div><strong>Revenue-aware</strong> by design</div>
-        <div><strong>Built by founders</strong> for operators</div>
       </div>
-    </div>
-
-    <section id="intelligence">
-      <div class="shell">
-        <div class="section-head">
-          <div class="kicker">What you actually get</div>
-          <h2 class="section-title">Not another pile of AI advice. A map of where the money and leverage are.</h2>
-          <p class="section-copy">Your report is structured to answer the questions that matter before you burn another week on random tactics, tools, or content.</p>
-        </div>
-        <div class="cards">
-          <article class="card">
-            <span class="card-num">01 / MARKET</span>
-            <h3>Competitive intelligence</h3>
-            <p>See where competitors are stronger, where they are vulnerable, and what your market may be leaving open.</p>
-          </article>
-          <article class="card">
-            <span class="card-num">02 / CONVERSION</span>
-            <h3>Friction and missed opportunities</h3>
-            <p>Identify places where your website, offer, positioning, or customer journey may be costing you attention or revenue.</p>
-          </article>
-          <article class="card">
-            <span class="card-num">03 / DISCOVERY</span>
-            <h3>Search + AI visibility</h3>
-            <p>Surface opportunities to become easier to find across traditional search, local discovery, and emerging AI answer surfaces.</p>
-          </article>
-          <article class="card">
-            <span class="card-num">04 / AUTOMATION</span>
-            <h3>AI automation opportunities</h3>
-            <p>Spot repetitive work that may be worth automating first instead of buying another tool you do not need.</p>
-          </article>
-          <article class="card">
-            <span class="card-num">05 / REVENUE</span>
-            <h3>Revenue ideas</h3>
-            <p>Generate practical monetization plays connected to the business you already have—not fantasy startup ideas detached from reality.</p>
-          </article>
-          <article class="card">
-            <span class="card-num">06 / EXECUTION</span>
-            <h3>30-day priority plan</h3>
-            <p>Turn the analysis into a ranked sequence of moves so you know what to do first, what can wait, and what is probably noise.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="how-it-works">
-      <div class="shell">
-        <div class="section-head">
-          <div class="kicker">How it works</div>
-          <h2 class="section-title">Three steps. No strategy-theater maze.</h2>
-        </div>
-        <div class="process">
-          <article class="step">
-            <h3>Checkout + context</h3>
-            <p>Submit your website and the primary business objective you want the report to focus on.</p>
-          </article>
-          <article class="step">
-            <h3>GWAP analyzes the business</h3>
-            <p>Your business is reviewed through a business-intelligence lens: competition, conversion, discovery, automation, and revenue.</p>
-          </article>
-          <article class="step">
-            <h3>You get the prioritized report</h3>
-            <p>Receive the finished intelligence report within three business days, including a concrete 30-day action plan.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="shell split">
+      <div class="price-stack">
         <div>
-          <div class="kicker">GWAP operating principle</div>
-          <h2 class="section-title">Use AI to reduce uncertainty—not multiply busywork.</h2>
-          <p class="section-copy">GWAP Gang is building practical systems around business intelligence, automation, content, and digital revenue. The point is not to add more software to your life. The point is to help you see what matters and move on it faster.</p>
-          <div class="hero-actions">
-            <a class="btn-secondary" href="/author/rich-ross/">About Rich Ross</a>
-            <a class="btn-secondary" href="/blog/">Read GWAP Insights</a>
+          <div class="price-big">$49</div>
+          <div class="price-note">Pilot price · one time</div>
+        </div>
+        <a class="btn btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get My AI Report <span class="arrow">→</span></a>
+        <div class="secure">Secure checkout with Stripe</div>
+      </div>
+    </section>
+
+    <section class="command-section" id="command-center">
+      <div class="shell">
+        <div class="command-head">
+          <div>
+            <div class="section-code">GWAP / Revenue System</div>
+            <h2>Revenue Command Center.</h2>
+          </div>
+          <p>Not just a landing page. Use the GWAP cockpit to turn an idea into a sharper offer, score the commercial signal, and identify the next market test before you build more.</p>
+        </div>
+
+        <div class="command-shell">
+          <div class="command-topbar">
+            <div class="command-cell primary">
+              <div class="command-label">Today’s Command</div>
+              <div class="command-value">Turn one founder idea into a testable offer and one distribution move.</div>
+              <div class="command-note">Action first. Build only after the signal is clearer.</div>
+            </div>
+            <div class="command-cell">
+              <div class="command-label">CEO Lens</div>
+              <div class="command-value">Pain × urgency × specificity</div>
+              <div class="command-note">Score before scaling.</div>
+            </div>
+            <div class="command-cell">
+              <div class="command-label">Money Path</div>
+              <div class="command-value">Offer → Checkout → Fulfillment</div>
+              <div class="command-note">Revenue path over feature drift.</div>
+            </div>
+            <div class="command-cell">
+              <div class="command-label">Stop Point</div>
+              <div class="command-value">Test. Measure. Decide.</div>
+              <div class="command-note">Do not build forever.</div>
+            </div>
+          </div>
+
+          <div class="builder">
+            <form class="builder-form" id="offerForm">
+              <h3>Run an Offer Signal Scan</h3>
+              <p class="builder-intro">Use the simplified Command Center right here. Nothing is submitted or stored; the score runs locally in your browser.</p>
+              <div class="fields">
+                <div class="field">
+                  <label for="audience">Buyer</label>
+                  <input id="audience" value="small business owners" />
+                </div>
+                <div class="field">
+                  <label for="price">Price</label>
+                  <input id="price" value="$99" />
+                </div>
+                <div class="field wide">
+                  <label for="problem">Pain / Problem</label>
+                  <textarea id="problem">They know AI could save time and make money, but they do not know what to automate first.</textarea>
+                </div>
+                <div class="field wide">
+                  <label for="outcome">Desired Outcome</label>
+                  <textarea id="outcome">Leave with one clear priority, a practical automation plan, and the next revenue move.</textarea>
+                </div>
+              </div>
+              <div class="builder-actions">
+                <button class="btn btn-primary" type="submit">Score the Offer <span class="arrow">→</span></button>
+                <a class="btn btn-ghost" href="https://gwap-revenue-command-center.gwapgangguru.chatgpt.site" target="_blank" rel="noopener">Open Full Command Center</a>
+              </div>
+            </form>
+
+            <div class="builder-output" aria-live="polite">
+              <div class="output-empty" id="outputEmpty">
+                <div><strong>Commercial signal waiting.</strong>Enter the buyer, pain, outcome, and price—then run the scan.</div>
+              </div>
+              <div class="result" id="result">
+                <div class="scoreline">
+                  <div><small>CEO Conversion Fit</small><h4 id="scoreLabel">Testable</h4></div>
+                  <div class="score" id="scoreValue">74</div>
+                </div>
+                <h4 id="offerHeadline">A sharper offer appears here.</h4>
+                <p id="offerSummary"></p>
+                <div class="result-grid">
+                  <div class="metric"><span>Pain intensity</span><strong id="painScore">7/10</strong></div>
+                  <div class="metric"><span>Urgency</span><strong id="urgencyScore">7/10</strong></div>
+                  <div class="metric"><span>Specificity</span><strong id="specificityScore">7/10</strong></div>
+                  <div class="metric"><span>Price friction</span><strong id="frictionScore">Low</strong></div>
+                </div>
+                <div class="next-test">
+                  <small>Next Test</small>
+                  <p id="nextTest">Put the offer in front of real buyers and measure response.</p>
+                </div>
+                <a class="full-cc" href="https://gwap-revenue-command-center.gwapgangguru.chatgpt.site" target="_blank" rel="noopener">Continue inside the full Revenue Command Center →</a>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="signal-box" aria-label="GWAP decision framework">
-          <div class="signal-row"><span>Real customer pain</span><strong>PRIORITIZE</strong></div>
-          <div class="signal-row"><span>Fast path to revenue</span><strong>PRIORITIZE</strong></div>
-          <div class="signal-row"><span>Automation leverage</span><strong>PRIORITIZE</strong></div>
-          <div class="signal-row"><span>Long-term ownership</span><strong>PRIORITIZE</strong></div>
-          <div class="signal-row"><span>Complexity for its own sake</span><strong>CUT</strong></div>
-        </div>
       </div>
     </section>
 
-    <section>
+    <section class="pillars" id="systems" aria-label="What GWAP builds">
+      <article class="pillar"><div class="num">01</div><h3>Business Intelligence</h3><p>See the market. Find the leverage. Make smarter moves.</p></article>
+      <article class="pillar"><div class="num">02</div><h3>AI Automation</h3><p>Turn repetitive work into reliable systems and reclaimed time.</p></article>
+      <article class="pillar"><div class="num">03</div><h3>Creator Technology</h3><p>Build tools and workflows for modern creators and media operators.</p></article>
+      <article class="pillar"><div class="num">04</div><h3>Revenue Systems</h3><p>Turn ideas into offers, offers into transactions, and transactions into owned assets.</p></article>
+    </section>
+
+    <section class="insights">
       <div class="shell">
-        <div class="section-head">
-          <div class="kicker">From the playbook</div>
-          <h2 class="section-title">Useful ideas before you spend another dollar.</h2>
+        <div class="section-row">
+          <div><div class="section-code">Latest Insights</div><h2>The playbook.</h2></div>
+          <a href="/blog/">View all insights →</a>
         </div>
-        <div class="insights">
+        <div class="insight-grid">
           <a class="insight" href="/blog/what-small-businesses-should-automate-first-with-ai/">
-            <small>AI Automation</small>
+            <time>AI AUTOMATION</time>
             <h3>What Small Businesses Should Automate First With AI</h3>
-            <p>Start with the work that creates real leverage instead of automating everything just because you can.</p>
+            <p>Start where leverage is real: repeated work, obvious bottlenecks, and tasks that steal attention from revenue.</p>
+            <span class="read">READ ARTICLE →</span>
           </a>
           <a class="insight" href="/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/">
-            <small>AI + Originality</small>
+            <time>AI + ORIGINALITY</time>
             <h3>AI Can Copy the Recipe. It Still Can’t Give You the Sauce.</h3>
-            <p>Why access to the same models does not automatically create the same ideas, judgment, voice, or value.</p>
+            <p>The same tools do not create the same judgment, taste, lived experience, or point of view.</p>
+            <span class="read">READ ARTICLE →</span>
           </a>
         </div>
       </div>
     </section>
 
-    <div class="shell final-cta">
-      <div>
-        <div class="kicker">Ready to stop guessing?</div>
-        <h2>Put your business under the microscope.</h2>
-        <p>Get the $49 GWAP AI Business Intelligence Report pilot and walk away with a clearer picture of your opportunities and your next 30 days.</p>
+    <section class="shell founder" id="about">
+      <div class="founder-monogram" aria-hidden="true">RR</div>
+      <div class="founder-copy">
+        <small>Founder</small>
+        <h2>Rich Ross</h2>
+        <p>GWAP Gang sits at the intersection of business strategy, creative technology, AI automation, and practical revenue execution. The mission is simple: turn powerful ideas into working systems people can actually use, buy, and build on.</p>
+        <a href="/author/rich-ross/">More about Rich →</a>
       </div>
-      <a class="btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get the $49 Report</a>
-    </div>
+      <div class="founder-quote"><b>//</b> Same creativity.<br>New advantage.</div>
+    </section>
+
+    <section class="shell closing">
+      <div class="closing-brand"><strong>GWAP GANG</strong><span>CREATIVE TECHNOLOGY. REAL LEVERAGE.</span></div>
+      <div class="closing-center"><h2>Let’s build.</h2><p>Intelligence. Automation. Content. Revenue.</p></div>
+      <div class="closing-action">
+        <a class="btn btn-primary" href="https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04">Get Your $49 AI Report <span class="arrow">→</span></a>
+        <a class="mail" href="mailto:intelligence@gwapgang.com">intelligence@gwapgang.com</a>
+      </div>
+    </section>
   </main>
 
   <footer>
     <div class="shell footer-inner">
-      <div>© 2026 GWAP Gang · Build smarter. Move with purpose.</div>
-      <div class="footer-links">
-        <a href="/blog/">Insights</a>
-        <a href="/author/rich-ross/">Rich Ross</a>
-        <a href="mailto:intelligence@gwapgang.com">intelligence@gwapgang.com</a>
-      </div>
+      <div>© 2026 GWAP Gang. All rights reserved.</div>
+      <div class="footer-links"><a href="#intelligence">Intelligence</a><a href="#command-center">Command Center</a><a href="/blog/">Insights</a><a href="#about">About</a></div>
     </div>
   </footer>
+
+  <script>
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    const words = (value) => String(value || '').trim().split(/\s+/).filter(Boolean).length;
+    const includesAny = (text, signals) => signals.filter((s) => text.includes(s)).length;
+
+    document.getElementById('offerForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const audience = document.getElementById('audience').value.trim() || 'buyers';
+      const problem = document.getElementById('problem').value.trim();
+      const outcome = document.getElementById('outcome').value.trim();
+      const priceText = document.getElementById('price').value.trim() || '$49';
+      const price = Number(priceText.replace(/[^0-9.]/g, '')) || 49;
+      const combined = `${problem} ${outcome}`.toLowerCase();
+
+      const painSignals = ['wasting', 'stuck', 'lose', 'losing', 'slow', 'expensive', 'unclear', 'problem', 'missed', 'repeat', 'manual'];
+      const urgencySignals = ['now', 'today', 'urgent', 'first', 'fast', 'revenue', 'money', 'leads', 'sales', 'time'];
+      const specificitySignals = ['one', '30-day', 'plan', 'checklist', 'workflow', 'audit', 'report', 'automation', 'priority', 'revenue'];
+
+      const pain = clamp(4 + Math.floor(words(problem) / 9) + includesAny(combined, painSignals), 1, 10);
+      const urgency = clamp(3 + includesAny(combined, urgencySignals), 1, 10);
+      const specificity = clamp(3 + Math.floor(words(outcome) / 10) + includesAny(combined, specificitySignals), 1, 10);
+      const pricePenalty = price <= 100 ? 0 : price <= 300 ? 5 : price <= 750 ? 11 : 18;
+      const score = clamp(Math.round((pain * 3.2) + (urgency * 2.8) + (specificity * 3.1) + 13 - pricePenalty), 28, 96);
+
+      let label = 'Needs sharpening';
+      if (score >= 82) label = 'Strong test signal';
+      else if (score >= 68) label = 'Testable';
+      else if (score >= 52) label = 'Promising but loose';
+
+      const friction = price <= 100 ? 'Low' : price <= 300 ? 'Moderate' : price <= 750 ? 'High' : 'Very high';
+      const headline = `${audience}: move from ${problem ? 'the current pain' : 'uncertainty'} to ${outcome ? 'a clear outcome' : 'a clearer next move'}.`;
+      const summary = `At ${priceText}, this offer scores ${score}/100 on a simplified GWAP CEO lens. The strongest signal is ${pain >= urgency && pain >= specificity ? 'pain intensity' : urgency >= specificity ? 'urgency' : 'specificity'}. The weakest area is ${pain <= urgency && pain <= specificity ? 'pain clarity' : urgency <= specificity ? 'urgency' : 'specificity'}, so tighten that before adding more features.`;
+      const nextTest = score >= 82
+        ? `Put 3 message variants in front of ${audience} and track replies, clicks, and purchase intent over the next 24–72 hours.`
+        : score >= 68
+          ? `Rewrite the promise into one sentence, then ask 5 real ${audience} whether they would pay ${priceText} for the stated outcome.`
+          : `Do not build more yet. Interview 5 ${audience} and capture their exact language for the pain, desired result, and why they would act now.`;
+
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('scoreLabel').textContent = label;
+      document.getElementById('painScore').textContent = `${pain}/10`;
+      document.getElementById('urgencyScore').textContent = `${urgency}/10`;
+      document.getElementById('specificityScore').textContent = `${specificity}/10`;
+      document.getElementById('frictionScore').textContent = friction;
+      document.getElementById('offerHeadline').textContent = headline;
+      document.getElementById('offerSummary').textContent = summary;
+      document.getElementById('nextTest').textContent = nextTest;
+      document.getElementById('outputEmpty').classList.add('hidden');
+      document.getElementById('result').classList.add('active');
+    });
+  </script>
 </body>
 </html>
