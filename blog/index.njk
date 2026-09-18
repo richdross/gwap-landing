@@ -29,6 +29,8 @@ permalink: /blog/index.html
     .card h2 { margin:8px 0 6px; font-size:1.35rem; line-height:1.2; }
     .desc { color:var(--muted); }
     .empty { border:1px dashed var(--line); border-radius:16px; padding:32px; color:var(--muted); }
+    footer { padding:28px 0 48px; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; }
+    footer a { color:var(--accent); text-decoration:none; }
   </style>
 </head>
 <body>
@@ -56,5 +58,6 @@ permalink: /blog/index.html
       <div class="empty">No articles published yet. The first Pages CMS article will appear here automatically.</div>
     {% endif %}
   </main>
+  <footer><div class="shell">Contact: <a href="mailto:{{ site.email }}">{{ site.email }}</a></div></footer>
 </body>
 </html>
