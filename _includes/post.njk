@@ -3,54 +3,107 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }} — GWAP Gang</title>
+
+  {% set canonicalUrl = canonical or (site.url + page.url) %}
+  {% set heroImage = image or site.defaultImage %}
+  {% set heroImageUrl = heroImage | absoluteUrl(site.url) %}
+  {% set modifiedDate = updated or date %}
+  {% set articleCategory = category or "Gwap Intelligence" %}
+
+  <title>{{ title }} — Gwap Gang</title>
   <meta name="description" content="{{ description }}">
-  <link rel="canonical" href="https://gwapgang.com{{ page.url }}">
-  <link rel="alternate" type="application/rss+xml" title="GWAP Intelligence RSS" href="https://gwapgang.com/feed.xml">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="author" content="{{ author }}">
+  <link rel="canonical" href="{{ canonicalUrl }}">
+  <link rel="alternate" type="application/rss+xml" title="Gwap Intelligence RSS" href="{{ site.url }}{{ site.rssPath }}">
 
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="GWAP Gang">
+  <meta property="og:site_name" content="Gwap Gang">
   <meta property="og:title" content="{{ title }}">
   <meta property="og:description" content="{{ description }}">
-  <meta property="og:url" content="https://gwapgang.com{{ page.url }}">
-  {% if image %}<meta property="og:image" content="https://gwapgang.com{{ image }}">{% endif %}
+  <meta property="og:url" content="{{ canonicalUrl }}">
+  <meta property="og:image" content="{{ heroImageUrl }}">
+  <meta property="og:image:alt" content="{{ imageAlt or title }}">
   <meta property="article:published_time" content="{{ date | isoDate }}">
+  <meta property="article:modified_time" content="{{ modifiedDate | isoDate }}">
   <meta property="article:author" content="{{ author }}">
+  <meta property="article:section" content="{{ articleCategory }}">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ title }}">
   <meta name="twitter:description" content="{{ description }}">
-  {% if image %}<meta name="twitter:image" content="https://gwapgang.com{{ image }}">{% endif %}
+  <meta name="twitter:image" content="{{ heroImageUrl }}">
+  <meta name="twitter:image:alt" content="{{ imageAlt or title }}">
+
+  {% if site.preferredSourcesEnabled %}
+  <script async src="https://news.google.com/swg/js/v1/publisher.js"></script>
+  {% endif %}
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": {{ title | json | safe }},
-    "description": {{ description | json | safe }},
-    "datePublished": {{ date | isoDate | json | safe }},
-    "dateModified": {{ date | isoDate | json | safe }},
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": "https://gwapgang.com{{ page.url }}"
-    },
-    "author": {
-      "@type": "Person",
-      "name": {{ author | json | safe }},
-      "url": "https://gwapgang.com{{ authorUrl }}",
-      "jobTitle": {{ authorRole | json | safe }},
-      "worksFor": {
+    "@graph": [
+      {
         "@type": "Organization",
-        "name": "GWAP Gang",
-        "url": "https://gwapgang.com/"
+        "@id": "{{ site.url }}/#organization",
+        "name": "Gwap Gang",
+        "url": "{{ site.url }}/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "{{ site.publisherLogo | absoluteUrl(site.url) }}"
+        }
+      },
+      {
+        "@type": "Person",
+        "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person",
+        "name": {{ author | json | safe }},
+        "url": "{{ authorUrl | absoluteUrl(site.url) }}",
+        "jobTitle": {{ authorRole | json | safe }},
+        "worksFor": { "@id": "{{ site.url }}/#organization" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "{{ canonicalUrl }}#breadcrumbs",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Gwap Gang",
+            "item": "{{ site.url }}/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": "{{ site.url }}/blog/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": {{ title | json | safe }},
+            "item": "{{ canonicalUrl }}"
+          }
+        ]
+      },
+      {
+        "@type": "BlogPosting",
+        "@id": "{{ canonicalUrl }}#article",
+        "url": "{{ canonicalUrl }}",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "{{ canonicalUrl }}"
+        },
+        "headline": {{ title | json | safe }},
+        "description": {{ description | json | safe }},
+        "image": ["{{ heroImageUrl }}"],
+        "datePublished": {{ date | isoDate | json | safe }},
+        "dateModified": {{ modifiedDate | isoDate | json | safe }},
+        "articleSection": {{ articleCategory | json | safe }},
+        "author": { "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person" },
+        "publisher": { "@id": "{{ site.url }}/#organization" },
+        "breadcrumb": { "@id": "{{ canonicalUrl }}#breadcrumbs" }
       }
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "GWAP Gang",
-      "url": "https://gwapgang.com/"
-    }{% if image %},
-    "image": ["https://gwapgang.com{{ image }}"]{% endif %}
+    ]
   }
   </script>
 
@@ -79,7 +132,10 @@
     .reading-shell { width:min(820px,100%); }
     header { padding:24px 0; border-bottom:1px solid var(--line); }
     .brand { color:var(--accent); text-decoration:none; font-weight:900; letter-spacing:.14em; font-size:.82rem; }
-    article { padding:72px 0 96px; }
+    .breadcrumbs { padding:22px 0 0; color:var(--muted); font-size:.82rem; }
+    .breadcrumbs a { color:var(--muted); text-decoration:none; }
+    .breadcrumbs a:hover { color:var(--accent); }
+    article { padding:42px 0 96px; }
     .eyebrow { color:var(--accent); font-size:.76rem; font-weight:850; letter-spacing:.18em; text-transform:uppercase; }
     article > h1 {
       max-width:980px;
@@ -105,7 +161,6 @@
       margin-bottom:38px;
       font-size:.95rem;
     }
-    .meta strong { color:var(--text); font-weight:700; }
     .meta .author-link { color:var(--text); text-decoration:none; font-weight:700; }
     .meta .author-link:hover { color:var(--accent); }
     .author-role { color:var(--muted); }
@@ -129,10 +184,7 @@
     }
     .body > *:first-child { margin-top:0; }
     .body p { margin:0 0 1.45em; }
-    .body h1,
-    .body h2,
-    .body h3,
-    .body h4 {
+    .body h1,.body h2,.body h3,.body h4 {
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       color:var(--text);
       line-height:1.08;
@@ -157,34 +209,193 @@
     .body ul,.body ol { padding-left:1.25em; margin-bottom:1.5em; }
     .body li { margin:.45em 0; }
     .body a { text-underline-offset:3px; }
+
+    .commercial {
+      width:min(760px,100%);
+      margin:58px 0 0;
+      padding:28px;
+      border:1px solid #2d4939;
+      border-radius:18px;
+      background:linear-gradient(145deg,rgba(56,255,136,.08),rgba(11,15,13,.96));
+    }
+    .commercial h2 { margin:8px 0 10px; font-size:clamp(1.55rem,3vw,2.15rem); line-height:1.05; letter-spacing:-.03em; }
+    .commercial p { margin:0; color:var(--soft); line-height:1.6; }
+    .commercial .cta {
+      display:inline-flex;
+      margin-top:20px;
+      min-height:46px;
+      padding:0 18px;
+      align-items:center;
+      justify-content:center;
+      color:#07110b;
+      background:var(--accent);
+      text-decoration:none;
+      font-weight:900;
+      border-radius:8px;
+    }
+    .disclosure {
+      width:min(760px,100%);
+      margin:28px 0;
+      padding:14px 16px;
+      border-left:3px solid var(--accent);
+      color:var(--muted);
+      background:var(--panel);
+      font-size:.88rem;
+      line-height:1.55;
+    }
+    .discovery {
+      width:min(760px,100%);
+      margin:44px 0 0;
+      padding-top:26px;
+      border-top:1px solid var(--line);
+    }
+    .discovery p { margin:0 0 14px; color:var(--muted); font-size:.9rem; }
+    .search-profile { display:inline-block; margin-top:12px; font-size:.9rem; }
+
+    .related {
+      width:min(900px,100%);
+      margin-top:58px;
+      padding-top:32px;
+      border-top:1px solid var(--line);
+    }
+    .related h2 { margin:0 0 18px; font-size:1.35rem; }
+    .related-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+    .related-card {
+      display:block;
+      padding:18px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:var(--panel);
+      color:var(--text);
+      text-decoration:none;
+    }
+    .related-card small { color:var(--accent); text-transform:uppercase; letter-spacing:.08em; font-weight:800; }
+    .related-card strong { display:block; margin-top:7px; line-height:1.3; }
+
     .post-end { margin-top:64px; padding-top:30px; border-top:1px solid var(--line); }
     .back { display:inline-block; text-decoration:none; font-weight:800; font-size:.95rem; }
     footer { padding:30px 0 54px; color:var(--muted); border-top:1px solid var(--line); font-size:.88rem; }
     @media (max-width:640px) {
       .shell { width:min(100% - 24px,1120px); }
-      article { padding:48px 0 72px; }
+      article { padding:34px 0 72px; }
       .hero-wrap { margin-bottom:38px; }
       .body { font-size:1.08rem; line-height:1.78; }
+      .commercial { padding:22px; }
     }
   </style>
 </head>
 <body>
   <header><div class="shell"><a class="brand" href="/">GWAP GANG</a></div></header>
   <main class="shell">
-    <article>
-      <div class="eyebrow">GWAP Intelligence</div>
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Gwap Gang</a> / <a href="/blog/">Blog</a> / <span>{{ title }}</span>
+    </nav>
+
+    <article data-gwap-article="{{ page.fileSlug }}">
+      <div class="eyebrow">{{ articleCategory }}</div>
       <h1>{{ title }}</h1>
       {% if description %}<p class="dek">{{ description }}</p>{% endif %}
       <div class="meta">
         <a class="author-link" href="{{ authorUrl }}">{{ author }}</a>
         {% if authorRole %}<span class="author-role">{{ authorRole }}</span>{% endif %}
-        <span class="dot">•</span><span>{{ date | readableDate }}</span>
+        <span class="dot">•</span><span>Published {{ date | readableDate }}</span>
+        {% if updated %}<span class="dot">•</span><span>Updated {{ updated | readableDate }}</span>{% endif %}
       </div>
-      {% if image %}<div class="hero-wrap"><img class="hero" src="{{ image }}" alt="{{ title }}"></div>{% endif %}
+
+      {% if image %}
+      <div class="hero-wrap">
+        <img class="hero" src="{{ image }}" alt="{{ imageAlt or title }}" loading="eager" fetchpriority="high">
+      </div>
+      {% endif %}
+
+      {% if affiliateDisclosure %}
+      <aside class="disclosure" aria-label="Affiliate disclosure">
+        {{ affiliateDisclosure }}
+      </aside>
+      {% endif %}
+
       <div class="reading-shell"><div class="body">{{ content | safe }}</div></div>
-      <div class="post-end"><a class="back" href="/blog/">← Back to GWAP Blog</a></div>
+
+      {% set ctaTarget = ctaUrl or site.primaryOffer.url %}
+      {% set ctaHeading = ctaTitle or site.primaryOffer.title %}
+      {% set ctaLabel = ctaText or site.primaryOffer.text %}
+      {% if ctaTarget %}
+      <aside class="commercial" aria-label="Gwap Gang offer">
+        <div class="eyebrow">{{ site.primaryOffer.eyebrow }}</div>
+        <h2>{{ ctaHeading }}</h2>
+        <p>{{ site.primaryOffer.description }}</p>
+        <a class="cta" href="{{ ctaTarget }}" data-gwap-event="article_cta_click" data-gwap-placement="post_end">{{ ctaLabel }} →</a>
+      </aside>
+      {% endif %}
+
+      {% if site.preferredSourcesEnabled or site.googleSearchProfileUrl %}
+      <section class="discovery" aria-label="Follow Gwap Gang">
+        <p>Want more Gwap Gang intelligence in your search and discovery feeds?</p>
+        {% if site.preferredSourcesEnabled %}
+        <div google-add-preferred-source-btn data-theme="dark" data-lang="en"></div>
+        {% endif %}
+        {% if site.googleSearchProfileUrl %}
+        <a class="search-profile" href="{{ site.googleSearchProfileUrl }}" rel="me">Follow Gwap Gang on Google →</a>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {% set related = collections.posts | relatedPosts(page.url, 3) %}
+      {% if related.length %}
+      <section class="related" aria-label="Related Gwap Gang articles">
+        <div class="eyebrow">Keep going</div>
+        <h2>More Gwap Intelligence</h2>
+        <div class="related-grid">
+          {% for post in related %}
+          <a class="related-card" href="{{ post.url }}" data-gwap-event="related_article_click">
+            <small>{{ post.data.category or "Gwap Intelligence" }}</small>
+            <strong>{{ post.data.title }}</strong>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <div class="post-end"><a class="back" href="/blog/">← Back to Gwap Blog</a></div>
     </article>
   </main>
-  <footer><div class="shell">© 2026 GWAP Gang. Build. Ship. Get Paid.</div></footer>
+  <footer><div class="shell">© 2026 Gwap Gang. Build. Ship. Get Paid.</div></footer>
+
+  <script>
+  (() => {
+    const base = {
+      article_slug: {{ page.fileSlug | json | safe }},
+      article_title: {{ title | json | safe }},
+      article_category: {{ articleCategory | json | safe }}
+    };
+
+    const emit = (event, detail = {}) => {
+      const payload = { event, ...base, ...detail };
+      window.dispatchEvent(new CustomEvent("gwap:analytics", { detail: payload }));
+      if (Array.isArray(window.dataLayer)) window.dataLayer.push(payload);
+    };
+
+    emit("article_view");
+
+    let midpointSent = false;
+    addEventListener("scroll", () => {
+      if (midpointSent) return;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      if (max > 0 && scrollY / max >= 0.5) {
+        midpointSent = true;
+        emit("article_scroll_50");
+      }
+    }, { passive: true });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("[data-gwap-event]");
+      if (!target) return;
+      emit(target.dataset.gwapEvent, {
+        placement: target.dataset.gwapPlacement || null,
+        destination: target.href || null
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
