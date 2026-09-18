@@ -15,7 +15,7 @@ eleventyExcludeFromCollections: true
     {% if post.data.image %}
     <image:image>
       <image:loc>{{ post.data.image | absoluteUrl(site.url) }}</image:loc>
-      <image:title>{{ post.data.imageAlt or post.data.title }}</image:title>
+      <image:title>{{ (post.data.imageAlt or post.data.title) | xmlEscape }}</image:title>
     </image:image>
     {% endif %}
   </url>
