@@ -23,6 +23,13 @@ module.exports = function (eleventyConfig) {
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
 
+  eleventyConfig.addFilter("xmlEscape", (value = "") => String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;"));
+
   eleventyConfig.addFilter("absoluteUrl", (value, base = "https://gwapgang.com") => {
     if (!value) return base;
     try {
