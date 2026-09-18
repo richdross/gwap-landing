@@ -11,12 +11,12 @@ eleventyExcludeFromCollections: true
     <language>en-us</language>
     {% for post in collections.posts | reverse %}
     <item>
-      <title>{{ post.data.title }}</title>
+      <title>{{ post.data.title | xmlEscape }}</title>
       <link>{{ site.url }}{{ post.url }}</link>
       <guid isPermaLink="true">{{ site.url }}{{ post.url }}</guid>
       <pubDate>{{ post.date | rfc822Date }}</pubDate>
-      <description>{{ post.data.description }}</description>
-      {% if post.data.category %}<category>{{ post.data.category }}</category>{% endif %}
+      <description>{{ post.data.description | xmlEscape }}</description>
+      {% if post.data.category %}<category>{{ post.data.category | xmlEscape }}</category>{% endif %}
     </item>
     {% endfor %}
   </channel>
