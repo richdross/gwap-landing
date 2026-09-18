@@ -48,6 +48,12 @@
         "@id": "{{ site.url }}/#organization",
         "name": "Gwap Gang",
         "url": "{{ site.url }}/",
+        "email": "{{ site.email }}",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "{{ site.contactPoint.contactType }}",
+          "email": "{{ site.contactPoint.email }}"
+        },
         "logo": {
           "@type": "ImageObject",
           "url": "{{ site.publisherLogo | absoluteUrl(site.url) }}"
@@ -359,7 +365,7 @@
       <div class="post-end"><a class="back" href="/blog/">← Back to Gwap Blog</a></div>
     </article>
   </main>
-  <footer><div class="shell">© 2026 Gwap Gang. Build. Ship. Get Paid.</div></footer>
+  <footer><div class="shell">© 2026 Gwap Gang. Build. Ship. Get Paid. · <a href="mailto:{{ site.email }}">{{ site.email }}</a></div></footer>
 
   <script>
   (() => {

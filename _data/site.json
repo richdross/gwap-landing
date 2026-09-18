@@ -4,6 +4,11 @@
   "description": "Creative technology, AI automation, business intelligence, creator systems, and revenue strategy for founders, creators, and small businesses.",
   "publisherLogo": "/images/gwap-gang-logo.png",
   "defaultImage": "/images/gwap-gang-logo.png",
+  "email": "intelligence@gwapgang.com",
+  "contactPoint": {
+    "contactType": "customer service",
+    "email": "intelligence@gwapgang.com"
+  },
   "rssPath": "/feed.xml",
   "preferredSourcesEnabled": true,
   "googleSearchProfileUrl": "",
