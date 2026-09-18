@@ -3,6 +3,7 @@
   "permalink": "/blog/{{ page.fileSlug }}/index.html",
   "tags": ["posts"],
   "author": "Rich Ross",
-  "authorRole": "Founder, GWAP Gang",
-  "authorUrl": "/author/rich-ross/"
+  "authorRole": "Founder, Gwap Gang",
+  "authorUrl": "/author/rich-ross/",
+  "category": "Gwap Intelligence"
 }
