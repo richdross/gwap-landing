@@ -1,5 +1,5 @@
 ---
-title: AI Agents for Small Business: What They Should Do—and What They Should Never Decide
+title: "AI Agents for Small Business: What They Should Do—and What They Should Never Decide"
 author: Rich Ross
 authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
