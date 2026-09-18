@@ -42,6 +42,12 @@ jobs:
           test -f _site/index.html
           test -f _site/blog/index.html
           test -d _site/images/blog
+          test -f _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
           grep -q 'Gwap Gang — Build. Ship. Get Paid.' _site/index.html
           grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
-          echo 'GWAP Publisher V0.1 build verification PASS'
+          grep -q 'Was this useful?' _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
+          grep -q 'Related Intelligence' _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
+          grep -q 'G-MZF7SR86XK' _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
+          grep -q 'article_read_depth' _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
+          grep -q '"@type": "BlogPosting"' _site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html
+          echo 'GWAP Publisher professional blog engine verification PASS'
