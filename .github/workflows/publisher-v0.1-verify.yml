@@ -5,10 +5,16 @@ on:
     paths:
       - '.eleventy.js'
       - '.pages.yml'
+      - '_data/**'
       - 'package.json'
       - '_includes/**'
       - 'blog/**'
       - 'content/blog/**'
+      - 'author/**'
+      - 'feed.njk'
+      - 'sitemap.njk'
+      - 'robots.txt'
+      - 'public/robots.txt'
       - 'public/images/blog/**'
       - '.github/workflows/publisher-v0.1-verify.yml'
   workflow_dispatch:
@@ -39,9 +45,97 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          ARTICLE="_site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html"
+          HERO="_site/images/blog/chatgpt-image-jun-7-2026-062819-pm.png"
+
           test -f _site/index.html
           test -f _site/blog/index.html
-          test -d _site/images/blog
-          grep -q 'Gwap Gang — Build. Ship. Get Paid.' _site/index.html
+          test -f "$ARTICLE"
+          test -f "$HERO"
+          test -f _site/feed.xml
+          test -f _site/sitemap.xml
+          test -f _site/robots.txt
+
+          grep -q 'Creative Technology for Business' _site/index.html
           grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
-          echo 'GWAP Publisher V0.1 build verification PASS'
+
+          grep -q 'max-image-preview:large' "$ARTICLE"
+          grep -q 'rel="canonical" href="https://gwapgang.com/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/"' "$ARTICLE"
+          grep -q 'property="og:type" content="article"' "$ARTICLE"
+          grep -q 'property="article:modified_time"' "$ARTICLE"
+          grep -q 'google-add-preferred-source-btn' "$ARTICLE"
+          grep -q 'news.google.com/swg/js/v1/publisher.js' "$ARTICLE"
+          grep -q 'data-gwap-event="article_cta_click"' "$ARTICLE"
+          grep -q 'article_view' "$ARTICLE"
+          grep -q 'article_scroll_50' "$ARTICLE"
+
+          grep -q 'User-agent: OAI-SearchBot' _site/robots.txt
+          grep -q 'User-agent: Googlebot' _site/robots.txt
+          grep -q 'User-agent: Bingbot' _site/robots.txt
+          grep -q 'ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce' _site/sitemap.xml
+          grep -q 'AI + Originality' _site/feed.xml
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const articlePath = "_site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html";
+          const html = fs.readFileSync(articlePath, "utf8");
+          const blocks = [...html.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
+
+          if (!blocks.length) throw new Error("No JSON-LD block found");
+
+          const documents = blocks.map((match) => JSON.parse(match[1]));
+          const graph = documents.flatMap((doc) => Array.isArray(doc["@graph"]) ? doc["@graph"] : [doc]);
+          const getType = (type) => graph.find((node) => node && node["@type"] === type);
+
+          const organization = getType("Organization");
+          const person = getType("Person");
+          const breadcrumbs = getType("BreadcrumbList");
+          const article = getType("BlogPosting");
+
+          if (!organization) throw new Error("Organization schema missing");
+          if (!person) throw new Error("Person schema missing");
+          if (!breadcrumbs) throw new Error("BreadcrumbList schema missing");
+          if (!article) throw new Error("BlogPosting schema missing");
+
+          const expectedUrl = "https://gwapgang.com/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/";
+          if (article.url !== expectedUrl) throw new Error("Article URL mismatch");
+          if (article.mainEntityOfPage?.["@id"] !== expectedUrl) throw new Error("mainEntityOfPage mismatch");
+          if (!article.headline) throw new Error("headline missing");
+          if (!article.description) throw new Error("description missing");
+          if (!article.datePublished) throw new Error("datePublished missing");
+          if (!article.dateModified) throw new Error("dateModified missing");
+          if (!Array.isArray(article.image) || !article.image.length) throw new Error("article image missing");
+          if (!article.author?.["@id"]) throw new Error("author reference missing");
+          if (!article.publisher?.["@id"]) throw new Error("publisher reference missing");
+          if (person.name !== "Rich Ross") throw new Error("author name mismatch");
+          if (organization.url !== "https://gwapgang.com/") throw new Error("publisher URL mismatch");
+          if (!Array.isArray(breadcrumbs.itemListElement) || breadcrumbs.itemListElement.length !== 3) {
+            throw new Error("breadcrumb structure invalid");
+          }
+
+          console.log("Structured data JSON-LD parse and publisher assertions PASS");
+          NODE
+
+          node <<'NODE'
+          const fs = require("fs");
+          const path = "_site/images/blog/chatgpt-image-jun-7-2026-062819-pm.png";
+          const buffer = fs.readFileSync(path);
+
+          const pngSignature = "89504e470d0a1a0a";
+          if (buffer.subarray(0, 8).toString("hex") !== pngSignature) {
+            throw new Error("Validation hero is not a PNG");
+          }
+
+          const width = buffer.readUInt32BE(16);
+          const height = buffer.readUInt32BE(20);
+
+          if (width < 1200) {
+            throw new Error(`Validation hero width is ${width}px; minimum target is 1200px`);
+          }
+
+          console.log(`Validation hero dimensions PASS: ${width}x${height}`);
+          NODE
+
+          echo 'GWAP Publisher + Revenue + AI Discovery Engine V0.1 verification PASS'
