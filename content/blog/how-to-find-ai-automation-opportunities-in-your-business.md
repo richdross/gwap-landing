@@ -5,8 +5,8 @@ authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
 category: AI Automation
-image: /images/blog/ai-automation-opportunities-gwap.webp
-imageAlt: Gwap Gang graffiti-style logo in neon green and red on a city wall
+image: /images/blog/ai-automation-opportunities-gwap.jpg
+imageAlt: Gwap Gang graffiti-style neon green and red lettering on a city wall
 description: A practical framework for finding the highest-value AI automation opportunities inside a small business without wasting money on random tools.
 ctaTitle: Find the AI opportunities your business is missing.
 ctaText: Get the $49 AI Intelligence Report

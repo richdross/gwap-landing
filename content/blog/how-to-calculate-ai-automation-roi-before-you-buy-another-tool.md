@@ -5,8 +5,8 @@ authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
 category: AI ROI
-image: /images/blog/ai-automation-roi-gwap.webp
-imageAlt: Gwap logo emerging through vivid blue and pink smoke
+image: /images/blog/ai-automation-roi-gwap.jpg
+imageAlt: Bright Gwap logo in neon green and red with high-speed light streaks
 description: A simple ROI framework for deciding whether an AI automation project is actually worth the software, setup, maintenance, and human oversight it requires.
 ctaTitle: Want to know which AI investments could actually pay off for your business?
 ctaText: Get the $49 AI Intelligence Report
