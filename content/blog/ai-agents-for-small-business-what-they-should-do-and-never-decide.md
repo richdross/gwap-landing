@@ -5,8 +5,8 @@ authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
 category: AI Agents
-image: /images/blog/ai-agents-small-business-gwap.webp
-imageAlt: Gwap neon graffiti logo glowing green and pink against a dark wall
+image: /images/blog/ai-agents-small-business-gwap.jpg
+imageAlt: Gwap Gang logo in glossy neon green and red on a black background
 description: A practical guide to giving AI agents useful business responsibilities without giving them dangerous authority over high-impact decisions.
 ctaTitle: Find where an AI agent could safely create leverage in your business.
 ctaText: Get the $49 AI Intelligence Report
