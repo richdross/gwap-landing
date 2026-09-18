@@ -39,6 +39,14 @@
   <script async src="https://news.google.com/swg/js/v1/publisher.js"></script>
   {% endif %}
 
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MZF7SR86XK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-MZF7SR86XK', { page_path: '{{ page.url }}' });
+  </script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -118,6 +126,7 @@
       color-scheme: dark;
       --bg:#050706;
       --panel:#0b0f0d;
+      --panel2:#0f1511;
       --text:#f3f7f4;
       --muted:#9aa79f;
       --line:#1d2b23;
@@ -125,6 +134,7 @@
       --soft:#d8e0db;
     }
     * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
     body {
       margin:0;
       background:var(--bg);
@@ -134,6 +144,17 @@
       text-rendering:optimizeLegibility;
     }
     a { color:var(--accent); }
+    button { font:inherit; }
+    .reading-progress {
+      position:fixed;
+      top:0;
+      left:0;
+      z-index:100;
+      width:0;
+      height:3px;
+      background:var(--accent);
+      box-shadow:0 0 18px rgba(56,255,136,.4);
+    }
     .shell { width:min(1120px,calc(100% - 32px)); margin:auto; }
     .reading-shell { width:min(820px,100%); }
     header { padding:24px 0; border-bottom:1px solid var(--line); }
@@ -216,6 +237,39 @@
     .body li { margin:.45em 0; }
     .body a { text-underline-offset:3px; }
 
+    .engagement {
+      width:min(760px,100%);
+      margin-top:54px;
+      display:grid;
+      gap:16px;
+    }
+    .engagement-panel {
+      padding:22px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(180deg,var(--panel2),var(--panel));
+    }
+    .engagement-panel h2 { margin:0 0 6px; font-size:1.08rem; }
+    .engagement-panel p { margin:0; color:var(--muted); font-size:.9rem; line-height:1.55; }
+    .engagement-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:15px; }
+    .engagement-action {
+      min-height:42px;
+      padding:0 14px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #2a3b31;
+      border-radius:9px;
+      background:#090d0b;
+      color:var(--text);
+      text-decoration:none;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .engagement-action:hover,.engagement-action:focus-visible { border-color:var(--accent); outline:none; }
+    .engagement-action[aria-pressed="true"] { color:var(--accent); border-color:var(--accent); background:rgba(56,255,136,.06); }
+    .engagement-status { min-height:18px; margin-top:9px; color:var(--accent); font-size:.8rem; }
+
     .commercial {
       width:min(760px,100%);
       margin:58px 0 0;
@@ -286,18 +340,19 @@
       article { padding:34px 0 72px; }
       .hero-wrap { margin-bottom:38px; }
       .body { font-size:1.08rem; line-height:1.78; }
-      .commercial { padding:22px; }
+      .commercial,.engagement-panel { padding:20px; }
     }
   </style>
 </head>
 <body>
+  <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
   <header><div class="shell"><a class="brand" href="/">GWAP GANG</a></div></header>
   <main class="shell">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="/">Gwap Gang</a> / <a href="/blog/">Blog</a> / <span>{{ title }}</span>
     </nav>
 
-    <article data-gwap-article="{{ page.fileSlug }}">
+    <article data-gwap-article="{{ page.fileSlug }}" data-article-url="{{ page.url }}" data-article-title="{{ title }}">
       <div class="eyebrow">{{ articleCategory }}</div>
       <h1>{{ title }}</h1>
       {% if description %}<p class="dek">{{ description }}</p>{% endif %}
@@ -306,6 +361,7 @@
         {% if authorRole %}<span class="author-role">{{ authorRole }}</span>{% endif %}
         <span class="dot">•</span><span>Published {{ date | readableDate }}</span>
         {% if updated %}<span class="dot">•</span><span>Updated {{ updated | readableDate }}</span>{% endif %}
+        <span class="dot">•</span><span>{{ content | readingTime }} min read</span>
       </div>
 
       {% if image %}
@@ -320,7 +376,30 @@
       </aside>
       {% endif %}
 
-      <div class="reading-shell"><div class="body">{{ content | safe }}</div></div>
+      <div class="reading-shell"><div class="body" id="article-body">{{ content | safe }}</div></div>
+
+      <section class="engagement" aria-label="Article feedback and sharing">
+        <div class="engagement-panel">
+          <h2>Was this useful?</h2>
+          <p>Your feedback helps Gwap Intelligence produce more of what is actually worth reading.</p>
+          <div class="engagement-actions">
+            <button class="engagement-action reaction" type="button" data-reaction="helpful" aria-pressed="false">👍 Yes</button>
+            <button class="engagement-action reaction" type="button" data-reaction="not_helpful" aria-pressed="false">👎 Not really</button>
+          </div>
+          <div class="engagement-status" id="reaction-status" aria-live="polite"></div>
+        </div>
+        <div class="engagement-panel">
+          <h2>Share this intelligence</h2>
+          <p>Send the article to somebody who can put it to work.</p>
+          <div class="engagement-actions">
+            <button class="engagement-action" type="button" id="native-share">Share</button>
+            <button class="engagement-action" type="button" id="copy-link">Copy link</button>
+            <a class="engagement-action" id="linkedin-share" href="#" target="_blank" rel="noopener">LinkedIn</a>
+            <a class="engagement-action" id="x-share" href="#" target="_blank" rel="noopener">X</a>
+          </div>
+          <div class="engagement-status" id="share-status" aria-live="polite"></div>
+        </div>
+      </section>
 
       {% set ctaTarget = ctaUrl or site.primaryOffer.url %}
       {% set ctaHeading = ctaTitle or site.primaryOffer.title %}
@@ -369,37 +448,118 @@
 
   <script>
   (() => {
+    const article = document.querySelector("[data-gwap-article]");
+    const articleBody = document.getElementById("article-body");
+    const progress = document.getElementById("reading-progress");
+    const canonical = document.querySelector('link[rel="canonical"]')?.href || location.href;
     const base = {
       article_slug: {{ page.fileSlug | json | safe }},
       article_title: {{ title | json | safe }},
-      article_category: {{ articleCategory | json | safe }}
+      article_category: {{ articleCategory | json | safe }},
+      article_path: {{ page.url | json | safe }}
     };
 
     const emit = (event, detail = {}) => {
-      const payload = { event, ...base, ...detail };
-      window.dispatchEvent(new CustomEvent("gwap:analytics", { detail: payload }));
-      if (Array.isArray(window.dataLayer)) window.dataLayer.push(payload);
+      const params = { ...base, ...detail };
+      window.dispatchEvent(new CustomEvent("gwap:analytics", { detail: { event, ...params } }));
+      if (typeof window.gtag === "function") window.gtag("event", event, params);
     };
 
     emit("article_view");
 
-    let midpointSent = false;
-    addEventListener("scroll", () => {
-      if (midpointSent) return;
-      const max = document.documentElement.scrollHeight - innerHeight;
-      if (max > 0 && scrollY / max >= 0.5) {
-        midpointSent = true;
-        emit("article_scroll_50");
+    const firedDepths = new Set();
+    const updateProgress = () => {
+      if (!articleBody || !progress) return;
+      const rect = articleBody.getBoundingClientRect();
+      const start = window.scrollY + rect.top;
+      const end = start + articleBody.offsetHeight - window.innerHeight;
+      const percent = end <= start ? 100 : Math.max(0, Math.min(100, ((window.scrollY - start) / (end - start)) * 100));
+      progress.style.width = percent + "%";
+
+      [25, 50, 75, 100].forEach((threshold) => {
+        if (percent >= threshold && !firedDepths.has(threshold)) {
+          firedDepths.add(threshold);
+          emit("article_read_depth", { percent_read: threshold });
+          if (threshold === 50) emit("article_scroll_50");
+          if (threshold === 100) emit("article_completed");
+        }
+      });
+    };
+
+    addEventListener("scroll", updateProgress, { passive: true });
+    addEventListener("resize", updateProgress);
+    updateProgress();
+
+    const reactionKey = "gwap_reaction:" + base.article_path;
+    const reactionButtons = [...document.querySelectorAll(".reaction")];
+    const reactionStatus = document.getElementById("reaction-status");
+    let savedReaction = null;
+    try { savedReaction = localStorage.getItem(reactionKey); } catch (_) {}
+
+    if (savedReaction) {
+      reactionButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.reaction === savedReaction));
+      });
+      if (reactionStatus) reactionStatus.textContent = "Feedback saved. Thank you.";
+    }
+
+    reactionButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const reaction = button.dataset.reaction;
+        reactionButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        try { localStorage.setItem(reactionKey, reaction); } catch (_) {}
+        if (reactionStatus) reactionStatus.textContent = "Feedback saved. Thank you.";
+        emit("article_feedback", { reaction });
+      });
+    });
+
+    const shareStatus = document.getElementById("share-status");
+    const nativeShare = document.getElementById("native-share");
+    const copyLink = document.getElementById("copy-link");
+    const linkedinShare = document.getElementById("linkedin-share");
+    const xShare = document.getElementById("x-share");
+
+    if (linkedinShare) linkedinShare.href = "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(canonical);
+    if (xShare) xShare.href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(base.article_title) + "&url=" + encodeURIComponent(canonical);
+
+    copyLink?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(canonical);
+        if (shareStatus) shareStatus.textContent = "Link copied.";
+        emit("article_share", { method: "copy_link" });
+      } catch (_) {
+        if (shareStatus) shareStatus.textContent = "Copy failed. Use your browser address bar.";
       }
-    }, { passive: true });
+    });
+
+    nativeShare?.addEventListener("click", async () => {
+      if (!navigator.share) {
+        copyLink?.click();
+        return;
+      }
+      try {
+        await navigator.share({ title: base.article_title, url: canonical });
+        emit("article_share", { method: "native" });
+      } catch (_) {}
+    });
+
+    linkedinShare?.addEventListener("click", () => emit("article_share", { method: "linkedin" }));
+    xShare?.addEventListener("click", () => emit("article_share", { method: "x" }));
 
     document.addEventListener("click", (event) => {
-      const target = event.target.closest("[data-gwap-event]");
-      if (!target) return;
-      emit(target.dataset.gwapEvent, {
-        placement: target.dataset.gwapPlacement || null,
-        destination: target.href || null
-      });
+      const tracked = event.target.closest("[data-gwap-event]");
+      if (tracked) {
+        emit(tracked.dataset.gwapEvent, {
+          placement: tracked.dataset.gwapPlacement || null,
+          destination: tracked.href || null
+        });
+        return;
+      }
+
+      const bodyLink = event.target.closest(".body a");
+      if (bodyLink) {
+        emit("article_link_click", { destination: bodyLink.href || bodyLink.getAttribute("href") || null });
+      }
     });
   })();
   </script>

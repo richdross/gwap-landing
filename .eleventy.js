@@ -39,6 +39,18 @@ module.exports = function (eleventyConfig) {
     }
   });
 
+  eleventyConfig.addFilter("readingTime", (value) => {
+    const text = String(value || "")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&[a-z0-9#]+;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const words = text ? text.split(" ").length : 0;
+    return Math.max(1, Math.ceil(words / 225));
+  });
+
   eleventyConfig.addFilter("relatedPosts", (posts, currentUrl, count = 3) => {
     if (!Array.isArray(posts)) return [];
 
