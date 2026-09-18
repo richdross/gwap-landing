@@ -23,6 +23,32 @@ module.exports = function (eleventyConfig) {
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
 
+  eleventyConfig.addFilter("xmlEscape", (value = "") => String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;"));
+
+  eleventyConfig.addFilter("absoluteUrl", (value, base = "https://gwapgang.com") => {
+    if (!value) return base;
+    try {
+      return new URL(value, base).href;
+    } catch {
+      return value;
+    }
+  });
+
+  eleventyConfig.addFilter("relatedPosts", (posts, currentUrl, count = 3) => {
+    if (!Array.isArray(posts)) return [];
+
+    const limit = Math.max(0, Number(count) || 3);
+    return [...posts]
+      .reverse()
+      .filter((post) => post && post.url && post.url !== currentUrl)
+      .slice(0, limit);
+  });
+
   return {
     dir: {
       input: ".",

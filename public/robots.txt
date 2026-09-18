@@ -1,6 +1,15 @@
-# GWAP Gang crawler baseline
+# Gwap Gang crawler policy
+# Search and answer-engine discovery stay open. Training controls remain separate.
 # Cloudflare may prepend managed AI-specific directives.
-# Keep search/discovery open while opting out of Apple foundation-model training.
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
 
 User-agent: Applebot
 Allow: /

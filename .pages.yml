@@ -8,13 +8,13 @@ media:
 
 content:
   - name: blog
-    label: GWAP Blog
+    label: Gwap Blog
     type: collection
     path: content/blog
     filename: "{primary}.md"
     exclude: ["blog.json", ".gitkeep"]
     view:
-      fields: [title, author, date]
+      fields: [title, author, date, category]
       primary: title
       sort: [date, title]
       default:
@@ -29,13 +29,34 @@ content:
         label: Author
         type: string
         required: true
-        default: "Rich — GWAP Gang"
+        default: "Rich Ross"
+      - name: authorRole
+        label: Author Role
+        type: string
+        required: false
+        default: "Founder, Gwap Gang"
+      - name: authorUrl
+        label: Author URL
+        type: string
+        required: false
+        default: "/author/rich-ross/"
       - name: date
         label: Publish Date
         type: date
         required: true
         options:
           format: yyyy-MM-dd
+      - name: updated
+        label: Updated Date
+        type: date
+        required: false
+        options:
+          format: yyyy-MM-dd
+      - name: category
+        label: Category
+        type: string
+        required: false
+        default: "Gwap Intelligence"
       - name: image
         label: Featured Image
         type: image
@@ -44,6 +65,10 @@ content:
           media: blog_images
           categories: [image]
           rename: safe
+      - name: imageAlt
+        label: Featured Image Alt Text
+        type: string
+        required: false
       - name: description
         label: Description
         type: text
@@ -51,6 +76,26 @@ content:
         options:
           minlength: 20
           maxlength: 240
+      - name: canonical
+        label: Canonical URL Override
+        type: string
+        required: false
+      - name: affiliateDisclosure
+        label: Affiliate Disclosure
+        type: text
+        required: false
+      - name: ctaTitle
+        label: Revenue CTA Headline
+        type: string
+        required: false
+      - name: ctaText
+        label: Revenue CTA Button
+        type: string
+        required: false
+      - name: ctaUrl
+        label: Revenue CTA URL
+        type: string
+        required: false
       - name: body
         label: Blog
         type: rich-text

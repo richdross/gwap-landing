@@ -1,0 +1,25 @@
+{
+  "name": "Gwap Gang",
+  "url": "https://gwapgang.com",
+  "description": "Creative technology, AI automation, business intelligence, creator systems, and revenue strategy for founders, creators, and small businesses.",
+  "publisherLogo": "/images/gwap-gang-logo.png",
+  "defaultImage": "/images/gwap-gang-logo.png",
+  "rssPath": "/feed.xml",
+  "preferredSourcesEnabled": true,
+  "googleSearchProfileUrl": "",
+  "sameAs": [],
+  "primaryOffer": {
+    "eyebrow": "Gwap Intelligence",
+    "title": "Turn the insight into a move for your business.",
+    "description": "Get a practical AI Business Intelligence Report covering competitors, missed opportunities, AI leverage, revenue ideas, and a prioritized action plan.",
+    "text": "Get the $49 Report",
+    "url": "https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04"
+  },
+  "emailCapture": {
+    "enabled": false,
+    "action": "",
+    "heading": "Get Gwap Intelligence in your inbox.",
+    "description": "New AI, automation, business, and creator intelligence from Gwap Gang.",
+    "buttonText": "Join the list"
+  }
+}
