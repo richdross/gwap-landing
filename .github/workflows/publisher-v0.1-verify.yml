@@ -70,6 +70,18 @@ jobs:
           grep -q 'article_view' "$ARTICLE"
           grep -q 'article_scroll_50' "$ARTICLE"
 
+          # Professional blog engine assertions
+          grep -q 'G-MZF7SR86XK' "$ARTICLE"
+          grep -q 'Was this useful?' "$ARTICLE"
+          grep -q 'Share this intelligence' "$ARTICLE"
+          grep -q 'reading-progress' "$ARTICLE"
+          grep -q 'min read' "$ARTICLE"
+          grep -q 'article_read_depth' "$ARTICLE"
+          grep -q 'article_completed' "$ARTICLE"
+          grep -q 'article_feedback' "$ARTICLE"
+          grep -q 'article_share' "$ARTICLE"
+          grep -q 'article_link_click' "$ARTICLE"
+
           grep -q 'User-agent: OAI-SearchBot' _site/robots.txt
           grep -q 'User-agent: Googlebot' _site/robots.txt
           grep -q 'User-agent: Bingbot' _site/robots.txt
@@ -180,4 +192,4 @@ jobs:
           }
           NODE
 
-          echo 'GWAP Publisher + Revenue + AI Discovery Engine V0.1 verification PASS'
+          echo 'GWAP Publisher + Revenue + AI Discovery + Professional Blog Engine verification PASS'
