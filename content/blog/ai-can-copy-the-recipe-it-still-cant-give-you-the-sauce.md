@@ -6,8 +6,8 @@ authorUrl: /author/rich-ross/
 date: 2026-09-04
 updated: 2026-09-18
 category: AI + Originality
-image: /images/blog/ai-automation-workflow.webp
-imageAlt: AI automation workflow showing capture, respond, route, prepare, and human decision stages
+image: /images/blog/chatgpt-image-jun-7-2026-062819-pm.png
+imageAlt: Gwap Gang visual about originality and human creative judgment in the age of AI
 description: AI can copy the recipe, but it still can’t give you the sauce. A
   GWAP Gang perspective on why originality, lived experience, and real creative
   judgment still matter in the age of AI.
