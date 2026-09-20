@@ -104,7 +104,7 @@ a{color:inherit}
     <p>Emerging technology. Real workflows. Business applications. Systems worth understanding. No spam. Just signal.</p>
     <form id="signup-form" novalidate>
       <div class="form-row"><input id="signup-email" type="email" autocomplete="email" placeholder="Enter your email" aria-label="Email address" required><button type="submit">JOIN THE GANG →</button></div>
-      <div class="status" id="signup-status" aria-live="polite">FREE // NO SPAM // LEAVE WHENEVER YOU WANT</div>
+      <div class="status" id="signup-status" aria-live="polite">FREE // NO SPAM // CHECK YOUR INBOX AFTER JOINING</div>
     </form>
     <button class="close" type="button" id="close-signup">Close</button>
   </div>
@@ -128,7 +128,7 @@ a{color:inherit}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){status.textContent='ENTER A VALID EMAIL TO JOIN THE SIGNAL.';status.className='status err';return}
     button.disabled=true;button.textContent='CONNECTING…';status.textContent='LOCKING ONTO THE SIGNAL…';status.className='status';
     try{
-      const r=await fetch('https://aqqhfpizbmgmrnupccoi.supabase.co/functions/v1/leverage-brief-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:value})});
+      const r=await fetch('https://gwap-automation-api.onrender.com/newsletter/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:value})});
       const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error('signup failed');
       status.textContent=data.created?'ACCESS GRANTED // WELCOME TO THE GANG.':'YOU’RE ALREADY IN // SIGNAL CONFIRMED.';status.className='status ok';email.disabled=true;button.textContent='YOU’RE IN';
     }catch{status.textContent='SIGNAL INTERRUPTED // TRY AGAIN.';status.className='status err';button.disabled=false;button.textContent='JOIN THE GANG →'}
