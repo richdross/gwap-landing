@@ -161,9 +161,10 @@ a{color:inherit}
   form.addEventListener('submit',async e=>{
     e.preventDefault();
     const value=email.value.trim().toLowerCase();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){
+    if(!value || !email.checkValidity()){
       status.textContent='ENTER A VALID EMAIL TO JOIN THE SIGNAL.';
       status.className='live-capture-status err';
+      email.focus();
       return;
     }
     button.disabled=true;
