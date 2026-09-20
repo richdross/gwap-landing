@@ -77,6 +77,15 @@
     .big-statement{padding:110px 0}
     .big-statement .display{margin:0;font-size:clamp(4rem,10.2vw,10.8rem);line-height:.82;letter-spacing:-.075em;text-transform:uppercase;font-weight:950}
     .big-statement .small{margin:28px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,3vw,3.2rem);color:#dedfd9}
+    .film{padding:0;background:#030403}
+    .film-frame{position:relative;min-height:70vh;display:grid;align-items:end;overflow:hidden;border-bottom:1px solid var(--line)}
+    .film-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.88) contrast(1.08) brightness(.72)}
+    .film-frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,5,5,.14),rgba(5,5,5,.06) 42%,rgba(5,5,5,.92));pointer-events:none}
+    .film-copy{position:relative;z-index:2;padding:clamp(34px,7vw,84px);max-width:980px}
+    .film-copy h2{margin:14px 0 0;font-size:clamp(3.6rem,8vw,8.5rem);line-height:.84;letter-spacing:-.07em;text-transform:uppercase}
+    .film-copy p{max-width:620px;color:#c1c5bd;line-height:1.7}
+    .film-index{position:absolute;z-index:3;top:22px;right:24px;font:700 10px/1 var(--mono);letter-spacing:.14em;color:#b3b7af}
+    .film-mark{position:absolute;z-index:3;top:24px;left:24px;font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
     .brand-panel{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);align-items:center;min-height:720px}
     .brand-image{position:relative;min-height:720px;border-right:1px solid var(--line);display:grid;place-items:center;overflow:hidden}
     .brand-image img{width:min(640px,92%);filter:saturate(1.04) contrast(1.02);transform:scale(1.05)}
@@ -236,8 +245,23 @@
       </div>
     </div>
 
+    <section class="section film" aria-label="Gwap Gang brand film">
+      <div class="film-frame">
+        <video autoplay muted loop playsinline preload="metadata" aria-label="Gwap Gang brand motion film">
+          <source src="/video/gwap-leverage-film.mp4" type="video/mp4" />
+        </video>
+        <div class="film-mark">GWAP GANG // BRAND FILM</div>
+        <div class="film-index">002 / IN MOTION</div>
+        <div class="film-copy">
+          <div class="label green">CULTURE × CAPITAL × TECHNOLOGY × INTELLIGENCE</div>
+          <h2>BUILD BIG.<br>STAY LIGHT.</h2>
+          <p>This is the idea in motion: one small operator, connected systems, outsized capability. Not more tools for the sake of tools. More leverage.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="section big-statement" id="signal">
-      <div class="folio">002 / OUR PERSPECTIVE</div>
+      <div class="folio">003 / OUR PERSPECTIVE</div>
       <div class="shell">
         <div class="label green">The market changed.</div>
         <h2 class="display fade">EVERYBODY<br>HAS AI NOW.</h2>
@@ -246,7 +270,7 @@
     </section>
 
     <section class="section">
-      <div class="folio">003 / CULTURE</div>
+      <div class="folio">004 / CULTURE</div>
       <div class="brand-panel">
         <div class="brand-image fade">
           <img src="/images/gwap-gang-logo.png" alt="Gwap Gang logo" />
@@ -261,7 +285,7 @@
     </section>
 
     <section class="section system">
-      <div class="folio">004 / THE SYSTEMS VIEW</div>
+      <div class="folio">005 / THE SYSTEMS VIEW</div>
       <div class="shell">
         <div class="label green">THE CONNECTION // GWAP PRINCIPLE 003</div>
         <h2 class="fade">TOOLS ARE EVERYWHERE.<br><span class="green">SYSTEM THINKING IS STILL RARE.</span></h2>
@@ -275,7 +299,7 @@
     </section>
 
     <section class="section editorial">
-      <div class="folio">005 / GWAP SIGNAL</div>
+      <div class="folio">006 / GWAP SIGNAL</div>
       <div class="shell">
         <div class="label green">BEFORE IT'S OBVIOUS // WATCHING</div>
         <h2 class="fade">THIS LOOKS SMALL TODAY.<br>IT PROBABLY WON'T STAY THAT WAY.</h2>
@@ -294,7 +318,7 @@
     </section>
 
     <section class="section labs" id="labs">
-      <div class="folio">006 / LABS: REAL EXPERIMENTS</div>
+      <div class="folio">007 / LABS: REAL EXPERIMENTS</div>
       <div class="shell labs-grid">
         <div class="labs-logo fade">
           <img src="/images/gwap-gang-labs-v3.webp" alt="Gwap Gang Labs" />
@@ -314,7 +338,7 @@
     </section>
 
     <section class="section manifesto" id="manifesto">
-      <div class="folio">007 / OUR MANIFESTO</div>
+      <div class="folio">008 / OUR MANIFESTO</div>
       <div class="shell">
         <div class="label">THE GWAP MANIFESTO</div>
         <div class="manifesto-lines">
@@ -329,7 +353,7 @@
     </section>
 
     <section class="section offers">
-      <div class="folio">008 / BUILD WITH US</div>
+      <div class="folio">009 / BUILD WITH US</div>
       <div class="shell">
         <div class="offers-head">
           <div>
@@ -359,7 +383,7 @@
     </section>
 
     <section class="section join" id="join">
-      <div class="folio">009 / JOIN US</div>
+      <div class="folio">010 / JOIN US</div>
       <div class="shell join-grid">
         <div class="join-copy">
           <div class="label green">THE LEVERAGE BRIEF // FREE</div>
@@ -448,7 +472,7 @@
         status.className = 'signup-status';
 
         try {
-          const response = await fetch('https://gwap-automation-api.onrender.com/newsletter/subscribe', {
+          const response = await fetch('https://aqqhfpizbmgmrnupccoi.supabase.co/functions/v1/leverage-brief-signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: value })
