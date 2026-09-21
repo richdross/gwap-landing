@@ -150,4 +150,46 @@ jobs:
           console.log(`Validation hero dimensions PASS: ${width}x${height}`);
           NODE
 
+          node <<'NODE'
+          const fs = require("fs");
+
+          const files = [
+            "_site/images/blog/ai-automation-opportunities-gwap.webp",
+            "_site/images/blog/ai-automation-roi-gwap.webp",
+            "_site/images/blog/ai-agents-small-business-gwap.webp"
+          ];
+
+          for (const path of files) {
+            if (!fs.existsSync(path)) throw new Error(`Missing WebP asset: ${path}`);
+            const buffer = fs.readFileSync(path);
+            if (buffer.length < 10000) throw new Error(`WebP asset is suspiciously small: ${path} (${buffer.length} bytes)`);
+            if (buffer.subarray(0, 4).toString("ascii") !== "RIFF" ||
+                buffer.subarray(8, 12).toString("ascii") !== "WEBP") {
+              throw new Error(`Invalid WebP signature: ${path}`);
+            }
+
+            const chunk = buffer.subarray(12, 16).toString("ascii");
+            let width = 0;
+            let height = 0;
+
+            if (chunk === "VP8 ") {
+              for (let i = 20; i < Math.min(buffer.length - 7, 64); i++) {
+                if (buffer[i] === 0x9d && buffer[i + 1] === 0x01 && buffer[i + 2] === 0x2a) {
+                  width = buffer.readUInt16LE(i + 3) & 0x3fff;
+                  height = buffer.readUInt16LE(i + 5) & 0x3fff;
+                  break;
+                }
+              }
+            } else if (chunk === "VP8X") {
+              width = 1 + buffer[24] + (buffer[25] << 8) + (buffer[26] << 16);
+              height = 1 + buffer[27] + (buffer[28] << 8) + (buffer[29] << 16);
+            }
+
+            if (width < 1200) throw new Error(`WebP width is ${width}px; minimum target is 1200px: ${path}`);
+            if (!height) throw new Error(`Could not read WebP dimensions: ${path}`);
+
+            console.log(`WebP asset PASS: ${path} — ${width}x${height}, ${buffer.length} bytes`);
+          }
+          NODE
+
           echo 'GWAP Publisher + Revenue + AI Discovery + Professional Blog Engine verification PASS'
