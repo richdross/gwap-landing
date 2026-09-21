@@ -1,0 +1,294 @@
+---
+permalink: /graph/index.html
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Explore the Intelligence Graph — Gwap Gang</title>
+<meta name="description" content="Explore the relationships between Gwap Gang articles, topics, technologies, businesses, entities, and business models.">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="{{ site.url }}/graph/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Gwap Gang">
+<meta property="og:title" content="Explore the Intelligence Graph — Gwap Gang">
+<meta property="og:description" content="Move through connected Gwap Gang intelligence instead of browsing only chronologically.">
+<meta property="og:url" content="{{ site.url }}/graph/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"Explore the Intelligence Graph — Gwap Gang","url":"{{ site.url }}/graph/","description":"An interactive map of Gwap Gang articles and the topics, technologies, entities, and business models that connect them.","isPartOf":{"@type":"WebSite","name":"Gwap Gang","url":"{{ site.url }}/"}}
+</script>
+<style>
+:root{color-scheme:dark;--bg:#020302;--panel:#070907;--panel2:#0b0e0b;--paper:#f4f2ec;--muted:#90968e;--line:#2c302c;--acid:#caff00;--article:#caff00;--topic:#8ed8ff;--technology:#8fffad;--entity:#ffcf70;--business:#d9a7ff}
+*{box-sizing:border-box}
+html{background:#000;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--paper);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input{font:inherit}
+.shell{width:min(1220px,calc(100% - 34px));margin:auto}
+.site-head{position:sticky;top:0;z-index:30;background:rgba(0,0,0,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.head-inner{min-height:68px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:30px}
+.brand{color:var(--acid);text-decoration:none;font:950 1.12rem/1 Impact,"Arial Black",sans-serif;letter-spacing:.025em;text-transform:uppercase}
+.nav{display:flex;justify-content:center;gap:26px}
+.nav a{color:#888d85;text-decoration:none;font:800 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.11em;text-transform:uppercase;padding:27px 0 25px;border-bottom:1px solid transparent}
+.nav a:hover{color:var(--paper);border-color:var(--acid)}
+.archive-link{color:#d6dad3;text-decoration:none;font:800 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.11em;text-transform:uppercase}
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 73% 15%,rgba(202,255,0,.08),transparent 26%),linear-gradient(180deg,transparent 62%,rgba(0,0,0,.88))}
+.hero-inner{position:relative;z-index:2;padding:78px 0 62px}
+.kicker{color:var(--acid);font:850 10px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase}
+h1{max-width:1080px;margin:17px 0 24px;font:950 clamp(4rem,9vw,9.4rem)/.79 Impact,"Arial Black",sans-serif;letter-spacing:-.045em;text-transform:uppercase}
+.intro{max-width:790px;margin:0;color:#bbc0b9;font:20px/1.62 Georgia,"Times New Roman",serif}
+.statline{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:30px;color:#767c74;font:800 8px/1.5 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
+.statline strong{color:var(--acid)}
+.explorer{padding:44px 0 86px}
+.controls{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:18px;align-items:end;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.search-label{display:block;color:#858b83;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.11em;text-transform:uppercase;margin-bottom:8px}
+.search{width:100%;min-height:46px;border:1px solid #383d37;background:#050605;color:var(--paper);padding:0 14px;outline:none}
+.search:focus{border-color:var(--acid);box-shadow:0 0 0 2px rgba(202,255,0,.08)}
+.zoom{display:flex;gap:7px}
+.zoom button,.chip{min-height:42px;border:1px solid #383d37;background:#070807;color:#aeb3ab;padding:0 13px;cursor:pointer;font:850 8px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+.zoom button:hover,.chip:hover,.chip[aria-pressed="true"]{border-color:var(--acid);color:#050505;background:var(--acid)}
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 10px}
+.filter-row.secondary{margin-top:8px}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;margin-top:24px}
+.canvas{position:relative;min-height:680px;border:1px solid var(--line);background:
+linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+radial-gradient(circle at center,rgba(202,255,0,.035),transparent 50%),#030403;
+background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
+#graph-svg{display:block;width:100%;height:680px;touch-action:none}
+.edge{stroke:#343a34;stroke-width:1;opacity:.58}
+.edge.next_move{stroke:var(--acid);stroke-width:2.1;opacity:.78}
+.edge.editorial_relation{stroke:#9ba59b;stroke-width:1.45;opacity:.68}
+.node{cursor:pointer}
+.node circle{stroke:#030403;stroke-width:3}
+.node.article circle{fill:var(--article)}
+.node.topic circle{fill:var(--topic)}
+.node.technology circle{fill:var(--technology)}
+.node.entity circle{fill:var(--entity)}
+.node.businessModel circle{fill:var(--business)}
+.node text{fill:#c9cec7;font:700 10px/1 Arial,sans-serif;pointer-events:none}
+.node.article text{fill:#fff;font-weight:850}
+.node.dim{opacity:.16}
+.edge.dim{opacity:.06}
+.node.selected circle{stroke:#fff;stroke-width:4}
+.node.match circle{stroke:#fff;stroke-width:4}
+.legend{position:absolute;left:14px;bottom:14px;display:flex;flex-wrap:wrap;gap:7px 11px;max-width:calc(100% - 28px);padding:9px 11px;border:1px solid #313631;background:rgba(2,3,2,.9);color:#90968e;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.article{background:var(--article)}.dot.topic{background:var(--topic)}.dot.technology{background:var(--technology)}.dot.entity{background:var(--entity)}.dot.businessModel{background:var(--business)}
+.inspector{min-height:680px;border:1px solid var(--line);background:var(--panel);padding:22px}
+.inspector-kicker{color:var(--acid);font:850 8px/1.4 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
+.inspector h2{margin:12px 0 10px;font-size:1.55rem;line-height:1.05}
+.inspector p{color:#969c94;line-height:1.58;margin:0}
+.meta{margin-top:20px;border-top:1px solid var(--line)}
+.meta-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.meta-label{color:#737a72;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+.meta-value{margin-top:5px;color:#d1d5cf;font-size:.92rem;line-height:1.4}
+.connections{margin-top:24px}
+.connections h3{margin:0 0 10px;font-size:.92rem;text-transform:uppercase}
+.connection{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:transparent;color:#c5cac3;padding:12px 0;cursor:pointer}
+.connection:hover{color:var(--acid)}
+.visit{display:inline-flex;margin-top:22px;min-height:44px;align-items:center;justify-content:center;background:var(--acid);color:#050505;text-decoration:none;padding:0 16px;font:900 9px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+.help{margin-top:14px;color:#727870;font:800 8px/1.5 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.foot{border-top:1px solid var(--line);padding:24px 0 42px;color:#737871;font:800 8px/1.6 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+.foot-inner{display:flex;justify-content:space-between;gap:22px}.foot a{text-decoration:none}.foot a:hover{color:var(--acid)}
+@media(max-width:920px){.head-inner{grid-template-columns:1fr auto}.nav{grid-column:1/-1;justify-content:flex-start;overflow-x:auto;gap:20px;border-top:1px solid #171917}.nav a{padding:15px 0}.workspace{grid-template-columns:1fr}.inspector{min-height:0}.canvas{min-height:600px}#graph-svg{height:600px}}
+@media(max-width:620px){.hero-inner{padding:58px 0 48px}.controls{grid-template-columns:1fr}.zoom{flex-wrap:wrap}.canvas{min-height:520px}#graph-svg{height:520px}.inspector{padding:18px}.foot-inner{display:block}.foot-inner div+div{margin-top:8px}}
+</style>
+</head>
+<body>
+<header class="site-head">
+<div class="shell head-inner">
+<a class="brand" href="/">GWAP GANG</a>
+<nav class="nav" aria-label="Primary editorial sections">
+<a href="/culture/">Culture</a><a href="/capital/">Capital</a><a href="/technology/">Technology</a><a href="/intelligence/">Intelligence</a>
+</nav>
+<a class="archive-link" href="/blog/">All Intelligence →</a>
+</div>
+</header>
+<main>
+<section class="hero">
+<div class="shell hero-inner">
+<div class="kicker">Gwap Intelligence Graph // Live Knowledge Map</div>
+<h1>Explore The<br>Connections.</h1>
+<p class="intro">Articles are only the surface. Move through the topics, technologies, entities, businesses, and business models underneath them—and follow the relationships that connect one piece of intelligence to the next.</p>
+<div class="statline"><span><strong id="article-count">0</strong> articles</span><span><strong id="node-count">0</strong> graph nodes</span><span><strong id="edge-count">0</strong> connections</span><span>Click any node to follow the signal</span></div>
+</div>
+</section>
+<section class="explorer">
+<div class="shell">
+<div class="controls">
+<div><label class="search-label" for="graph-search">Search the graph</label><input class="search" id="graph-search" type="search" placeholder="Search AI agents, automation, creators, SaaS…" autocomplete="off"></div>
+<div class="zoom" aria-label="Graph view controls"><button type="button" id="zoom-in">Zoom +</button><button type="button" id="zoom-out">Zoom −</button><button type="button" id="zoom-reset">Reset view</button></div>
+</div>
+<div class="filter-row" role="group" aria-label="Graph node types">
+<button class="chip" type="button" data-type="all" aria-pressed="true">Everything</button>
+<button class="chip" type="button" data-type="article" aria-pressed="false">Articles</button>
+<button class="chip" type="button" data-type="topic" aria-pressed="false">Topics</button>
+<button class="chip" type="button" data-type="technology" aria-pressed="false">Technologies</button>
+<button class="chip" type="button" data-type="entity" aria-pressed="false">Businesses + Entities</button>
+<button class="chip" type="button" data-type="businessModel" aria-pressed="false">Business Models</button>
+</div>
+<div class="filter-row secondary" role="group" aria-label="Editorial section filter">
+<button class="chip" type="button" data-section="all" aria-pressed="true">All Sections</button>
+<button class="chip" type="button" data-section="culture" aria-pressed="false">Culture</button>
+<button class="chip" type="button" data-section="capital" aria-pressed="false">Capital</button>
+<button class="chip" type="button" data-section="technology" aria-pressed="false">Technology</button>
+<button class="chip" type="button" data-section="intelligence" aria-pressed="false">Intelligence</button>
+</div>
+<div class="workspace">
+<div class="canvas" id="graph-canvas">
+<svg id="graph-svg" viewBox="0 0 1000 680" role="img" aria-label="Interactive Gwap Intelligence Graph"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg>
+<div class="legend" aria-hidden="true"><span><i class="dot article"></i>Article</span><span><i class="dot topic"></i>Topic</span><span><i class="dot technology"></i>Technology</span><span><i class="dot entity"></i>Entity</span><span><i class="dot businessModel"></i>Business model</span></div>
+</div>
+<aside class="inspector" id="inspector" aria-live="polite">
+<div class="inspector-kicker">Intelligence Graph</div><h2>Select a signal.</h2><p>Choose any article, topic, technology, entity, or business model to reveal what it connects to.</p>
+<div class="help">Tip // Search or use the filters to isolate a smaller part of the graph.</div>
+</aside>
+</div>
+</div>
+</section>
+</main>
+<footer class="foot"><div class="shell foot-inner"><div>Gwap Gang // Intelligence is more valuable when it connects.</div><div><a href="/blog/">All Intelligence</a> · <a href="/brief/">Leverage Brief</a> · <a href="mailto:{{ site.email }}">Contact</a></div></div></footer>
+
+<script id="article-graph-data" type="application/json">{{ collections.posts | intelligenceGraph | json | safe }}</script>
+<script>
+(()=>{
+const raw=JSON.parse(document.getElementById('article-graph-data').textContent||'{"nodes":[],"edges":[]}');
+const svg=document.getElementById('graph-svg'), viewport=document.getElementById('viewport'), edgeLayer=document.getElementById('edges'), nodeLayer=document.getElementById('nodes');
+const inspector=document.getElementById('inspector'), search=document.getElementById('graph-search');
+const typeButtons=[...document.querySelectorAll('[data-type]')], sectionButtons=[...document.querySelectorAll('[data-section]')];
+const NS='http://www.w3.org/2000/svg';
+const nodes=[], edges=[], byId=new Map(), facetMap=new Map();
+const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug=(s)=>String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const typeLabel={article:'Article',topic:'Topic',technology:'Technology',entity:'Business / Entity',businessModel:'Business Model'};
+const sectionLabel={culture:'Culture',capital:'Capital',technology:'Technology',intelligence:'Intelligence'};
+
+(raw.nodes||[]).forEach((n,i)=>{const node={...n,type:'article',label:n.title,x:0,y:0,index:i};nodes.push(node);byId.set(node.id,node)});
+const addFacet=(type,label,article)=>{
+ const key=type+':'+slug(label); let node=facetMap.get(key);
+ if(!node){node={id:key,type,label,articles:[],x:0,y:0,index:nodes.length};facetMap.set(key,node);nodes.push(node);byId.set(key,node)}
+ if(!node.articles.includes(article.id))node.articles.push(article.id);
+ edges.push({source:article.id,target:key,type:'facet',weight:5});
+};
+(raw.nodes||[]).forEach(a=>{
+ (a.topics||[]).forEach(v=>addFacet('topic',v,a));
+ (a.technologies||[]).forEach(v=>addFacet('technology',v,a));
+ (a.entities||[]).forEach(v=>addFacet('entity',v,a));
+ (a.businessModels||[]).forEach(v=>addFacet('businessModel',v,a));
+});
+(raw.edges||[]).forEach(e=>{if(byId.has(e.source)&&byId.has(e.target))edges.push({...e})});
+
+const articleNodes=nodes.filter(n=>n.type==='article');
+document.getElementById('article-count').textContent=articleNodes.length;
+document.getElementById('node-count').textContent=nodes.length;
+document.getElementById('edge-count').textContent=edges.length;
+
+function layout(){
+ const cx=500,cy=340, articles=articleNodes;
+ articles.forEach((n,i)=>{const a=(-Math.PI/2)+(Math.PI*2*i/Math.max(articles.length,1));const r=Math.min(155,75+articles.length*15);n.x=cx+Math.cos(a)*r;n.y=cy+Math.sin(a)*r});
+ const groups={topic:[],technology:[],entity:[],businessModel:[]};
+ nodes.filter(n=>n.type!=='article').forEach(n=>groups[n.type].push(n));
+ const arcs={topic:[Math.PI*1.05,Math.PI*1.45],technology:[-Math.PI*.45,Math.PI*.05],entity:[Math.PI*.05,Math.PI*.55],businessModel:[Math.PI*.55,Math.PI*1.05]};
+ Object.entries(groups).forEach(([type,list])=>{
+   const [start,end]=arcs[type];list.sort((a,b)=>a.label.localeCompare(b.label));
+   list.forEach((n,i)=>{const t=list.length===1?.5:i/(list.length-1);const a=start+(end-start)*t;const r=285+(i%2)*35;n.x=cx+Math.cos(a)*r;n.y=cy+Math.sin(a)*r});
+ });
+}
+layout();
+
+let activeType='all',activeSection='all',selectedId=null,scale=1,tx=0,ty=0;
+function visibleArticleIds(){
+ const ids=new Set();
+ articleNodes.forEach(n=>{if(activeSection==='all'||n.section===activeSection)ids.add(n.id)});
+ return ids;
+}
+function visibleNodeIds(){
+ const articles=visibleArticleIds(), ids=new Set(articles);
+ if(activeType==='article')return ids;
+ nodes.filter(n=>n.type!=='article').forEach(n=>{
+   if(activeType!=='all'&&n.type!==activeType)return;
+   const linked=n.articles||[];if(linked.some(id=>articles.has(id)))ids.add(n.id);
+ });
+ return ids;
+}
+function neighborIds(id){
+ const out=new Set([id]);edges.forEach(e=>{if(e.source===id)out.add(e.target);if(e.target===id)out.add(e.source)});return out;
+}
+function render(){
+ edgeLayer.textContent='';nodeLayer.textContent='';
+ const vis=visibleNodeIds(), q=search.value.trim().toLowerCase();
+ let focus=null;
+ if(selectedId&&vis.has(selectedId))focus=neighborIds(selectedId);
+ const matches=new Set();
+ if(q)nodes.forEach(n=>{if(vis.has(n.id)&&((n.label||'').toLowerCase().includes(q)||(n.category||'').toLowerCase().includes(q)))matches.add(n.id)});
+ edges.forEach(e=>{
+   if(!vis.has(e.source)||!vis.has(e.target))return;
+   const line=document.createElementNS(NS,'line');const s=byId.get(e.source),t=byId.get(e.target);
+   line.setAttribute('x1',s.x);line.setAttribute('y1',s.y);line.setAttribute('x2',t.x);line.setAttribute('y2',t.y);
+   line.setAttribute('class','edge '+(e.type||''));
+   if(focus&&(!focus.has(e.source)||!focus.has(e.target)))line.classList.add('dim');
+   edgeLayer.appendChild(line);
+ });
+ nodes.forEach(n=>{
+   if(!vis.has(n.id))return;
+   const g=document.createElementNS(NS,'g');g.setAttribute('class','node '+n.type+(n.id===selectedId?' selected':'')+(matches.has(n.id)?' match':''));
+   if(focus&&!focus.has(n.id))g.classList.add('dim');
+   g.setAttribute('transform','translate('+n.x+' '+n.y+')');g.setAttribute('role','button');g.setAttribute('tabindex','0');g.setAttribute('aria-label',(typeLabel[n.type]||n.type)+': '+n.label);
+   const c=document.createElementNS(NS,'circle');c.setAttribute('r',n.type==='article'?12:8);g.appendChild(c);
+   const text=document.createElementNS(NS,'text');text.setAttribute('x',n.type==='article'?18:13);text.setAttribute('y','4');
+   const label=n.type==='article'?(n.label.length>34?n.label.slice(0,32)+'…':n.label):(n.label.length>24?n.label.slice(0,22)+'…':n.label);
+   text.textContent=label;g.appendChild(text);
+   g.addEventListener('click',()=>selectNode(n.id));g.addEventListener('dblclick',()=>{if(n.type==='article'&&n.url)location.href=n.url});
+   g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectNode(n.id)}});
+   nodeLayer.appendChild(g);
+ });
+}
+function connectionsFor(id){
+ const found=[];
+ edges.forEach(e=>{if(e.source===id)found.push({node:byId.get(e.target),edge:e});else if(e.target===id)found.push({node:byId.get(e.source),edge:e})});
+ const seen=new Set();return found.filter(x=>x.node&&!seen.has(x.node.id)&&(seen.add(x.node.id),true)).sort((a,b)=>(b.edge.weight||0)-(a.edge.weight||0));
+}
+function selectNode(id){
+ selectedId=id;const n=byId.get(id);if(!n)return;
+ const con=connectionsFor(id);
+ let html='<div class="inspector-kicker">'+esc(typeLabel[n.type]||n.type)+'</div><h2>'+esc(n.label)+'</h2>';
+ if(n.type==='article'){
+   html+='<p>'+esc(sectionLabel[n.section]||'Intelligence')+' // '+esc(n.category||'Gwap Intelligence')+'</p><div class="meta">';
+   const rows=[['Section',sectionLabel[n.section]||'Intelligence'],['Topics',(n.topics||[]).join(', ')],['Technologies',(n.technologies||[]).join(', ')],['Entities',(n.entities||[]).join(', ')],['Business models',(n.businessModels||[]).join(', ')]];
+   rows.filter(r=>r[1]).forEach(r=>html+='<div class="meta-row"><div class="meta-label">'+esc(r[0])+'</div><div class="meta-value">'+esc(r[1])+'</div></div>');
+   html+='</div><a class="visit" href="'+esc(n.url)+'">Read Article →</a>';
+ }else{
+   const linked=(n.articles||[]).map(x=>byId.get(x)).filter(Boolean);
+   html+='<p>This '+esc(typeLabel[n.type].toLowerCase())+' appears across '+linked.length+' connected article'+(linked.length===1?'':'s')+'.</p>';
+ }
+ if(con.length){
+   html+='<div class="connections"><h3>Connected signals</h3>';
+   con.slice(0,10).forEach(x=>html+='<button class="connection" type="button" data-select="'+esc(x.node.id)+'">'+esc(typeLabel[x.node.type]||x.node.type)+' // '+esc(x.node.label)+'</button>');
+   html+='</div>';
+ }
+ inspector.innerHTML=html;
+ inspector.querySelectorAll('[data-select]').forEach(b=>b.addEventListener('click',()=>selectNode(b.dataset.select)));
+ render();
+}
+function setTransform(){viewport.setAttribute('transform','translate('+tx+' '+ty+') scale('+scale+')')}
+document.getElementById('zoom-in').addEventListener('click',()=>{scale=Math.min(2.2,scale*1.2);setTransform()});
+document.getElementById('zoom-out').addEventListener('click',()=>{scale=Math.max(.55,scale/1.2);setTransform()});
+document.getElementById('zoom-reset').addEventListener('click',()=>{scale=1;tx=0;ty=0;setTransform()});
+typeButtons.forEach(b=>b.addEventListener('click',()=>{activeType=b.dataset.type;typeButtons.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));selectedId=null;render()}));
+sectionButtons.forEach(b=>b.addEventListener('click',()=>{activeSection=b.dataset.section;sectionButtons.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));selectedId=null;render()}));
+search.addEventListener('input',render);
+let panning=false,startX=0,startY=0,startTx=0,startTy=0;
+svg.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('.node'))return;panning=true;startX=e.clientX;startY=e.clientY;startTx=tx;startTy=ty;svg.setPointerCapture(e.pointerId)});
+svg.addEventListener('pointermove',e=>{if(!panning)return;const rect=svg.getBoundingClientRect();tx=startTx+(e.clientX-startX)*(1000/rect.width);ty=startTy+(e.clientY-startY)*(680/rect.height);setTransform()});
+svg.addEventListener('pointerup',e=>{panning=false;try{svg.releasePointerCapture(e.pointerId)}catch(_){}});
+svg.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(.55,Math.min(2.2,scale*(e.deltaY>0?.9:1.1)));setTransform()},{passive:false});
+render();setTransform();
+})();
+</script>
+</body>
+</html>
