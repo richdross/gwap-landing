@@ -1,0 +1,48 @@
+---
+permalink: /signal/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Neon Signal — Gwap Gang</title>
+  <meta name="description" content="A live Gwap Gang signal visual.">
+  <meta name="theme-color" content="#050505">
+  <link rel="canonical" href="https://gwapgang.com/signal/">
+  <style>
+    :root{--bg:#050505;--paper:#f4f2ec;--muted:#9ea39a;--acid:#caff00;--line:#343734}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--paper)}
+    body{min-height:100vh;display:grid;place-items:center;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+    main{width:min(1120px,calc(100% - 32px));padding:52px 0 64px}
+    .eyebrow{margin:0 0 18px;color:var(--acid);font:800 11px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase}
+    h1{margin:0 0 18px;font:900 clamp(3.4rem,9vw,8rem)/.84 Impact,Haettenschweiler,"Arial Black",sans-serif;letter-spacing:-.045em;text-transform:uppercase}
+    h1 span{color:var(--acid)}
+    .deck{max-width:760px;margin:0 0 30px;color:#bcc0b8;font:18px/1.65 Georgia,"Times New Roman",serif}
+    .frame{position:relative;overflow:hidden;border:1px solid var(--line);background:#000;box-shadow:0 28px 90px rgba(0,0,0,.45)}
+    .frame img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#000}
+    .meta{display:flex;justify-content:space-between;gap:18px;padding:12px 14px;border-top:1px solid var(--line);color:#7f847c;font:700 9px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+    .actions a{display:inline-block;border:1px solid var(--line);padding:13px 17px;color:var(--paper);text-decoration:none;font:900 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
+    .actions a.primary{background:var(--acid);border-color:var(--acid);color:#050505}
+    @media(max-width:640px){main{width:min(100% - 22px,1120px);padding:30px 0 42px}.deck{font-size:16px}.meta{display:block}.meta span{display:block}.meta span+span{margin-top:5px}}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Gwap Gang // Signal Asset</p>
+    <h1>Neon <span>Signal.</span></h1>
+    <p class="deck">A standalone visual page for the Gwap Gang neon tile loop.</p>
+    <section class="frame" aria-label="Gwap Gang neon signal animation">
+      <img src="/images/gwap-neon-tile.gif" alt="Animated neon green digital tile background" width="360" height="203" loading="eager" decoding="async">
+      <div class="meta"><span>Gwap Gang // Visual System</span><span>Looping GIF // Web Optimized</span></div>
+    </section>
+    <nav class="actions" aria-label="Signal page navigation">
+      <a class="primary" href="/">Back to Gwap Gang</a>
+      <a href="/brief/">The Leverage Brief</a>
+    </nav>
+  </main>
+</body>
+</html>
