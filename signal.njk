@@ -68,6 +68,19 @@ eleventyExcludeFromCollections: true
       object-fit:cover;
       background:#000;
     }
+    .signal-secondary{
+      margin-top:72px;
+      padding-top:54px;
+      border-top:1px solid var(--line);
+    }
+    .signal-secondary h2{
+      margin:0 0 14px;
+      font:900 clamp(2.6rem,7vw,6rem)/.88 Impact,Haettenschweiler,"Arial Black",sans-serif;
+      letter-spacing:-.04em;
+      text-transform:uppercase;
+    }
+    .signal-secondary h2 span{color:var(--acid)}
+    .signal-secondary .deck{margin-bottom:24px}
     .meta{
       display:flex;
       justify-content:space-between;
@@ -135,10 +148,68 @@ eleventyExcludeFromCollections: true
       </div>
     </section>
 
+    <section class="signal-secondary" aria-labelledby="identity-signal-title">
+      <p class="eyebrow">Gwap Gang // Identity Signal</p>
+      <h2 id="identity-signal-title">The <span>Mark.</span></h2>
+      <p class="deck">The Gwap Gang identity in motion — a second visual signal built to follow the world and atmosphere above.</p>
+
+      <section class="frame" aria-label="Animated Gwap Gang logo">
+        <video
+          class="lazy-signal-video"
+          muted
+          loop
+          playsinline
+          preload="none"
+          poster="https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/7efdb4db-5997-454b-a888-66176104e286.jpg"
+          aria-label="Animated Gwap Gang logo"
+        >
+          <source data-src="https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/9e70cac3-5dae-47cc-9b0b-572fb3f794fc.mp4" type="video/mp4">
+          Your browser does not support HTML5 video.
+        </video>
+        <div class="meta">
+          <span>Gwap Gang // Identity System</span>
+          <span>Logo Motion // Lazy Loaded</span>
+        </div>
+      </section>
+    </section>
+
     <nav class="actions" aria-label="Signal page navigation">
       <a class="primary" href="/">Back to Gwap Gang</a>
       <a href="/brief/">The Leverage Brief</a>
     </nav>
   </main>
+  <script>
+    (() => {
+      const videos = document.querySelectorAll('.lazy-signal-video');
+      if (!videos.length) return;
+
+      const loadAndPlay = (video) => {
+        if (video.dataset.loaded === 'true') return;
+        video.querySelectorAll('source[data-src]').forEach((source) => {
+          source.src = source.dataset.src;
+          source.removeAttribute('data-src');
+        });
+        video.dataset.loaded = 'true';
+        video.load();
+        const attempt = video.play();
+        if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
+      };
+
+      if (!('IntersectionObserver' in window)) {
+        videos.forEach(loadAndPlay);
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          loadAndPlay(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '300px 0px' });
+
+      videos.forEach((video) => observer.observe(video));
+    })();
+  </script>
 </body>
 </html>
