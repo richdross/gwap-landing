@@ -32,10 +32,13 @@
     "name": "Revenue Rescue Sprint",
     "priceUsd": 299,
     "priceLabel": "$299",
-    "checkoutUrl": "",
+    "checkoutUrl": "https://book.stripe.com/14A6oIbTkgzkbmOcfG2cg05",
     "salesUrl": "/revenue-rescue-sprint/",
     "deliveryWindow": "5 business days",
     "executionWindow": "7-day action plan",
-    "status": "stripe_link_pending"
+    "status": "live",
+    "stripeProductId": "prod_VIjxDcYKjyhdvF",
+    "stripePriceId": "price_1UI8TuJjydtDeANjUuTobHaH",
+    "stripePaymentLinkId": "plink_1UI8UlJjydtDeANjtkYOZ9x3"
   }
 }
