@@ -1,0 +1,242 @@
+[
+  {
+    "id": "ai-business-intelligence-report",
+    "name": "AI Business Intelligence Report",
+    "kind": "report",
+    "status": "live",
+    "price": "$49",
+    "url": "https://buy.stripe.com/dRmfZibTk5UGduWa7y2cg04",
+    "cta": "Get the $49 Report",
+    "description": "A practical Gwap Gang report covering competitors, missed opportunities, AI leverage, revenue ideas, and a prioritized action plan.",
+    "sections": [
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "AI ROI",
+      "AI automation",
+      "workflow discovery",
+      "business operations",
+      "business cases",
+      "small business"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI automation",
+      "workflow automation",
+      "AI agents"
+    ],
+    "businessModels": [
+      "AI business intelligence",
+      "automation consulting",
+      "AI services"
+    ],
+    "minScore": 4
+  },
+  {
+    "id": "leverage-brief",
+    "name": "The Leverage Brief",
+    "kind": "publication",
+    "status": "live",
+    "price": "Free",
+    "url": "/brief/",
+    "cta": "Read the Brief",
+    "description": "Gwap Gang editorial intelligence on capabilities, market shifts, business models, and leverage worth paying attention to.",
+    "sections": [
+      "culture",
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "AI creativity",
+      "creator economy",
+      "human judgment",
+      "business operations"
+    ],
+    "entities": [
+      "Creators",
+      "Gwap Gang"
+    ],
+    "technologies": [
+      "generative AI",
+      "AI automation"
+    ],
+    "businessModels": [
+      "creator economy",
+      "AI-assisted media"
+    ],
+    "minScore": 6
+  },
+  {
+    "id": "gwap-intelligence-graph",
+    "name": "Gwap Intelligence Graph",
+    "kind": "tool",
+    "status": "live",
+    "price": "Free",
+    "url": "/graph/",
+    "cta": "Explore the Graph",
+    "description": "The interactive Gwap Gang knowledge map connecting articles, technologies, business models, entities, and opportunities.",
+    "sections": [
+      "culture",
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "AI creativity",
+      "AI automation",
+      "business operations",
+      "workflow discovery"
+    ],
+    "technologies": [
+      "AI automation",
+      "AI agents"
+    ],
+    "businessModels": [
+      "AI business intelligence",
+      "AI-assisted media"
+    ],
+    "minScore": 8
+  },
+  {
+    "id": "automation-opportunity-scan",
+    "name": "Automation Opportunity Scan",
+    "kind": "automation",
+    "status": "experimental",
+    "price": "",
+    "url": "",
+    "cta": "",
+    "description": "A declared Gwap Gang automation concept for identifying high-value, lower-risk workflows. It is represented in the graph as an emerging capability, not a live offer.",
+    "sections": [
+      "technology",
+      "intelligence",
+      "capital"
+    ],
+    "topics": [
+      "AI automation",
+      "workflow discovery",
+      "workflow design",
+      "small business",
+      "business operations"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI automation",
+      "workflow automation",
+      "AI agents"
+    ],
+    "businessModels": [
+      "automation consulting",
+      "automation services",
+      "AI services"
+    ],
+    "minScore": 5
+  },
+  {
+    "id": "ai-automation-services",
+    "name": "AI Automation Services",
+    "kind": "revenue opportunity",
+    "status": "opportunity",
+    "price": "",
+    "url": "",
+    "cta": "",
+    "description": "Package bounded lead intake, routing, preparation, follow-up, and reporting systems as a commercial service for small businesses.",
+    "sections": [
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "AI automation",
+      "workflow discovery",
+      "workflow design",
+      "operational leverage",
+      "small business"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI automation",
+      "workflow automation"
+    ],
+    "businessModels": [
+      "automation consulting",
+      "automation services",
+      "AI services"
+    ],
+    "minScore": 5
+  },
+  {
+    "id": "agent-enabled-operations",
+    "name": "Agent-Enabled Operations",
+    "kind": "revenue opportunity",
+    "status": "opportunity",
+    "price": "",
+    "url": "",
+    "cta": "",
+    "description": "Use bounded AI agents to prepare, route, summarize, monitor, and execute reversible operational work while humans retain high-impact judgment.",
+    "sections": [
+      "technology",
+      "capital"
+    ],
+    "topics": [
+      "AI agents",
+      "automation governance",
+      "human oversight",
+      "operational leverage"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI agents",
+      "large language models",
+      "workflow automation"
+    ],
+    "businessModels": [
+      "agent-enabled operations",
+      "AI automation services"
+    ],
+    "minScore": 5
+  },
+  {
+    "id": "ai-assisted-media",
+    "name": "AI-Assisted Media",
+    "kind": "revenue opportunity",
+    "status": "opportunity",
+    "price": "",
+    "url": "",
+    "cta": "",
+    "description": "Build differentiated creator and media products that use AI for production leverage while keeping human taste, originality, and judgment in the loop.",
+    "sections": [
+      "culture",
+      "capital"
+    ],
+    "topics": [
+      "AI creativity",
+      "originality",
+      "human judgment",
+      "creator economy"
+    ],
+    "entities": [
+      "Creators"
+    ],
+    "technologies": [
+      "generative AI",
+      "AI image generation",
+      "large language models"
+    ],
+    "businessModels": [
+      "creator economy",
+      "AI-assisted media"
+    ],
+    "minScore": 5
+  }
+]

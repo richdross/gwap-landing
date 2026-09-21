@@ -20,7 +20,7 @@ permalink: /graph/index.html
 {"@context":"https://schema.org","@type":"CollectionPage","name":"Explore the Intelligence Graph — Gwap Gang","url":"{{ site.url }}/graph/","description":"An interactive map of Gwap Gang articles and the topics, technologies, entities, and business models that connect them.","isPartOf":{"@type":"WebSite","name":"Gwap Gang","url":"{{ site.url }}/"}}
 </script>
 <style>
-:root{color-scheme:dark;--bg:#020302;--panel:#070907;--panel2:#0b0e0b;--paper:#f4f2ec;--muted:#90968e;--line:#2c302c;--acid:#caff00;--article:#caff00;--topic:#8ed8ff;--technology:#8fffad;--entity:#ffcf70;--business:#d9a7ff}
+:root{color-scheme:dark;--bg:#020302;--panel:#070907;--panel2:#0b0e0b;--paper:#f4f2ec;--muted:#90968e;--line:#2c302c;--acid:#caff00;--article:#caff00;--topic:#8ed8ff;--technology:#8fffad;--entity:#ffcf70;--business:#d9a7ff;--opportunity:#ff6d8f}
 *{box-sizing:border-box}
 html{background:#000;scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--paper);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
@@ -61,14 +61,14 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 #graph-svg{display:block;width:100%;height:680px;touch-action:none}
 .edge{stroke:#343a34;stroke-width:1;opacity:.58}
 .edge.next_move{stroke:var(--acid);stroke-width:2.1;opacity:.78}
-.edge.editorial_relation{stroke:#9ba59b;stroke-width:1.45;opacity:.68}
+.edge.editorial_relation{stroke:#9ba59b;stroke-width:1.45;opacity:.68}.edge.opportunity_relation{stroke:var(--opportunity);stroke-width:1.7;opacity:.74}
 .node{cursor:pointer}
 .node circle{stroke:#030403;stroke-width:3}
 .node.article circle{fill:var(--article)}
 .node.topic circle{fill:var(--topic)}
 .node.technology circle{fill:var(--technology)}
 .node.entity circle{fill:var(--entity)}
-.node.businessModel circle{fill:var(--business)}
+.node.businessModel circle{fill:var(--business)}.node.opportunity circle{fill:var(--opportunity)}
 .node text{fill:#c9cec7;font:700 10px/1 Arial,sans-serif;pointer-events:none}
 .node.article text{fill:#fff;font-weight:850}
 .node.dim{opacity:.16}
@@ -78,7 +78,7 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 .legend{position:absolute;left:14px;bottom:14px;display:flex;flex-wrap:wrap;gap:7px 11px;max-width:calc(100% - 28px);padding:9px 11px;border:1px solid #313631;background:rgba(2,3,2,.9);color:#90968e;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
 .legend span{display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%}
-.dot.article{background:var(--article)}.dot.topic{background:var(--topic)}.dot.technology{background:var(--technology)}.dot.entity{background:var(--entity)}.dot.businessModel{background:var(--business)}
+.dot.article{background:var(--article)}.dot.topic{background:var(--topic)}.dot.technology{background:var(--technology)}.dot.entity{background:var(--entity)}.dot.businessModel{background:var(--business)}.dot.opportunity{background:var(--opportunity)}
 .inspector{min-height:680px;border:1px solid var(--line);background:var(--panel);padding:22px}
 .inspector-kicker{color:var(--acid);font:850 8px/1.4 ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase}
 .inspector h2{margin:12px 0 10px;font-size:1.55rem;line-height:1.05}
@@ -115,7 +115,7 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 <div class="kicker">Gwap Intelligence Graph // Live Knowledge Map</div>
 <h1>Explore The<br>Connections.</h1>
 <p class="intro">Articles are only the surface. Move through the topics, technologies, entities, businesses, and business models underneath them—and follow the relationships that connect one piece of intelligence to the next.</p>
-<div class="statline"><span><strong id="article-count">0</strong> articles</span><span><strong id="node-count">0</strong> graph nodes</span><span><strong id="edge-count">0</strong> connections</span><span>Click any node to follow the signal</span></div>
+<div class="statline"><span><strong id="article-count">0</strong> articles</span><span><strong id="node-count">0</strong> graph nodes</span><span><strong id="edge-count">0</strong> connections</span><span><strong id="opportunity-count">0</strong> opportunities</span><span>Click any node to follow the signal</span></div>
 </div>
 </section>
 <section class="explorer">
@@ -130,7 +130,7 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 <button class="chip" type="button" data-type="topic" aria-pressed="false">Topics</button>
 <button class="chip" type="button" data-type="technology" aria-pressed="false">Technologies</button>
 <button class="chip" type="button" data-type="entity" aria-pressed="false">Businesses + Entities</button>
-<button class="chip" type="button" data-type="businessModel" aria-pressed="false">Business Models</button>
+<button class="chip" type="button" data-type="businessModel" aria-pressed="false">Business Models</button><button class="chip" type="button" data-type="opportunity" aria-pressed="false">Opportunities</button>
 </div>
 <div class="filter-row secondary" role="group" aria-label="Editorial section filter">
 <button class="chip" type="button" data-section="all" aria-pressed="true">All Sections</button>
@@ -142,7 +142,7 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 <div class="workspace">
 <div class="canvas" id="graph-canvas">
 <svg id="graph-svg" viewBox="0 0 1000 680" role="img" aria-label="Interactive Gwap Intelligence Graph"><g id="viewport"><g id="edges"></g><g id="nodes"></g></g></svg>
-<div class="legend" aria-hidden="true"><span><i class="dot article"></i>Article</span><span><i class="dot topic"></i>Topic</span><span><i class="dot technology"></i>Technology</span><span><i class="dot entity"></i>Entity</span><span><i class="dot businessModel"></i>Business model</span></div>
+<div class="legend" aria-hidden="true"><span><i class="dot article"></i>Article</span><span><i class="dot topic"></i>Topic</span><span><i class="dot technology"></i>Technology</span><span><i class="dot entity"></i>Entity</span><span><i class="dot businessModel"></i>Business model</span><span><i class="dot opportunity"></i>Opportunity</span></div>
 </div>
 <aside class="inspector" id="inspector" aria-live="polite">
 <div class="inspector-kicker">Intelligence Graph</div><h2>Select a signal.</h2><p>Choose any article, topic, technology, entity, or business model to reveal what it connects to.</p>
@@ -154,7 +154,7 @@ background-size:36px 36px,36px 36px,auto,auto;overflow:hidden}
 </main>
 <footer class="foot"><div class="shell foot-inner"><div>Gwap Gang // Intelligence is more valuable when it connects.</div><div><a href="/blog/">All Intelligence</a> · <a href="/brief/">Leverage Brief</a> · <a href="mailto:{{ site.email }}">Contact</a></div></div></footer>
 
-<script id="article-graph-data" type="application/json">{{ collections.posts | intelligenceGraph | json | safe }}</script>
+<script id="article-graph-data" type="application/json">{{ collections.posts | intelligenceGraph(opportunities) | json | safe }}</script>
 <script>
 (()=>{
 const raw=JSON.parse(document.getElementById('article-graph-data').textContent||'{"nodes":[],"edges":[]}');
@@ -165,17 +165,17 @@ const NS='http://www.w3.org/2000/svg';
 const nodes=[], edges=[], byId=new Map(), facetMap=new Map();
 const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const slug=(s)=>String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const typeLabel={article:'Article',topic:'Topic',technology:'Technology',entity:'Business / Entity',businessModel:'Business Model'};
+const typeLabel={article:'Article',topic:'Topic',technology:'Technology',entity:'Business / Entity',businessModel:'Business Model',opportunity:'Commercial Opportunity'};
 const sectionLabel={culture:'Culture',capital:'Capital',technology:'Technology',intelligence:'Intelligence'};
 
-(raw.nodes||[]).forEach((n,i)=>{const node={...n,type:'article',label:n.title,x:0,y:0,index:i};nodes.push(node);byId.set(node.id,node)});
+(raw.nodes||[]).forEach((n,i)=>{const type=n.type||'article';const node={...n,type,label:type==='opportunity'?(n.name||n.title):n.title,x:0,y:0,index:i};nodes.push(node);byId.set(node.id,node)});
 const addFacet=(type,label,article)=>{
  const key=type+':'+slug(label); let node=facetMap.get(key);
  if(!node){node={id:key,type,label,articles:[],x:0,y:0,index:nodes.length};facetMap.set(key,node);nodes.push(node);byId.set(key,node)}
  if(!node.articles.includes(article.id))node.articles.push(article.id);
  edges.push({source:article.id,target:key,type:'facet',weight:5});
 };
-(raw.nodes||[]).forEach(a=>{
+(raw.nodes||[]).filter(a=>(a.type||'article')==='article').forEach(a=>{
  (a.topics||[]).forEach(v=>addFacet('topic',v,a));
  (a.technologies||[]).forEach(v=>addFacet('technology',v,a));
  (a.entities||[]).forEach(v=>addFacet('entity',v,a));
@@ -183,17 +183,17 @@ const addFacet=(type,label,article)=>{
 });
 (raw.edges||[]).forEach(e=>{if(byId.has(e.source)&&byId.has(e.target))edges.push({...e})});
 
-const articleNodes=nodes.filter(n=>n.type==='article');
+const articleNodes=nodes.filter(n=>n.type==='article');const opportunityNodes=nodes.filter(n=>n.type==='opportunity');
 document.getElementById('article-count').textContent=articleNodes.length;
 document.getElementById('node-count').textContent=nodes.length;
-document.getElementById('edge-count').textContent=edges.length;
+document.getElementById('edge-count').textContent=edges.length;document.getElementById('opportunity-count').textContent=opportunityNodes.length;
 
 function layout(){
  const cx=500,cy=340, articles=articleNodes;
  articles.forEach((n,i)=>{const a=(-Math.PI/2)+(Math.PI*2*i/Math.max(articles.length,1));const r=Math.min(155,75+articles.length*15);n.x=cx+Math.cos(a)*r;n.y=cy+Math.sin(a)*r});
- const groups={topic:[],technology:[],entity:[],businessModel:[]};
+ const groups={topic:[],technology:[],entity:[],businessModel:[],opportunity:[]};
  nodes.filter(n=>n.type!=='article').forEach(n=>groups[n.type].push(n));
- const arcs={topic:[Math.PI*1.05,Math.PI*1.45],technology:[-Math.PI*.45,Math.PI*.05],entity:[Math.PI*.05,Math.PI*.55],businessModel:[Math.PI*.55,Math.PI*1.05]};
+ const arcs={topic:[Math.PI*1.05,Math.PI*1.45],technology:[-Math.PI*.45,Math.PI*.05],entity:[Math.PI*.05,Math.PI*.55],businessModel:[Math.PI*.55,Math.PI*1.05],opportunity:[-Math.PI*.85,-Math.PI*.15]};
  Object.entries(groups).forEach(([type,list])=>{
    const [start,end]=arcs[type];list.sort((a,b)=>a.label.localeCompare(b.label));
    list.forEach((n,i)=>{const t=list.length===1?.5:i/(list.length-1);const a=start+(end-start)*t;const r=285+(i%2)*35;n.x=cx+Math.cos(a)*r;n.y=cy+Math.sin(a)*r});
@@ -262,6 +262,10 @@ function selectNode(id){
    const rows=[['Section',sectionLabel[n.section]||'Intelligence'],['Topics',(n.topics||[]).join(', ')],['Technologies',(n.technologies||[]).join(', ')],['Entities',(n.entities||[]).join(', ')],['Business models',(n.businessModels||[]).join(', ')]];
    rows.filter(r=>r[1]).forEach(r=>html+='<div class="meta-row"><div class="meta-label">'+esc(r[0])+'</div><div class="meta-value">'+esc(r[1])+'</div></div>');
    html+='</div><a class="visit" href="'+esc(n.url)+'">Read Article →</a>';
+ }else if(n.type==='opportunity'){
+   html+='<p>'+esc(n.description||'Commercial opportunity connected to Gwap Gang intelligence.')+'</p><div class="meta">';
+   [['Type',n.kind],['Status',n.status],['Price',n.price]].filter(r=>r[1]).forEach(r=>html+='<div class="meta-row"><div class="meta-label">'+esc(r[0])+'</div><div class="meta-value">'+esc(r[1])+'</div></div>');
+   html+='</div>'; if(n.url) html+='<a class="visit" href="'+esc(n.url)+'">'+esc(n.cta||'Open opportunity')+' →</a>'; else html+='<div class="help">This node is labeled '+esc(n.status||'opportunity')+' and is not presented as a live offer.</div>';
  }else{
    const linked=(n.articles||[]).map(x=>byId.get(x)).filter(Boolean);
    html+='<p>This '+esc(typeLabel[n.type].toLowerCase())+' appears across '+linked.length+' connected article'+(linked.length===1?'':'s')+'.</p>';

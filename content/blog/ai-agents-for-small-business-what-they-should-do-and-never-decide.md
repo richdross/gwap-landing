@@ -25,6 +25,10 @@ relatedArticles:
   - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
   - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
 nextMove: content/blog/what-small-businesses-should-automate-first-with-ai.md
+commercialOpportunities:
+  - ai-business-intelligence-report
+  - automation-opportunity-scan
+  - agent-enabled-operations
 image: /images/blog/ai-agents-small-business-gwap.jpg
 imageAlt: Gwap Gang logo in glossy neon green and red on a black background
 description: A practical guide to giving AI agents useful business responsibilities without giving them dangerous authority over high-impact decisions.

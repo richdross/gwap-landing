@@ -2,4 +2,4 @@
 permalink: /intelligence-graph.json
 eleventyExcludeFromCollections: true
 ---
-{{ collections.posts | intelligenceGraph | json | safe }}
+{{ collections.posts | intelligenceGraph(opportunities) | json | safe }}

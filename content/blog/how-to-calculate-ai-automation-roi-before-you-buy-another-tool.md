@@ -25,6 +25,10 @@ relatedArticles:
   - content/blog/what-small-businesses-should-automate-first-with-ai.md
   - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
 nextMove: content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
+commercialOpportunities:
+  - ai-business-intelligence-report
+  - automation-opportunity-scan
+  - ai-automation-services
 image: /images/blog/ai-automation-roi-gwap.jpg
 imageAlt: Bright Gwap logo in neon green and red with high-speed light streaks
 description: A simple ROI framework for deciding whether an AI automation project is actually worth the software, setup, maintenance, and human oversight it requires.

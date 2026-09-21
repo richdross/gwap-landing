@@ -25,6 +25,10 @@ relatedArticles:
   - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
   - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
 nextMove: content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
+commercialOpportunities:
+  - ai-business-intelligence-report
+  - automation-opportunity-scan
+  - agent-enabled-operations
 image: /images/gwap-gang-labs-v3.webp
 ---
 Most small businesses do not have an AI problem.

@@ -26,6 +26,10 @@ relatedArticles:
   - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
   - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
 nextMove: content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
+commercialOpportunities:
+  - leverage-brief
+  - ai-assisted-media
+  - gwap-intelligence-graph
 image: /images/blog/chatgpt-image-jun-7-2026-062819-pm.png
 imageAlt: Gwap Gang visual about originality and human creative judgment in the age of AI
 description: AI can copy the recipe, but it still can’t give you the sauce. A

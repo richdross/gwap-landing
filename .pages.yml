@@ -112,6 +112,12 @@ content:
           search: "title,category,section"
           value: "{path}"
           label: "{primary}"
+      - name: commercialOpportunities
+        label: Commercial Graph — Opportunity IDs
+        type: string
+        list: true
+        required: false
+        description: Connect this article to Gwap products, reports, tools, automations, or revenue opportunities. Current IDs live in _data/opportunities.json.
       - name: image
         label: Featured Image
         type: image
