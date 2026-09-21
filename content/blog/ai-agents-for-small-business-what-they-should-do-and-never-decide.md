@@ -6,6 +6,25 @@ authorUrl: /author/rich-ross/
 date: 2026-09-18
 section: technology
 category: AI Agents
+topics:
+  - AI agents
+  - small business
+  - automation governance
+  - human oversight
+entities:
+  - Small businesses
+technologies:
+  - AI agents
+  - large language models
+  - workflow automation
+businessModels:
+  - AI automation services
+  - agent-enabled operations
+relatedArticles:
+  - content/blog/what-small-businesses-should-automate-first-with-ai.md
+  - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
+  - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
+nextMove: content/blog/what-small-businesses-should-automate-first-with-ai.md
 image: /images/blog/ai-agents-small-business-gwap.jpg
 imageAlt: Gwap Gang logo in glossy neon green and red on a black background
 description: A practical guide to giving AI agents useful business responsibilities without giving them dangerous authority over high-impact decisions.
