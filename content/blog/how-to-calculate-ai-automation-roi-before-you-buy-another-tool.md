@@ -6,6 +6,25 @@ authorUrl: /author/rich-ross/
 date: 2026-09-18
 section: capital
 category: AI ROI
+topics:
+  - AI ROI
+  - automation economics
+  - software spend
+  - business cases
+entities:
+  - Small businesses
+technologies:
+  - AI automation
+  - workflow automation
+businessModels:
+  - automation consulting
+  - SaaS
+  - AI services
+relatedArticles:
+  - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
+  - content/blog/what-small-businesses-should-automate-first-with-ai.md
+  - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
+nextMove: content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
 image: /images/blog/ai-automation-roi-gwap.jpg
 imageAlt: Bright Gwap logo in neon green and red with high-speed light streaks
 description: A simple ROI framework for deciding whether an AI automation project is actually worth the software, setup, maintenance, and human oversight it requires.
