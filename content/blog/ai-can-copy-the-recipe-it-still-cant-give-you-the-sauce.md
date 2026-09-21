@@ -5,6 +5,7 @@ authorRole: Founder, GWAP Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-04
 updated: 2026-09-18
+section: culture
 category: AI + Originality
 image: /images/blog/chatgpt-image-jun-7-2026-062819-pm.png
 imageAlt: Gwap Gang visual about originality and human creative judgment in the age of AI

@@ -115,9 +115,9 @@ h1{margin:16px 0 22px;max-width:790px;font:950 clamp(4rem,9vw,9.2rem)/.79 Impact
     <div class="latest">
       {% set recentPosts = collections.posts | reverse %}
       {% for post in recentPosts %}
-        {% if loop.index <= 3 %}
+        {% if post.data.section == sectionSlug %}
         <a class="post-card" href="{{ post.url }}">
-          <div class="post-date">{{ post.date | readableDate }}</div>
+          <div class="post-date">{{ post.date | readableDate }} // {{ post.data.category or section }}</div>
           <h3>{{ post.data.title }}</h3>
           <p>{{ post.data.description }}</p>
         </a>

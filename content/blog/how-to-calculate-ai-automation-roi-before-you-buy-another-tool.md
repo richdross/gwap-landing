@@ -4,6 +4,7 @@ author: Rich Ross
 authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
+section: capital
 category: AI ROI
 image: /images/blog/ai-automation-roi-gwap.jpg
 imageAlt: Bright Gwap logo in neon green and red with high-speed light streaks

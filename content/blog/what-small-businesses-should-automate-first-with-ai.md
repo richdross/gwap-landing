@@ -4,6 +4,7 @@ author: Rich Ross
 authorRole: Founder, GWAP Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-14
+section: technology
 description: A practical GWAP Intelligence framework for deciding which business tasks should be automated first with AI, which should wait, and which should stay human.
 image: /images/gwap-gang-labs-v3.webp
 ---

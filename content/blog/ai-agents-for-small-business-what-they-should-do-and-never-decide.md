@@ -4,6 +4,7 @@ author: Rich Ross
 authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
+section: technology
 category: AI Agents
 image: /images/blog/ai-agents-small-business-gwap.jpg
 imageAlt: Gwap Gang logo in glossy neon green and red on a black background

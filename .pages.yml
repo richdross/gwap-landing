@@ -14,7 +14,7 @@ content:
     filename: "{primary}.md"
     exclude: ["blog.json", ".gitkeep"]
     view:
-      fields: [title, author, date, category]
+      fields: [title, author, date, section, category]
       primary: title
       sort: [date, title]
       default:
@@ -52,8 +52,23 @@ content:
         required: false
         options:
           format: yyyy-MM-dd
+      - name: section
+        label: Editorial Section
+        type: select
+        required: true
+        description: Controls which permanent Gwap Gang section automatically publishes this article.
+        options:
+          values:
+            - name: culture
+              label: Culture
+            - name: capital
+              label: Capital
+            - name: technology
+              label: Technology
+            - name: intelligence
+              label: Intelligence
       - name: category
-        label: Category
+        label: Topic Category
         type: string
         required: false
         default: "Gwap Intelligence"

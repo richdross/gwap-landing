@@ -4,6 +4,7 @@ author: Rich Ross
 authorRole: Founder, Gwap Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-18
+section: intelligence
 category: AI Automation
 image: /images/blog/ai-automation-opportunities-gwap.jpg
 imageAlt: Gwap Gang graffiti-style neon green and red lettering on a city wall
