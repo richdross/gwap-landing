@@ -9,6 +9,17 @@
   {% set heroImageUrl = heroImage | absoluteUrl(site.url) %}
   {% set modifiedDate = updated or date %}
   {% set articleCategory = category or "Gwap Intelligence" %}
+  {% set articleSectionSlug = section or "intelligence" %}
+  {% if articleSectionSlug == "culture" %}
+    {% set articleSectionName = "Culture" %}
+  {% elif articleSectionSlug == "capital" %}
+    {% set articleSectionName = "Capital" %}
+  {% elif articleSectionSlug == "technology" %}
+    {% set articleSectionName = "Technology" %}
+  {% else %}
+    {% set articleSectionSlug = "intelligence" %}
+    {% set articleSectionName = "Intelligence" %}
+  {% endif %}
 
   <title>{{ title }} — Gwap Gang</title>
   <meta name="description" content="{{ description }}">
@@ -27,7 +38,7 @@
   <meta property="article:published_time" content="{{ date | isoDate }}">
   <meta property="article:modified_time" content="{{ modifiedDate | isoDate }}">
   <meta property="article:author" content="{{ author }}">
-  <meta property="article:section" content="{{ articleCategory }}">
+  <meta property="article:section" content="{{ articleSectionName }}">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ title }}">
@@ -88,8 +99,8 @@
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "Blog",
-            "item": "{{ site.url }}/blog/"
+            "name": {{ articleSectionName | json | safe }},
+            "item": "{{ site.url }}/{{ articleSectionSlug }}/"
           },
           {
             "@type": "ListItem",
@@ -112,7 +123,8 @@
         "image": ["{{ heroImageUrl }}"],
         "datePublished": {{ date | isoDate | json | safe }},
         "dateModified": {{ modifiedDate | isoDate | json | safe }},
-        "articleSection": {{ articleCategory | json | safe }},
+        "articleSection": {{ articleSectionName | json | safe }},
+        "keywords": [{{ articleSectionName | json | safe }}, {{ articleCategory | json | safe }}],
         "author": { "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person" },
         "publisher": { "@id": "{{ site.url }}/#organization" },
         "breadcrumb": { "@id": "{{ canonicalUrl }}#breadcrumbs" }
@@ -163,7 +175,10 @@
     .breadcrumbs a { color:var(--muted); text-decoration:none; }
     .breadcrumbs a:hover { color:var(--accent); }
     article { padding:42px 0 96px; }
-    .eyebrow { color:var(--accent); font-size:.76rem; font-weight:850; letter-spacing:.18em; text-transform:uppercase; }
+    .eyebrow { display:flex; flex-wrap:wrap; align-items:center; gap:.55em; color:var(--accent); font-size:.76rem; font-weight:850; letter-spacing:.18em; text-transform:uppercase; }
+    .eyebrow .section-link { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(56,255,136,.38); padding-bottom:3px; }
+    .eyebrow .section-link:hover { color:#fff; border-color:var(--accent); }
+    .eyebrow .topic-label { color:var(--muted); letter-spacing:.12em; }
     article > h1 {
       max-width:980px;
       margin:14px 0 18px;
@@ -349,11 +364,14 @@
   <header><div class="shell"><a class="brand" href="/">GWAP GANG</a></div></header>
   <main class="shell">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Gwap Gang</a> / <a href="/blog/">Blog</a> / <span>{{ title }}</span>
+      <a href="/">Gwap Gang</a> / <a href="/{{ articleSectionSlug }}/">{{ articleSectionName }}</a> / <span>{{ title }}</span>
     </nav>
 
     <article data-gwap-article="{{ page.fileSlug }}" data-article-url="{{ page.url }}" data-article-title="{{ title }}">
-      <div class="eyebrow">{{ articleCategory }}</div>
+      <div class="eyebrow">
+        <a class="section-link" href="/{{ articleSectionSlug }}/">{{ articleSectionName }}</a>
+        <span class="topic-label">// {{ articleCategory }}</span>
+      </div>
       <h1>{{ title }}</h1>
       {% if description %}<p class="dek">{{ description }}</p>{% endif %}
       <div class="meta">
