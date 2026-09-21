@@ -20,11 +20,11 @@ body{margin:0;background:#000;color:var(--paper);font-family:Arial,Helvetica,san
 a{color:inherit}
 .reference{position:relative;width:min(100%,1440px);margin:0 auto;background:#000;line-height:0}
 .reference img{display:block;width:100%;height:auto}
-.home-pulse-logo{position:absolute;z-index:20;left:1.85%;top:.30%;width:13.4%;height:1.95%;overflow:hidden;background:#000;text-decoration:none;transform-origin:center center;animation:homeLogoBreathe 8s ease-in-out infinite}
-.home-pulse-logo img{position:absolute;left:3%;top:50%;width:94%;height:auto;transform:translateY(-50%);display:block}
-@keyframes homeLogoBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.018)}}
+.home-pulse-logo{position:absolute;z-index:20;left:1.85%;top:.30%;width:13.4%;height:1.95%;overflow:hidden;background:#000;text-decoration:none}
+.home-pulse-logo img{position:absolute;left:3%;top:50%;width:94%;height:auto;display:block;transform:translateY(-50%) scale(1);transform-origin:center center;animation:homeLogoBreathe 5.6s cubic-bezier(.45,0,.55,1) infinite;will-change:transform}
+@keyframes homeLogoBreathe{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.055)}}
 @media(max-width:700px){.home-pulse-logo{left:1.60%;top:.22%;width:16.5%;height:2.35%}}
-@media(prefers-reduced-motion:reduce){.home-pulse-logo{animation:none}}
+@media(prefers-reduced-motion:reduce){.home-pulse-logo img{animation:none}}
 .hotspot{position:absolute;z-index:5;border:0;background:transparent;cursor:pointer;text-indent:-9999px;overflow:hidden}
 .hotspot:focus-visible{outline:3px solid var(--acid);outline-offset:3px}
 .enter{left:3.0%;top:19.35%;width:20.7%;height:2.25%}
