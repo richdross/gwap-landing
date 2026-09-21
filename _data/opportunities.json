@@ -238,5 +238,40 @@
       "AI-assisted media"
     ],
     "minScore": 5
+  },
+  {
+    "id": "revenue-rescue-sprint",
+    "name": "Revenue Rescue Sprint",
+    "kind": "service",
+    "status": "launching",
+    "price": "$299",
+    "url": "/revenue-rescue-sprint/",
+    "cta": "Explore the Sprint",
+    "description": "A fixed-scope intervention that identifies the three highest-value revenue leaks and turns them into a prioritized 7-day execution plan.",
+    "sections": [
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "AI ROI",
+      "AI automation",
+      "business operations",
+      "business cases",
+      "small business"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI automation",
+      "workflow automation"
+    ],
+    "businessModels": [
+      "automation consulting",
+      "AI business intelligence",
+      "AI services"
+    ],
+    "minScore": 4
   }
 ]
