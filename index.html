@@ -35,6 +35,26 @@ a{color:inherit}
 .nav-capital{left:37.4%;width:7.2%}
 .nav-technology{left:45.1%;width:10.2%}
 .nav-intelligence{left:56.2%;width:10.4%}
+.nav-gallery-visible{
+  position:absolute;
+  z-index:22;
+  left:68.4%;
+  top:.55%;
+  height:1.55%;
+  display:flex;
+  align-items:center;
+  color:#aeb3aa;
+  text-decoration:none;
+  font:800 clamp(5px,.56vw,8px)/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  line-height:1;
+  transition:color .18s ease,text-shadow .18s ease
+}
+.nav-gallery-visible::before{content:"/";margin-right:.75em;color:#555a54}
+.nav-gallery-visible:hover,.nav-gallery-visible:focus-visible{color:var(--acid);text-shadow:0 0 10px rgba(202,255,0,.25);outline:none}
+@media(max-width:700px){.nav-gallery-visible{left:68.1%;font-size:5px}}
 .email{left:68.15%;top:90.0%;width:17.0%;height:2.8%}
 .join{left:84.9%;top:90.0%;width:12.7%;height:2.8%}
 .signup-mask{position:absolute;z-index:10;left:67.45%;top:88.55%;width:30.55%;height:6.15%;background:#000}
@@ -107,6 +127,7 @@ a{color:inherit}
       <a class="hotspot nav-hotspot nav-capital" href="/capital/" aria-label="Capital">Capital</a>
       <a class="hotspot nav-hotspot nav-technology" href="/technology/" aria-label="Technology">Technology</a>
       <a class="hotspot nav-hotspot nav-intelligence" href="/intelligence/" aria-label="Intelligence">Intelligence</a>
+      <a class="nav-gallery-visible" href="/gallery/" aria-label="Gallery">Gallery</a>
     </nav>
     <button class="hotspot enter" type="button" data-signup>Enter the signal</button>
     <div class="signup-mask" aria-hidden="true"></div>
