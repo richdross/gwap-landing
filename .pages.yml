@@ -72,6 +72,46 @@ content:
         type: string
         required: false
         default: "Gwap Intelligence"
+      - name: topics
+        label: Intelligence Graph — Topics
+        type: string
+        list: true
+        required: false
+      - name: entities
+        label: Intelligence Graph — Entities
+        type: string
+        list: true
+        required: false
+      - name: technologies
+        label: Intelligence Graph — Technologies
+        type: string
+        list: true
+        required: false
+      - name: businessModels
+        label: Intelligence Graph — Business Models
+        type: string
+        list: true
+        required: false
+      - name: relatedArticles
+        label: Intelligence Graph — Related Articles
+        type: reference
+        required: false
+        options:
+          collection: blog
+          multiple: true
+          max: 5
+          search: "title,category,section"
+          value: "{path}"
+          label: "{primary}"
+      - name: nextMove
+        label: Intelligence Graph — Read This Next
+        type: reference
+        required: false
+        options:
+          collection: blog
+          search: "title,category,section"
+          value: "{path}"
+          label: "{primary}"
       - name: image
         label: Featured Image
         type: image
