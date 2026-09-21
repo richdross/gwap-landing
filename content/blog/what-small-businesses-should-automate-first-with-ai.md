@@ -5,7 +5,26 @@ authorRole: Founder, GWAP Gang
 authorUrl: /author/rich-ross/
 date: 2026-09-14
 section: technology
+category: AI Automation
 description: A practical GWAP Intelligence framework for deciding which business tasks should be automated first with AI, which should wait, and which should stay human.
+topics:
+  - AI automation
+  - small business
+  - workflow design
+  - operational leverage
+entities:
+  - Small businesses
+technologies:
+  - AI automation
+  - workflow automation
+businessModels:
+  - automation services
+  - AI-enabled operations
+relatedArticles:
+  - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
+  - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
+  - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
+nextMove: content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
 image: /images/gwap-gang-labs-v3.webp
 ---
 Most small businesses do not have an AI problem.
