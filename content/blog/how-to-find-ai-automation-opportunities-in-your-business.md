@@ -6,6 +6,24 @@ authorUrl: /author/rich-ross/
 date: 2026-09-18
 section: intelligence
 category: AI Automation
+topics:
+  - AI automation
+  - workflow discovery
+  - business operations
+  - process mapping
+entities:
+  - Small businesses
+technologies:
+  - AI automation
+  - workflow automation
+businessModels:
+  - automation consulting
+  - AI business intelligence
+relatedArticles:
+  - content/blog/what-small-businesses-should-automate-first-with-ai.md
+  - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
+  - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
+nextMove: content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
 image: /images/blog/ai-automation-opportunities-gwap.jpg
 imageAlt: Gwap Gang graffiti-style neon green and red lettering on a city wall
 description: A practical framework for finding the highest-value AI automation opportunities inside a small business without wasting money on random tools.
