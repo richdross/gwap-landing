@@ -20,6 +20,8 @@
     {% set articleSectionSlug = "intelligence" %}
     {% set articleSectionName = "Intelligence" %}
   {% endif %}
+  {% set intelligenceKeywords = articleSectionName | graphKeywords(articleCategory, topics, entities, technologies, businessModels) %}
+  {% set intelligenceAbout = entities | graphAbout(technologies) %}
 
   <title>{{ title }} — Gwap Gang</title>
   <meta name="description" content="{{ description }}">
@@ -124,7 +126,8 @@
         "datePublished": {{ date | isoDate | json | safe }},
         "dateModified": {{ modifiedDate | isoDate | json | safe }},
         "articleSection": {{ articleSectionName | json | safe }},
-        "keywords": [{{ articleSectionName | json | safe }}, {{ articleCategory | json | safe }}],
+        "keywords": {{ intelligenceKeywords | json | safe }},
+        {% if intelligenceAbout.length %}"about": {{ intelligenceAbout | json | safe }},{% endif %}
         "author": { "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person" },
         "publisher": { "@id": "{{ site.url }}/#organization" },
         "breadcrumb": { "@id": "{{ canonicalUrl }}#breadcrumbs" }
@@ -327,10 +330,23 @@
     .discovery p { margin:0 0 14px; color:var(--muted); font-size:.9rem; }
     .search-profile { display:inline-block; margin-top:12px; font-size:.9rem; }
 
+    .intelligence-map { width:min(900px,100%); margin-top:58px; padding:26px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(145deg,rgba(56,255,136,.04),var(--panel)); }
+    .intelligence-map h2 { margin:8px 0 18px; font-size:1.35rem; }
+    .graph-row { display:grid; grid-template-columns:135px 1fr; gap:14px; padding:12px 0; border-top:1px solid var(--line); }
+    .graph-row:first-of-type { border-top:0; }
+    .graph-label { color:var(--muted); font-size:.75rem; font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+    .graph-chips { display:flex; flex-wrap:wrap; gap:7px; }
+    .graph-chip { padding:6px 9px; border:1px solid #2a3b31; border-radius:999px; color:#cbd4ce; font-size:.78rem; }
+    .next-move { width:min(900px,100%); margin-top:58px; padding-top:32px; border-top:1px solid var(--line); }
+    .next-move h2 { margin:8px 0 18px; font-size:clamp(1.55rem,3vw,2.3rem); }
+    .next-card { display:grid; grid-template-columns:1fr auto; gap:26px; align-items:end; padding:24px; border:1px solid #31513e; border-radius:14px; background:linear-gradient(145deg,rgba(56,255,136,.075),var(--panel)); color:var(--text); text-decoration:none; }
+    .next-card small { color:var(--accent); font-weight:850; letter-spacing:.1em; text-transform:uppercase; }
+    .next-card strong { display:block; margin-top:9px; max-width:680px; font-size:1.35rem; line-height:1.12; }
+    .next-arrow { color:var(--accent); font-size:1.65rem; }
     .related {
       width:min(900px,100%);
-      margin-top:58px;
-      padding-top:32px;
+      margin-top:42px;
+      padding-top:28px;
       border-top:1px solid var(--line);
     }
     .related h2 { margin:0 0 18px; font-size:1.35rem; }
@@ -355,7 +371,9 @@
       article { padding:34px 0 72px; }
       .hero-wrap { margin-bottom:38px; }
       .body { font-size:1.08rem; line-height:1.78; }
-      .commercial,.engagement-panel { padding:20px; }
+      .commercial,.engagement-panel,.intelligence-map { padding:20px; }
+      .graph-row { grid-template-columns:1fr; gap:8px; }
+      .next-card { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -395,6 +413,17 @@
       {% endif %}
 
       <div class="reading-shell"><div class="body" id="article-body">{{ content | safe }}</div></div>
+
+      {% if topics or entities or technologies or businessModels %}
+      <section class="intelligence-map" aria-label="Gwap Intelligence Graph connections">
+        <div class="eyebrow">Gwap Intelligence Graph</div>
+        <h2>What this connects to.</h2>
+        {% if topics and topics.length %}<div class="graph-row"><div class="graph-label">Topics</div><div class="graph-chips">{% for item in topics %}<span class="graph-chip">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+        {% if entities and entities.length %}<div class="graph-row"><div class="graph-label">Entities</div><div class="graph-chips">{% for item in entities %}<span class="graph-chip">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+        {% if technologies and technologies.length %}<div class="graph-row"><div class="graph-label">Technologies</div><div class="graph-chips">{% for item in technologies %}<span class="graph-chip">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+        {% if businessModels and businessModels.length %}<div class="graph-row"><div class="graph-label">Business Models</div><div class="graph-chips">{% for item in businessModels %}<span class="graph-chip">{{ item }}</span>{% endfor %}</div></div>{% endif %}
+      </section>
+      {% endif %}
 
       <section class="engagement" aria-label="Article feedback and sharing">
         <div class="engagement-panel">
@@ -443,15 +472,27 @@
       </section>
       {% endif %}
 
-      {% set related = collections.posts | relatedPosts(page.url, 3) %}
+      {% set nextArticle = collections.posts | graphNextMove(page.url, nextMove, section, articleCategory, topics, entities, technologies, businessModels, relatedArticles) %}
+      {% if nextArticle %}
+      <section class="next-move" aria-label="Recommended next Gwap Gang article">
+        <div class="eyebrow">If you understood this</div>
+        <h2>Read this next.</h2>
+        <a class="next-card" href="{{ nextArticle.url }}" data-gwap-event="intelligence_graph_next_move">
+          <div><small>{{ nextArticle.data.section | sectionName }} // {{ nextArticle.data.category or "Gwap Intelligence" }}</small><strong>{{ nextArticle.data.title }}</strong></div>
+          <span class="next-arrow" aria-hidden="true">→</span>
+        </a>
+      </section>
+      {% endif %}
+
+      {% set related = collections.posts | graphRelated(page.url, section, articleCategory, topics, entities, technologies, businessModels, relatedArticles, nextMove, 3) %}
       {% if related.length %}
-      <section class="related" aria-label="Related Gwap Gang articles">
-        <div class="eyebrow">Keep going</div>
-        <h2>More Gwap Intelligence</h2>
+      <section class="related" aria-label="Connected Gwap Gang intelligence">
+        <div class="eyebrow">Connected Intelligence</div>
+        <h2>Follow the graph.</h2>
         <div class="related-grid">
           {% for post in related %}
-          <a class="related-card" href="{{ post.url }}" data-gwap-event="related_article_click">
-            <small>{{ post.data.category or "Gwap Intelligence" }}</small>
+          <a class="related-card" href="{{ post.url }}" data-gwap-event="intelligence_graph_related_click">
+            <small>{{ post.data.section | sectionName }} // {{ post.data.category or "Gwap Intelligence" }}</small>
             <strong>{{ post.data.title }}</strong>
           </a>
           {% endfor %}
@@ -459,7 +500,7 @@
       </section>
       {% endif %}
 
-      <div class="post-end"><a class="back" href="/blog/">← Back to Gwap Blog</a></div>
+      <div class="post-end"><a class="back" href="/blog/">← Back to All Intelligence</a></div>
     </article>
   </main>
   <footer><div class="shell">© 2026 Gwap Gang. Build. Ship. Get Paid. · <a href="mailto:{{ site.email }}">{{ site.email }}</a></div></footer>
