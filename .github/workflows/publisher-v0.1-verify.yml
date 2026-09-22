@@ -59,7 +59,7 @@ jobs:
           test -f _site/sitemap.xml
           test -f _site/robots.txt
 
-          grep -q 'Creative Technology for Business' _site/index.html
+          grep -qi 'Gwap Gang' _site/index.html
           grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
 
           grep -q 'max-image-preview:large' "$ARTICLE"
