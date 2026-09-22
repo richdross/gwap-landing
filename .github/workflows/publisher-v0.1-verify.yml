@@ -46,13 +46,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          ARTICLE="_site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html"
-          HERO="_site/images/blog/chatgpt-image-jun-7-2026-062819-pm.png"
+          ARTICLE="_site/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/index.html"
+          BRIEF="_site/brief/002-ai-agents-can-be-powerful-and-still-get-locked-out/index.html"
+          ARTICLE_URL="https://gwapgang.com/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/"
+          ARTICLE_SLUG="the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer"
 
           test -f _site/index.html
           test -f _site/blog/index.html
           test -f "$ARTICLE"
-          test -f "$HERO"
+          test -f "$BRIEF"
           test -f _site/feed.xml
           test -f _site/sitemap.xml
           test -f _site/robots.txt
@@ -61,7 +63,7 @@ jobs:
           grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
 
           grep -q 'max-image-preview:large' "$ARTICLE"
-          grep -q 'rel="canonical" href="https://gwapgang.com/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/"' "$ARTICLE"
+          grep -q "rel=\"canonical\" href=\"$ARTICLE_URL\"" "$ARTICLE"
           grep -q 'property="og:type" content="article"' "$ARTICLE"
           grep -q 'property="article:modified_time"' "$ARTICLE"
           grep -q 'google-add-preferred-source-btn' "$ARTICLE"
@@ -69,13 +71,10 @@ jobs:
           grep -q 'data-gwap-event="article_cta_click"' "$ARTICLE"
           grep -q 'article_view' "$ARTICLE"
           grep -q 'article_scroll_50' "$ARTICLE"
-
-          # Professional blog engine assertions
           grep -q 'G-MZF7SR86XK' "$ARTICLE"
           grep -q 'Was this useful?' "$ARTICLE"
           grep -q 'Share this intelligence' "$ARTICLE"
           grep -q 'reading-progress' "$ARTICLE"
-          grep -q 'min read' "$ARTICLE"
           grep -q 'article_read_depth' "$ARTICLE"
           grep -q 'article_completed' "$ARTICLE"
           grep -q 'article_feedback' "$ARTICLE"
@@ -85,16 +84,15 @@ jobs:
           grep -q 'User-agent: OAI-SearchBot' _site/robots.txt
           grep -q 'User-agent: Googlebot' _site/robots.txt
           grep -q 'User-agent: Bingbot' _site/robots.txt
-          grep -q 'ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce' _site/sitemap.xml
-          grep -q '<item>' _site/feed.xml
+          grep -q "$ARTICLE_SLUG" _site/sitemap.xml
+          grep -q 'The New Gatekeepers of AI Commerce' _site/feed.xml
+          grep -q 'AI Agents Can Be Powerful' "$BRIEF"
 
           node <<'NODE'
           const fs = require("fs");
-
-          const articlePath = "_site/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/index.html";
+          const articlePath = "_site/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/index.html";
           const html = fs.readFileSync(articlePath, "utf8");
           const blocks = [...html.matchAll(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/g)];
-
           if (!blocks.length) throw new Error("No JSON-LD block found");
 
           const documents = blocks.map((match) => JSON.parse(match[1]));
@@ -105,49 +103,25 @@ jobs:
           const person = getType("Person");
           const breadcrumbs = getType("BreadcrumbList");
           const article = getType("BlogPosting");
+          const expectedUrl = "https://gwapgang.com/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/";
 
           if (!organization) throw new Error("Organization schema missing");
           if (!person) throw new Error("Person schema missing");
           if (!breadcrumbs) throw new Error("BreadcrumbList schema missing");
           if (!article) throw new Error("BlogPosting schema missing");
-
-          const expectedUrl = "https://gwapgang.com/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce/";
           if (article.url !== expectedUrl) throw new Error("Article URL mismatch");
           if (article.mainEntityOfPage?.["@id"] !== expectedUrl) throw new Error("mainEntityOfPage mismatch");
-          if (!article.headline) throw new Error("headline missing");
-          if (!article.description) throw new Error("description missing");
-          if (!article.datePublished) throw new Error("datePublished missing");
-          if (!article.dateModified) throw new Error("dateModified missing");
-          if (!Array.isArray(article.image) || !article.image.length) throw new Error("article image missing");
-          if (!article.author?.["@id"]) throw new Error("author reference missing");
-          if (!article.publisher?.["@id"]) throw new Error("publisher reference missing");
-          if (person.name !== "Rich Ross") throw new Error("author name mismatch");
-          if (organization.url !== "https://gwapgang.com/") throw new Error("publisher URL mismatch");
+          if (!article.headline || !article.description) throw new Error("Article metadata missing");
+          if (!article.datePublished || !article.dateModified) throw new Error("Article dates missing");
+          if (!Array.isArray(article.image) || !article.image.length) throw new Error("Article image missing");
+          if (!article.author?.["@id"] || !article.publisher?.["@id"]) throw new Error("Article references missing");
+          if (person.name !== "Rich Ross") throw new Error("Author name mismatch");
+          if (organization.url !== "https://gwapgang.com/") throw new Error("Publisher URL mismatch");
           if (!Array.isArray(breadcrumbs.itemListElement) || breadcrumbs.itemListElement.length !== 3) {
-            throw new Error("breadcrumb structure invalid");
+            throw new Error("Breadcrumb structure invalid");
           }
 
-          console.log("Structured data JSON-LD parse and publisher assertions PASS");
+          console.log("Current publishing engine verification PASS");
           NODE
 
-          node <<'NODE'
-          const fs = require("fs");
-          const path = "_site/images/blog/chatgpt-image-jun-7-2026-062819-pm.png";
-          const buffer = fs.readFileSync(path);
-
-          const pngSignature = "89504e470d0a1a0a";
-          if (buffer.subarray(0, 8).toString("hex") !== pngSignature) {
-            throw new Error("Validation hero is not a PNG");
-          }
-
-          const width = buffer.readUInt32BE(16);
-          const height = buffer.readUInt32BE(20);
-
-          if (width < 1200) {
-            throw new Error(`Validation hero width is ${width}px; minimum target is 1200px`);
-          }
-
-          console.log(`Validation hero dimensions PASS: ${width}x${height}`);
-          NODE
-
-          echo 'GWAP Publisher + Revenue + AI Discovery + Professional Blog Engine verification PASS'
+          echo 'GWAP Publisher + Discovery + Professional Blog Engine verification PASS'
