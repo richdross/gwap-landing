@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "eleventy",
-    "serve": "eleventy --serve"
+    "build": "npm run editorial:qa && eleventy",
+    "serve": "eleventy --serve",
+    "editorial:qa": "node scripts/editorial-qa.mjs"
   },
   "devDependencies": {
     "@11ty/eleventy": "3.1.6"
