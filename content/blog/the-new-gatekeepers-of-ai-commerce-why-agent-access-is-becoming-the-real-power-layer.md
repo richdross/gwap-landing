@@ -303,9 +303,9 @@ And when access becomes contested, the gate becomes valuable.
 
 ## Sources
 
-- [TechCrunch — Meta's AI agent has been blocked from using Amazon.com](https://techcrunch.com/2026/09/21/metas-ai-agent-has-been-blocked-from-using-amazon-com/)
-- [GeekWire — Amazon blocks Meta's Muse AI assistant in new standoff over agentic shopping](https://www.geekwire.com/2026/amazon-blocks-metas-muse-ai-assistant-in-new-standoff-over-agentic-shopping/)
-- [The Verge — Amazon blocks Meta's Muse AI agent](https://www.theverge.com/tech/998078/amazon-blocks-meta-muse-ai-agent-shopping)
+- [TechCrunch: Meta's AI agent has been blocked from using Amazon.com](https://techcrunch.com/2026/09/21/metas-ai-agent-has-been-blocked-from-using-amazon-com/)
+- [GeekWire: Amazon blocks Meta's Muse AI assistant in new standoff over agentic shopping](https://www.geekwire.com/2026/amazon-blocks-metas-muse-ai-assistant-in-new-standoff-over-agentic-shopping/)
+- [The Verge: Amazon blocks Meta's Muse AI agent](https://www.theverge.com/tech/998078/amazon-blocks-meta-muse-ai-agent-shopping)
 
 ---
 
