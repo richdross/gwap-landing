@@ -10,6 +10,8 @@ on:
       - '_includes/**'
       - 'blog/**'
       - 'content/blog/**'
+      - 'content/brief/**'
+      - 'scripts/editorial-qa.mjs'
       - 'author/**'
       - 'feed.njk'
       - 'sitemap.njk'
