@@ -60,7 +60,7 @@ jobs:
           test -f _site/robots.txt
 
           grep -qi 'Gwap Gang' _site/index.html
-          grep -q 'GWAP Blog — GWAP Gang' _site/blog/index.html
+          grep -q 'All Intelligence — Gwap Gang' _site/blog/index.html
 
           grep -q 'max-image-preview:large' "$ARTICLE"
           grep -q "rel=\"canonical\" href=\"$ARTICLE_URL\"" "$ARTICLE"
