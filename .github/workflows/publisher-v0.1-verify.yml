@@ -18,6 +18,7 @@ on:
       - 'robots.txt'
       - 'public/robots.txt'
       - 'public/images/blog/**'
+      - 'public/operator/**'
       - '.github/workflows/publisher-v0.1-verify.yml'
   workflow_dispatch:
 
@@ -60,6 +61,7 @@ jobs:
           test -f _site/feed.xml
           test -f _site/sitemap.xml
           test -f _site/robots.txt
+          test -f _site/operator/blog-analytics/index.html
 
           grep -qi 'Gwap Gang' _site/index.html
           grep -q 'All Intelligence — Gwap Gang' _site/blog/index.html
@@ -82,6 +84,17 @@ jobs:
           grep -q 'article_feedback' "$ARTICLE"
           grep -q 'article_share' "$ARTICLE"
           grep -q 'article_link_click' "$ARTICLE"
+          grep -q 'article_helpful_yes' "$ARTICLE"
+          grep -q 'article_helpful_no' "$ARTICLE"
+
+          DASHBOARD="_site/operator/blog-analytics/index.html"
+          grep -q 'noindex,nofollow' "$DASHBOARD"
+          grep -q 'gwap-blog-analytics' "$DASHBOARD"
+          grep -q 'x-gwap-operator-key' "$DASHBOARD"
+          if grep -q 'gwap_op_' "$DASHBOARD"; then
+            echo 'Operator key must never be embedded in dashboard output'
+            exit 1
+          fi
 
           grep -q 'User-agent: OAI-SearchBot' _site/robots.txt
           grep -q 'User-agent: Googlebot' _site/robots.txt
