@@ -27,3 +27,7 @@ jobs:
       - name: Verify intelligence Worker syntax
         if: ${{ hashFiles('platform/intelligence/src/worker.js') != '' }}
         run: node --check platform/intelligence/src/worker.js
+
+      - name: Verify GA4 collector syntax
+        if: ${{ hashFiles('platform/intelligence/scripts/ga4-collector.mjs') != '' }}
+        run: node --check platform/intelligence/scripts/ga4-collector.mjs
