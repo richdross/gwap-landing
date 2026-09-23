@@ -590,7 +590,7 @@
         reactionButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
         try { localStorage.setItem(reactionKey, reaction); } catch (_) {}
         if (reactionStatus) reactionStatus.textContent = "Feedback saved. Thank you.";
-        emit("article_feedback", { reaction });
+        emit("article_feedback", { reaction });\n        emit(reaction === "helpful" ? "article_helpful_yes" : "article_helpful_no");
       });
     });
 
