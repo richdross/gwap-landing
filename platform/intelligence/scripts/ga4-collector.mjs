@@ -108,9 +108,63 @@ for (const row of eventReport.rows || []) {
   if (outcome === "stored") stored++; else if (outcome === "duplicate") duplicate++; else failed++;
 }
 
+const articleEventNames = new Set([
+  "article_view",
+  "article_read_depth",
+  "article_scroll_50",
+  "article_completed",
+  "article_helpful_yes",
+  "article_helpful_no",
+  "article_share",
+  "article_cta_click",
+  "article_link_click",
+  "related_article_click",
+  "intelligence_graph_related_click",
+  "intelligence_graph_next_move",
+  "commercial_opportunity_click",
+]);
+
+const articleEventReport = await analyticsRequest(token, "runReport", {
+  dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+  dimensions: [{ name: "eventName" }, { name: "pagePath" }, { name: "pageTitle" }],
+  metrics: [{ name: "eventCount" }, { name: "activeUsers" }],
+  orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+  limit: "500",
+});
+
+let articleEvents = 0;
+for (const row of articleEventReport.rows || []) {
+  const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
+  const path = row.dimensionValues?.[1]?.value || "/";
+  const title = row.dimensionValues?.[2]?.value || path;
+  if (!path.startsWith("/blog/") || !articleEventNames.has(eventName)) continue;
+
+  articleEvents++;
+  const metrics = row.metricValues || [];
+  const outcome = await storeSignal({
+    sourceType: "ga4",
+    sourceRef: `ga4:${propertyId}:article-event:${slug(eventName)}:${slug(path)}:${today}`,
+    title: `GA4 article event: ${eventName} — ${title}`,
+    observedAt: new Date().toISOString(),
+    normalized: {
+      adapter: "ga4-data-api-github-v2",
+      signalKind: "article-event-behavior",
+      sniperKey: slug(`${eventName}-${path}`),
+      propertyId,
+      eventName,
+      pagePath: path,
+      pageTitle: title,
+      eventCount: number(metrics[0]?.value),
+      activeUsers: number(metrics[1]?.value),
+      period: "7daysAgo:today",
+    },
+  });
+  if (outcome === "stored") stored++; else if (outcome === "duplicate") duplicate++; else failed++;
+}
+
 const standardPages = pageReport.rows?.length || 0;
 const standardEvents = eventReport.rows?.length || 0;
-summaries.push({ mode: "standard", pages: standardPages, events: standardEvents });
+summaries.push({ mode: "standard", pages: standardPages, events: standardEvents, articleEvents });
 
 if (standardPages === 0 && standardEvents === 0) {
   realtimeUsed = true;
