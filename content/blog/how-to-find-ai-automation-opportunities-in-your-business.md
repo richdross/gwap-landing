@@ -28,7 +28,7 @@ commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
   - ai-automation-services
-image: /images/blog/ai-automation-opportunities-gwap.jpg
+image: https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/7692b06c-50e0-4bf5-8346-68505d143c5d.jpg
 imageAlt: Gwap Gang graffiti-style neon green and red lettering on a city wall
 description: A practical framework for finding the highest-value AI automation opportunities inside a small business without wasting money on random tools.
 ctaTitle: Find the AI opportunities your business is missing.
