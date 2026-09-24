@@ -53,7 +53,7 @@ a{color:inherit}
   position:absolute;
   z-index:2;
   left:var(--x);
-  bottom:25%;
+  bottom:39%;
   width:var(--size);
   aspect-ratio:1/1;
   border:1px solid rgba(234,255,0,.95);
@@ -65,28 +65,33 @@ a{color:inherit}
   opacity:0;
   will-change:transform,opacity
 }
-.labs-bubble-logo .b1{--x:17%;--size:7%;animation:labBubbleA 2.75s linear infinite .05s}
-.labs-bubble-logo .b2{--x:24%;--size:5%;animation:labBubbleB 3.15s linear infinite .72s}
-.labs-bubble-logo .b3{--x:12%;--size:4%;animation:labBubbleC 2.45s linear infinite 1.18s}
-.labs-bubble-logo .b4{--x:27%;--size:6%;animation:labBubbleA 3.45s linear infinite 1.66s}
-.labs-bubble-logo .b5{--x:20%;--size:3.5%;animation:labBubbleB 2.25s linear infinite 2.05s}
-.labs-bubble-logo .b6{--x:9%;--size:5.5%;animation:labBubbleC 3.05s linear infinite 2.48s}
+.labs-bubble-logo .b1{--x:9%;--size:5.8%;animation:labBubbleA 2.6s linear infinite .05s}
+.labs-bubble-logo .b2{--x:13%;--size:4.6%;animation:labBubbleB 2.95s linear infinite .55s}
+.labs-bubble-logo .b3{--x:17%;--size:3.9%;animation:labBubbleC 2.35s linear infinite 1s}
+.labs-bubble-logo .b4{--x:11%;--size:5.1%;animation:labBubbleA 3.15s linear infinite 1.45s}
+.labs-bubble-logo .b5{--x:15%;--size:3.3%;animation:labBubbleB 2.1s linear infinite 1.82s}
+.labs-bubble-logo .b6{--x:19%;--size:4.2%;animation:labBubbleC 2.75s linear infinite 2.2s}
 @keyframes labBubbleA{
-  0%{transform:translate3d(0,12%,0) scale(.58);opacity:0}
-  12%{opacity:.92}
-  48%{transform:translate3d(18%,-190%,0) scale(.9);opacity:.95}
-  82%{opacity:.82}
-  100%{transform:translate3d(-8%,-520%,0) scale(1.14);opacity:0}
+  0%{transform:translate3d(0,10%,0) scale(.54);opacity:0}
+  10%{opacity:.9}
+  45%{transform:translate3d(10%,-175%,0) scale(.85);opacity:.96}
+  78%{opacity:.82}
+  100%{transform:translate3d(-4%,-760%,0) scale(1.14);opacity:0}
 }
 @keyframes labBubbleB{
-  0%{transform:translate3d(0,18%,0) scale(.5);opacity:0}
-  14%{opacity:.9}
-  52%{transform:translate3d(-22%,-225%,0) scale(.92);opacity:.94}
-  84%{opacity:.8}
-  100%{transform:translate3d(12%,-560%,0) scale(1.18);opacity:0}
+  0%{transform:translate3d(0,12%,0) scale(.48);opacity:0}
+  12%{opacity:.9}
+  48%{transform:translate3d(-14%,-210%,0) scale(.88);opacity:.95}
+  80%{opacity:.8}
+  100%{transform:translate3d(8%,-815%,0) scale(1.18);opacity:0}
 }
 @keyframes labBubbleC{
-  0%{transform:translate3d(0,10%,0) scale(.62);opacity:0}
+  0%{transform:translate3d(0,8%,0) scale(.58);opacity:0}
+  10%{opacity:.88}
+  42%{transform:translate3d(14%,-165%,0) scale(.9);opacity:.95}
+  82%{opacity:.78}
+  100%{transform:translate3d(4%,-785%,0) scale(1.1);opacity:0}
+}
   10%{opacity:.88}
   46%{transform:translate3d(24%,-175%,0) scale(.94);opacity:.95}
   86%{opacity:.76}
