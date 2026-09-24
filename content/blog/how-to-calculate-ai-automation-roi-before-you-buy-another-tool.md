@@ -29,7 +29,7 @@ commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
   - ai-automation-services
-image: /images/blog/ai-automation-roi-gwap.jpg
+image: https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/33e22ead-4276-4eab-bd31-771ecd1137af.jpg
 imageAlt: Bright Gwap logo in neon green and red with high-speed light streaks
 description: A simple ROI framework for deciding whether an AI automation project is actually worth the software, setup, maintenance, and human oversight it requires.
 ctaTitle: Want to know which AI investments could actually pay off for your business?
