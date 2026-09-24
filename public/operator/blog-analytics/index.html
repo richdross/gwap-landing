@@ -23,17 +23,17 @@
     .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:1030px;background:var(--panel)}
     th,td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:right;font-size:.82rem;white-space:nowrap}th{position:sticky;top:0;background:#101510;color:var(--muted);font-size:.67rem;text-transform:uppercase;letter-spacing:.08em}
     th:first-child,td:first-child{text-align:left;white-space:normal;min-width:320px}.article-title{font-weight:750;color:var(--cream)}.path{display:block;color:var(--muted);font:500 .68rem/1.3 ui-monospace,monospace;margin-top:5px}
-    tr:last-child td{border-bottom:0}.zero{color:#657269}.good{color:var(--green)}.footer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    tr:last-child td{border-bottom:0}.zero{color:#657269}.good{color:var(--green)}.footer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.decisions{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.decision{padding:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel))}.decision .action{font:900 .78rem/1 ui-monospace,monospace;letter-spacing:.09em;color:var(--green)}.decision h3{margin:10px 0 8px;font-size:1.1rem;line-height:1.25}.decision p{margin:0;color:var(--muted);font-size:.82rem;line-height:1.5}.decision .why{margin-top:10px;color:var(--cream)}.decision .confidence{margin-top:12px;font:700 .7rem/1 ui-monospace,monospace;color:var(--muted)}.decision.gated{opacity:.72}.decision.collect{border-style:dashed}
     @media(max-width:1080px){.cards{grid-template-columns:repeat(4,1fr)}}@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}.gate{grid-template-columns:1fr}.shell{width:min(100% - 22px,1320px)}}
   </style>
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand">GWAP GANG / OPERATOR</div><div class="badge">BLOG ANALYTICS V1</div></header>
+    <header class="top"><div class="brand">GWAP GANG / OPERATOR</div><div class="badge">EDITORIAL INTELLIGENCE V2</div></header>
     <main>
       <div class="eyebrow">Editorial Intelligence</div>
-      <h1>Know what earns attention—and what converts it.</h1>
-      <p class="intro">Private reporting for Gwap Gang articles. Metrics come from the existing GA4 signal pipeline plus attributed editorial revenue records. No customer-level records are exposed here.</p>
+      <h1>Know what to do next.</h1>
+      <p class="intro">Private editorial intelligence for Gwap Gang. V2 turns article performance into evidence-gated actions: DOUBLE DOWN, REPACKAGE, MONETIZE, TURN INTO VIDEO, or COLLECT DATA. FIX TITLE/HOOK and UPDATE remain visibly gated until search-impression and article-age evidence are connected.</p>
       <div class="gate">
         <input id="operator-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste operator key">
         <button id="load">Open dashboard</button>
@@ -51,6 +51,12 @@
           <div class="card"><span>Orders</span><strong id="orders">—</strong><small>attributed only</small></div>
           <div class="card"><span>Revenue</span><strong id="revenue">—</strong><small>attributed only</small></div>
         </div>
+
+        <section class="section">
+          <div class="section-head"><div><div class="eyebrow">Decision Engine</div><h2>What Gwap should do next.</h2></div></div>
+          <div class="note" id="decision-note">V2 uses conservative evidence gates. Small samples stay in COLLECT DATA instead of forcing a recommendation.</div>
+          <div class="decisions" id="decisions"></div>
+        </section>
 
         <section class="section">
           <div class="section-head"><div><div class="eyebrow">Article Performance</div><h2>Every post, one scoreboard.</h2></div></div>
@@ -77,6 +83,48 @@
   const pct = value => value === null || value === undefined ? "—" : value.toFixed(1) + "%";
   const money = cents => currency.format((Number(cents)||0)/100);
   const keyName = "gwap_blog_analytics_operator_key";
+  const ENGINE = {
+    minViews: 5,
+    strongViews: 20,
+    minFeedback: 3,
+    doubleDownCompletion: 60,
+    doubleDownCta: 8,
+    repackageCompletionBelow: 35,
+    monetizeCompletion: 50,
+    monetizeCtaBelow: 5,
+    videoCompletion: 60,
+    videoHelpful: 70
+  };
+
+  function decide(a) {
+    const actions = [];
+    const views = Number(a.views || 0);
+    const completion = a.completionRate == null ? null : Number(a.completionRate);
+    const cta = a.ctaRate == null ? null : Number(a.ctaRate);
+    const helpful = a.helpfulnessRate == null ? null : Number(a.helpfulnessRate);
+    const feedback = Number(a.helpfulYes || 0) + Number(a.helpfulNo || 0);
+    const revenue = Number(a.revenueCents || 0);
+
+    if (views >= ENGINE.minViews && completion != null && completion < ENGINE.repackageCompletionBelow) {
+      actions.push({label:"REPACKAGE",priority:90,why:`${views} views but only ${completion.toFixed(1)}% completion.`,next:"Rework the opening 20%, structure, subheads, and visual pacing before sending more traffic."});
+    }
+    if (views >= ENGINE.minViews && completion != null && cta != null && completion >= ENGINE.doubleDownCompletion && cta >= ENGINE.doubleDownCta) {
+      actions.push({label:"DOUBLE DOWN",priority:85,why:`${completion.toFixed(1)}% completion plus ${cta.toFixed(1)}% CTA rate.`,next:"Create the sequel, supporting short-form pieces, and additional distribution around the same problem."});
+    }
+    if (views >= ENGINE.minViews && completion != null && cta != null && completion >= ENGINE.monetizeCompletion && cta < ENGINE.monetizeCtaBelow && revenue === 0) {
+      actions.push({label:"MONETIZE",priority:80,why:`${completion.toFixed(1)}% completion but only ${cta.toFixed(1)}% CTA rate and no attributed revenue.`,next:"Add a tighter problem-matched offer, stronger in-body CTA, and one commercial bridge before the conclusion."});
+    }
+    if (views >= ENGINE.minViews && feedback >= ENGINE.minFeedback && completion != null && helpful != null && completion >= ENGINE.videoCompletion && helpful >= ENGINE.videoHelpful) {
+      actions.push({label:"TURN INTO VIDEO",priority:75,why:`${completion.toFixed(1)}% completion and ${helpful.toFixed(1)}% helpfulness across ${feedback} responses.`,next:"Send this article into the YouTube Constructor while preserving the same mechanism, proof, and payoff."});
+    }
+
+    actions.sort((x,y)=>y.priority-x.priority);
+    const confidence = views >= ENGINE.strongViews ? "HIGH" : views >= ENGINE.minViews ? "MEDIUM" : "LOW";
+    if (!actions.length) {
+      return {label:"COLLECT DATA",priority:10,confidence,why:views < ENGINE.minViews ? `Only ${views} rolling-window view${views===1?"":"s"}; V2 requires at least ${ENGINE.minViews} before making a content decision.` : "No action threshold is currently crossed.",next:views < ENGINE.minViews ? "Keep distribution running until the sample clears the minimum evidence gate." : "Keep the article live and let the next data cycle determine the move."};
+    }
+    return {...actions[0],confidence,secondary:actions.slice(1,3)};
+  }
 
   try { keyInput.value = sessionStorage.getItem(keyName) || ""; } catch (_) {}
 
@@ -111,6 +159,19 @@
     document.getElementById("sources").textContent = "GA4 signals: " + (data.source?.ga4Signals ?? 0) + " · Editorial outcomes: " + (data.source?.editorialOutcomeRows ?? 0);
 
     const articles = Array.isArray(data.articles) ? data.articles : [];
+    const decisions = articles.map(a => ({article:a, decision:decide(a)}))
+      .sort((x,y)=>y.decision.priority-x.decision.priority || (y.article.views||0)-(x.article.views||0));
+
+    document.getElementById("decisions").innerHTML = decisions.map(({article,decision}) => `
+      <article class="decision ${decision.label === "COLLECT DATA" ? "collect" : ""}">
+        <div class="action">${escapeHtml(decision.label)}</div>
+        <h3>${escapeHtml(article.title || article.pagePath)}</h3>
+        <p class="why">${escapeHtml(decision.why)}</p>
+        <p>${escapeHtml(decision.next)}</p>
+        <div class="confidence">${escapeHtml(decision.confidence)} CONFIDENCE · ${integer.format(article.views || 0)} VIEWS</div>
+      </article>`).join("") +
+      `<article class="decision gated"><div class="action">FIX TITLE/HOOK · GATED</div><h3>Waiting for Search Console evidence</h3><p class="why">No article-level search impression/CTR signals are stored yet.</p><p>V2 will not infer weak titles from page views. Connect GSC before activating this rule.</p><div class="confidence">EVIDENCE REQUIRED: IMPRESSIONS + ORGANIC CTR</div></article>
+       <article class="decision gated"><div class="action">UPDATE · GATED</div><h3>Waiting for reliable article-age evidence</h3><p class="why">The current API does not expose publication age or first-seen age per article.</p><p>V2 will not guess that an article is stale. Add publication/age metadata before activating this rule.</p><div class="confidence">EVIDENCE REQUIRED: ARTICLE AGE + CONTINUING TRAFFIC</div></article>`;
     document.getElementById("rows").innerHTML = articles.length ? articles.map(a => {
       const cls = n => Number(n) > 0 ? "good" : "zero";
       return `<tr>
