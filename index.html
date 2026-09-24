@@ -24,8 +24,21 @@ a{color:inherit}
 .home-pulse-logo img{position:absolute;left:3%;top:50%;width:94%;height:auto;display:block;transform:translateY(-50%) scale(1);transform-origin:center center;animation:homeLogoBreathe 5.2s cubic-bezier(.42,0,.58,1) infinite;will-change:transform}
 @keyframes homeLogoBreathe{0%,100%{transform:translateY(-50%) scale(1)}50%{transform:translateY(-50%) scale(1.075)}}
 @media(max-width:700px){.home-pulse-logo{left:1.60%;top:.22%;width:16.5%;height:2.35%}}
-@keyframes joinGangBreathe{0%,100%{transform:scale(1);box-shadow:0 0 0 rgba(202,255,0,0)}50%{transform:scale(1.055);box-shadow:0 0 18px rgba(202,255,0,.28)}}
-@media(prefers-reduced-motion:reduce){.home-pulse-logo img,.live-capture button{animation:none}}
+@keyframes joinGangBreathe{
+  0%,100%{
+    transform:translateY(0) scale(1);
+    box-shadow:0 0 0 rgba(202,255,0,0),0 0 0 rgba(202,255,0,0)
+  }
+  50%{
+    transform:translateY(-2px) scale(1.12);
+    box-shadow:0 0 22px rgba(202,255,0,.42),0 0 46px rgba(202,255,0,.22)
+  }
+}
+@keyframes joinGangRing{
+  0%,100%{transform:scale(1);opacity:0}
+  50%{transform:scale(1.14);opacity:.55}
+}
+@media(prefers-reduced-motion:reduce){.home-pulse-logo img,.live-capture button,.live-capture button::after{animation:none}}
 
 .labs-bubble-logo{
   position:absolute;
@@ -156,8 +169,50 @@ a{color:inherit}
 .live-capture{position:absolute;z-index:12;left:68.15%;top:90%;width:29.45%;height:2.8%;display:flex;gap:0;line-height:normal}
 .live-capture input{flex:1;min-width:0;height:100%;border:1px solid #646962;border-right:0;background:#050505;color:#fff;padding:0 12px;font-size:clamp(9px,.9vw,14px);outline:none;border-radius:0}
 .live-capture input:focus{border-color:var(--acid)}
-.live-capture button{height:100%;min-width:43%;border:1px solid var(--acid);background:var(--acid);color:#050505;padding:0 10px;font-weight:950;font-size:clamp(7px,.75vw,12px);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border-radius:0;transform-origin:center center;animation:joinGangBreathe 4.8s cubic-bezier(.42,0,.58,1) infinite;will-change:transform,box-shadow}
-.live-capture button:disabled{opacity:.65;cursor:wait;animation:none;transform:none;box-shadow:none}
+.live-capture button{
+  height:100%;
+  min-width:43%;
+  border:1px solid var(--acid);
+  background:var(--acid);
+  color:#050505;
+  padding:0 10px;
+  font-weight:950;
+  font-size:clamp(7px,.75vw,12px);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  cursor:pointer;
+  border-radius:0;
+  transform-origin:center center;
+  animation:joinGangBreathe 3.2s cubic-bezier(.42,0,.58,1) infinite;
+  will-change:transform,box-shadow;
+  position:relative;
+  z-index:1;
+  isolation:isolate;
+  overflow:visible
+}
+.live-capture button::after{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border:1px solid rgba(202,255,0,.34);
+  box-shadow:0 0 16px rgba(202,255,0,.12);
+  opacity:0;
+  pointer-events:none;
+  animation:joinGangRing 3.2s ease-in-out infinite
+}
+.live-capture button:hover,.live-capture button:focus-visible{
+  filter:brightness(1.06);
+  outline:none
+}
+.live-capture button:disabled{
+  opacity:.65;
+  cursor:wait;
+  animation:none;
+  transform:none;
+  box-shadow:none;
+  filter:none
+}
+.live-capture button:disabled::after{animation:none;opacity:0}
 .live-capture-status{position:absolute;z-index:12;left:68.15%;top:93.05%;width:29.45%;color:#92978f;font:700 clamp(6px,.58vw,9px)/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.07em;text-transform:uppercase;line-height:1.35}
 .live-capture-status.ok{color:var(--acid)}.live-capture-status.err{color:#f5ff4a}
 .identity-loop{width:min(100%,1440px);margin:0 auto;padding:24px 18px 34px;border-top:1px solid var(--line);background:#000}
