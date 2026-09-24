@@ -29,7 +29,8 @@ commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
   - agent-enabled-operations
-image: /images/gwap-gang-labs-v3.webp
+image: https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/6f7995ad-98da-4a0d-ba32-f1a493979225.jpg
+imageAlt: Glossy neon green and red Gwap Gang lettering with dripping paint
 ---
 Most small businesses do not have an AI problem.
 
