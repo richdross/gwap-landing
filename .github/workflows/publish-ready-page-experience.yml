@@ -1,0 +1,116 @@
+name: GWAP Publish Ready Page Experience Proof
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/publish-ready-page-experience.yml'
+      - '_includes/post.njk'
+      - 'content/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      TARGET_URL: https://gwapgang.com/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Run three mobile Lighthouse audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lighthouse
+          for run in 1 2 3; do
+            npx --yes lighthouse@12.8.2 "$TARGET_URL"               --output=json               --output-path="lighthouse/run-$run.json"               --chrome-flags="--headless --no-sandbox"               --only-categories=performance,accessibility,best-practices,seo               --quiet
+          done
+
+      - name: Summarize median Page Experience evidence
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const reports = [1,2,3].map((run) =>
+            JSON.parse(fs.readFileSync(`lighthouse/run-${run}.json`, "utf8"))
+          );
+
+          const median = (values) => {
+            const sorted = [...values].sort((a,b) => a-b);
+            return sorted[Math.floor(sorted.length / 2)];
+          };
+
+          const value = (report, id) => Number(report.audits[id]?.numericValue || 0);
+          const score = (report, category) => Number(report.categories[category]?.score || 0) * 100;
+
+          const metrics = {
+            performance: median(reports.map((r) => score(r, "performance"))),
+            accessibility: median(reports.map((r) => score(r, "accessibility"))),
+            best_practices: median(reports.map((r) => score(r, "best-practices"))),
+            seo: median(reports.map((r) => score(r, "seo"))),
+            lcp_ms: median(reports.map((r) => value(r, "largest-contentful-paint"))),
+            cls: median(reports.map((r) => value(r, "cumulative-layout-shift"))),
+            tbt_ms: median(reports.map((r) => value(r, "total-blocking-time"))),
+            fcp_ms: median(reports.map((r) => value(r, "first-contentful-paint"))),
+            speed_index_ms: median(reports.map((r) => value(r, "speed-index")))
+          };
+
+          const good = {
+            performance: metrics.performance >= 90,
+            accessibility: metrics.accessibility >= 90,
+            best_practices: metrics.best_practices >= 90,
+            seo: metrics.seo >= 95,
+            lcp: metrics.lcp_ms <= 2500,
+            cls: metrics.cls <= 0.1,
+            tbt: metrics.tbt_ms <= 200
+          };
+
+          const summary = [
+            "## GWAP Publish Ready Page Experience Proof",
+            "",
+            `Target: ${process.env.TARGET_URL}`,
+            "",
+            "| Metric | Median | Gate |",
+            "| --- | ---: | --- |",
+            `| Lighthouse Performance | ${metrics.performance.toFixed(0)} | ${good.performance ? "PASS" : "FAIL"} |`,
+            `| Accessibility | ${metrics.accessibility.toFixed(0)} | ${good.accessibility ? "PASS" : "FAIL"} |`,
+            `| Best Practices | ${metrics.best_practices.toFixed(0)} | ${good.best_practices ? "PASS" : "FAIL"} |`,
+            `| SEO | ${metrics.seo.toFixed(0)} | ${good.seo ? "PASS" : "FAIL"} |`,
+            `| LCP | ${metrics.lcp_ms.toFixed(0)} ms | ${good.lcp ? "PASS" : "FAIL"} |`,
+            `| CLS | ${metrics.cls.toFixed(3)} | ${good.cls ? "PASS" : "FAIL"} |`,
+            `| TBT | ${metrics.tbt_ms.toFixed(0)} ms | ${good.tbt ? "PASS" : "FAIL"} |`,
+            `| FCP | ${metrics.fcp_ms.toFixed(0)} ms | evidence |`,
+            `| Speed Index | ${metrics.speed_index_ms.toFixed(0)} ms | evidence |`,
+            "",
+            "Three mobile Lighthouse runs; medians shown."
+          ].join("\n");
+
+          console.log(summary);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+
+          const failures = Object.entries(good).filter(([,pass]) => !pass).map(([name]) => name);
+          if (failures.length) {
+            console.error(`PAGE_EXPERIENCE_NOT_READY: ${failures.join(", ")}`);
+            process.exit(1);
+          }
+
+          console.log("GWAP_PAGE_EXPERIENCE_PASS", JSON.stringify(metrics));
+          NODE
+
+      - name: Upload Lighthouse evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gwap-ai-commerce-lighthouse
+          path: lighthouse/*.json
+          retention-days: 30
