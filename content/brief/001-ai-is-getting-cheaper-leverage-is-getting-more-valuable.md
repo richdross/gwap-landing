@@ -11,7 +11,7 @@ authorUrl: /author/rich-ross/
 date: 2026-09-20
 description: "The first Leverage Brief: why access to AI is becoming common while real advantage shifts toward systems, data, automation, distribution, and execution."
 category: The Leverage Brief
-image: /images/blog/gwap-ai-cheaper-white.webp
+image: /images/blog/gwap-ai-cheaper-white-v2.webp
 imageAlt: "GWAP dripping neon green logo with red edging on a white background"
 ---
 
