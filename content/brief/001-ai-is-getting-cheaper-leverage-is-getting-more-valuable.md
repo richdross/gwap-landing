@@ -11,8 +11,8 @@ authorUrl: /author/rich-ross/
 date: 2026-09-20
 description: "The first Leverage Brief: why access to AI is becoming common while real advantage shifts toward systems, data, automation, distribution, and execution."
 category: The Leverage Brief
-image: /images/blog/gwap-ai-cheaper.webp
-imageAlt: "Gwap Gang neon green and red dripping logo on black"
+image: /images/blog/ai-agents-small-business-gwap.webp
+imageAlt: "Gwap Gang neon green laboratory logo with a glowing beaker on black"
 ---
 
 Everybody is getting access to AI.
