@@ -148,7 +148,7 @@ jobs:
             throw new Error("Breadcrumb structure invalid");
           }
 
-          const executableScripts = [...html.matchAll(/<script(?![^>]*type="application\\/ld\\+json")[^>]*>([\\s\\S]*?)<\\/script>/g)]
+          const executableScripts = [...html.matchAll(/<script(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g)]
             .map((match) => match[1].trim())
             .filter(Boolean);
           for (const script of executableScripts) {
