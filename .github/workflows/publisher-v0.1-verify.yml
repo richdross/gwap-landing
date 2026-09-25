@@ -122,12 +122,14 @@ jobs:
           const getType = (type) => graph.find((node) => node && node["@type"] === type);
 
           const organization = getType("Organization");
+          const website = getType("WebSite");
           const person = getType("Person");
           const breadcrumbs = getType("BreadcrumbList");
           const article = getType("BlogPosting");
           const expectedUrl = "https://gwapgang.com/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/";
 
           if (!organization) throw new Error("Organization schema missing");
+          if (!website) throw new Error("WebSite schema missing");
           if (!person) throw new Error("Person schema missing");
           if (!breadcrumbs) throw new Error("BreadcrumbList schema missing");
           if (!article) throw new Error("BlogPosting schema missing");
@@ -137,10 +139,20 @@ jobs:
           if (!article.datePublished || !article.dateModified) throw new Error("Article dates missing");
           if (!Array.isArray(article.image) || !article.image.length) throw new Error("Article image missing");
           if (!article.author?.["@id"] || !article.publisher?.["@id"]) throw new Error("Article references missing");
+          if (website["@id"] !== "https://gwapgang.com/#website") throw new Error("WebSite id mismatch");
+          if (website.publisher?.["@id"] !== "https://gwapgang.com/#organization") throw new Error("WebSite publisher mismatch");
+          if (article.isPartOf?.["@id"] !== "https://gwapgang.com/#website") throw new Error("Article WebSite relationship missing");
           if (person.name !== "Rich Ross") throw new Error("Author name mismatch");
           if (organization.url !== "https://gwapgang.com/") throw new Error("Publisher URL mismatch");
           if (!Array.isArray(breadcrumbs.itemListElement) || breadcrumbs.itemListElement.length !== 3) {
             throw new Error("Breadcrumb structure invalid");
+          }
+
+          const executableScripts = [...html.matchAll(/<script(?![^>]*type="application\\/ld\\+json")[^>]*>([\\s\\S]*?)<\\/script>/g)]
+            .map((match) => match[1].trim())
+            .filter(Boolean);
+          for (const script of executableScripts) {
+            new Function(script);
           }
 
           console.log("Current publishing engine verification PASS");
