@@ -3,7 +3,7 @@ permalink: /brief/002-ai-agents-can-be-powerful-and-still-get-locked-out/index.h
 title: "AI Agents Can Be Powerful and Still Get Locked Out"
 date: 2026-09-22
 description: "Leverage Brief #002: Amazon blocking Meta's Muse exposes a deeper truth about agentic commerce. The scarce resource may become permission, not intelligence."
-image: /images/blog/gwap-agents-powerful-black.webp
+image: /images/blog/gwap-ai-cheaper.webp
 imageAlt: "GWAPGANG dripping neon green logo with red edging on a black background"
 ---
 
