@@ -81,6 +81,13 @@
         }
       },
       {
+        "@type": "WebSite",
+        "@id": "{{ site.url }}/#website",
+        "url": "{{ site.url }}/",
+        "name": "Gwap Gang",
+        "publisher": { "@id": "{{ site.url }}/#organization" }
+      },
+      {
         "@type": "Person",
         "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person",
         "name": {{ author | json | safe }},
@@ -130,6 +137,7 @@
         {% if intelligenceAbout.length %}"about": {{ intelligenceAbout | json | safe }},{% endif %}
         "author": { "@id": "{{ authorUrl | absoluteUrl(site.url) }}#person" },
         "publisher": { "@id": "{{ site.url }}/#organization" },
+        "isPartOf": { "@id": "{{ site.url }}/#website" },
         "breadcrumb": { "@id": "{{ canonicalUrl }}#breadcrumbs" }
       }
     ]
@@ -590,7 +598,8 @@
         reactionButtons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
         try { localStorage.setItem(reactionKey, reaction); } catch (_) {}
         if (reactionStatus) reactionStatus.textContent = "Feedback saved. Thank you.";
-        emit("article_feedback", { reaction });\n        emit(reaction === "helpful" ? "article_helpful_yes" : "article_helpful_no");
+        emit("article_feedback", { reaction });
+        emit(reaction === "helpful" ? "article_helpful_yes" : "article_helpful_no");
       });
     });
 
