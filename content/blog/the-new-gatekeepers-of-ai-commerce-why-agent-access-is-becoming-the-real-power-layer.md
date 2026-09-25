@@ -25,8 +25,8 @@ commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
   - agent-enabled-operations
-image: /images/gwap-gang-labs-v3.webp
-imageAlt: "Gwap Gang intelligence visual representing AI agents, platform access, and digital commerce"
+image: /images/blog/gwap-agent-commerce.webp
+imageAlt: "Gwap logo under dramatic red and orange stage lighting"
 ---
 
 An AI agent can be brilliant and still be useless if the platform it needs says **no**.
