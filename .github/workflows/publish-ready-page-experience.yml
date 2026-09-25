@@ -1,0 +1,264 @@
+name: GWAP Publish Ready Page Experience Proof
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/publish-ready-page-experience.yml'
+      - '.github/workflows/publisher-v0.1-verify.yml'
+      - '_includes/post.njk'
+      - 'content/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-ready-page-experience.yml'
+      - '.github/workflows/publisher-v0.1-verify.yml'
+      - '_includes/post.njk'
+      - 'content/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ARTICLE_PATH: /blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/
+      PRODUCTION_URL: https://gwapgang.com/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Prepare audit target
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            npm install --no-audit --no-fund
+            npm run build
+            npx --yes http-server@14.1.1 _site -p 8080 -c-1 >/tmp/gwap-http-server.log 2>&1 &
+            echo $! >/tmp/gwap-http-server.pid
+            sleep 3
+            echo "TARGET_URL=http://127.0.0.1:8080$ARTICLE_PATH" >> "$GITHUB_ENV"
+            echo "AUDIT_ORIGIN=http://127.0.0.1:8080" >> "$GITHUB_ENV"
+            echo "AUDIT_MODE=branch_build" >> "$GITHUB_ENV"
+          else
+            sleep 30
+            echo "TARGET_URL=$PRODUCTION_URL" >> "$GITHUB_ENV"
+            echo "AUDIT_ORIGIN=https://gwapgang.com" >> "$GITHUB_ENV"
+            echo "AUDIT_MODE=production" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run three mobile Lighthouse audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lighthouse
+          for run in 1 2 3; do
+            npx --yes lighthouse@12.8.2 "$TARGET_URL"               --output=json               --output-path="lighthouse/run-$run.json"               --chrome-flags="--headless --no-sandbox"               --only-categories=performance,accessibility,best-practices,seo               --quiet
+          done
+
+      - name: Summarize Page Experience evidence
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+
+          const reports = [1,2,3].map((run) =>
+            JSON.parse(fs.readFileSync(`lighthouse/run-${run}.json`, "utf8"))
+          );
+
+          const median = (values) => {
+            const sorted = [...values].sort((a,b) => a-b);
+            return sorted[Math.floor(sorted.length / 2)];
+          };
+          const value = (report, id) => Number(report.audits[id]?.numericValue || 0);
+          const score = (report, category) => Number(report.categories[category]?.score || 0) * 100;
+
+          const metrics = {
+            performance: median(reports.map((r) => score(r, "performance"))),
+            accessibility: median(reports.map((r) => score(r, "accessibility"))),
+            best_practices: median(reports.map((r) => score(r, "best-practices"))),
+            seo: median(reports.map((r) => score(r, "seo"))),
+            lcp_ms: median(reports.map((r) => value(r, "largest-contentful-paint"))),
+            cls: median(reports.map((r) => value(r, "cumulative-layout-shift"))),
+            tbt_ms: median(reports.map((r) => value(r, "total-blocking-time"))),
+            fcp_ms: median(reports.map((r) => value(r, "first-contentful-paint"))),
+            speed_index_ms: median(reports.map((r) => value(r, "speed-index")))
+          };
+
+          const firstPartyConsoleErrors = reports.flatMap((report) =>
+            (report.audits["errors-in-console"]?.details?.items || [])
+              .filter((item) => {
+                const url = item?.sourceLocation?.url || "";
+                return url.startsWith(process.env.AUDIT_ORIGIN);
+              })
+              .map((item) => ({
+                url: item?.sourceLocation?.url || "",
+                line: item?.sourceLocation?.line ?? null,
+                description: item?.description || ""
+              }))
+          );
+
+          const thirdPartyBestPracticeIssues = reports.flatMap((report) =>
+            ["deprecations", "inspector-issues"]
+              .flatMap((id) =>
+                (report.audits[id]?.score === 1 ? [] : [{
+                  audit: id,
+                  title: report.audits[id]?.title || id,
+                  displayValue: report.audits[id]?.displayValue || null
+                }])
+              )
+          );
+
+          const good = {
+            performance: metrics.performance >= 90,
+            accessibility: metrics.accessibility >= 90,
+            seo: metrics.seo >= 95,
+            lcp: metrics.lcp_ms <= 2500,
+            cls: metrics.cls <= 0.1,
+            tbt: metrics.tbt_ms <= 200,
+            first_party_console: firstPartyConsoleErrors.length === 0
+          };
+
+          const summary = [
+            "## GWAP Publish Ready Page Experience Proof",
+            "",
+            `Mode: ${process.env.AUDIT_MODE}`,
+            `Target: ${process.env.TARGET_URL}`,
+            "",
+            "| Metric | Median | Gate |",
+            "| --- | ---: | --- |",
+            `| Lighthouse Performance | ${metrics.performance.toFixed(0)} | ${good.performance ? "PASS" : "FAIL"} |`,
+            `| Accessibility | ${metrics.accessibility.toFixed(0)} | ${good.accessibility ? "PASS" : "FAIL"} |`,
+            `| Best Practices | ${metrics.best_practices.toFixed(0)} | evidence |`,
+            `| SEO | ${metrics.seo.toFixed(0)} | ${good.seo ? "PASS" : "FAIL"} |`,
+            `| LCP | ${metrics.lcp_ms.toFixed(0)} ms | ${good.lcp ? "PASS" : "FAIL"} |`,
+            `| CLS | ${metrics.cls.toFixed(3)} | ${good.cls ? "PASS" : "FAIL"} |`,
+            `| TBT | ${metrics.tbt_ms.toFixed(0)} ms | ${good.tbt ? "PASS" : "FAIL"} |`,
+            `| FCP | ${metrics.fcp_ms.toFixed(0)} ms | evidence |`,
+            `| Speed Index | ${metrics.speed_index_ms.toFixed(0)} ms | evidence |`,
+            `| First-party console errors | ${firstPartyConsoleErrors.length} | ${good.first_party_console ? "PASS" : "FAIL"} |`,
+            "",
+            thirdPartyBestPracticeIssues.length
+              ? "Third-party/platform Best Practices warnings are recorded as evidence and are not treated as first-party defects."
+              : "No third-party Best Practices warnings detected."
+          ].join("\n");
+
+          console.log(summary);
+          if (firstPartyConsoleErrors.length) {
+            console.log("FIRST_PARTY_CONSOLE_ERRORS", JSON.stringify(firstPartyConsoleErrors, null, 2));
+          }
+          if (thirdPartyBestPracticeIssues.length) {
+            console.log("THIRD_PARTY_BEST_PRACTICE_ISSUES", JSON.stringify(thirdPartyBestPracticeIssues, null, 2));
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+
+          const failures = Object.entries(good).filter(([,pass]) => !pass).map(([name]) => name);
+          if (failures.length) {
+            console.error(`PAGE_EXPERIENCE_NOT_READY: ${failures.join(", ")}`);
+            process.exit(1);
+          }
+
+          console.log("GWAP_PAGE_EXPERIENCE_PASS", JSON.stringify(metrics));
+          NODE
+
+      - name: Verify technical SEO and internal link integrity
+        shell: bash
+        run: |
+          node <<'NODE'
+          const target = new URL(process.env.TARGET_URL);
+          const canonicalExpected = process.env.PRODUCTION_URL;
+
+          const response = await fetch(target, { redirect: "follow" });
+          if (response.status !== 200) throw new Error(`Target HTTP status ${response.status}`);
+          const html = await response.text();
+
+          const canonical = html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1];
+          if (canonical !== canonicalExpected) {
+            throw new Error(`Canonical mismatch: ${canonical || "missing"}`);
+          }
+
+          const robots = html.match(/<meta\s+name=["']robots["']\s+content=["']([^"']+)["']/i)?.[1] || "";
+          if (!/\bindex\b/i.test(robots) || !/\bfollow\b/i.test(robots)) {
+            throw new Error(`Indexability failure: ${robots || "robots meta missing"}`);
+          }
+
+          const h1Count = (html.match(/<h1\b/gi) || []).length;
+          if (h1Count !== 1) throw new Error(`Expected exactly one H1; found ${h1Count}`);
+
+          const description = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)?.[1] || "";
+          if (!description.trim()) throw new Error("Meta description missing");
+
+          const jsonBlocks = [...html.matchAll(/<script type=["']application\/ld\+json["']>\s*([\s\S]*?)\s*<\/script>/gi)]
+            .map((match) => JSON.parse(match[1]));
+          const graph = jsonBlocks.flatMap((doc) => Array.isArray(doc["@graph"]) ? doc["@graph"] : [doc]);
+          const types = new Set(graph.map((node) => node?.["@type"]).filter(Boolean));
+          for (const type of ["Organization","WebSite","Person","BreadcrumbList","BlogPosting"]) {
+            if (!types.has(type)) throw new Error(`Structured data missing ${type}`);
+          }
+
+          const hrefs = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["']/gi)]
+            .map((match) => match[1])
+            .filter((href) => href && !href.startsWith("#") && !href.startsWith("mailto:") && !href.startsWith("javascript:"));
+
+          const internal = [...new Set(hrefs.flatMap((href) => {
+            try {
+              const resolved = new URL(href, canonicalExpected);
+              if (resolved.hostname !== "gwapgang.com") return [];
+              const auditUrl =
+                process.env.AUDIT_MODE === "branch_build"
+                  ? new URL(resolved.pathname + resolved.search, process.env.AUDIT_ORIGIN).toString()
+                  : resolved.toString();
+              return [auditUrl];
+            } catch {
+              return [];
+            }
+          }))];
+
+          const failures = [];
+          let cursor = 0;
+          const workers = Array.from({length: Math.min(6, internal.length || 1)}, async () => {
+            while (cursor < internal.length) {
+              const index = cursor++;
+              const url = internal[index];
+              try {
+                const res = await fetch(url, { redirect: "follow" });
+                if (res.status >= 400) failures.push({url,status:res.status});
+              } catch (error) {
+                failures.push({url,error:String(error?.message || error)});
+              }
+            }
+          });
+          await Promise.all(workers);
+
+          console.log("GWAP_TECHNICAL_SEO_PASS", JSON.stringify({
+            http_status: response.status,
+            canonical,
+            robots,
+            h1_count: h1Count,
+            meta_description: true,
+            structured_data_types: [...types],
+            internal_links_checked: internal.length,
+            broken_internal_links: failures.length
+          }));
+
+          if (failures.length) {
+            console.error("BROKEN_INTERNAL_LINKS", JSON.stringify(failures, null, 2));
+            process.exit(1);
+          }
+          NODE
+
+      - name: Upload Lighthouse evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gwap-ai-commerce-lighthouse
+          path: lighthouse/*.json
+          retention-days: 30
