@@ -39,12 +39,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          npm install --no-audit --no-fund
+          npm run build
+          npx --yes http-server@14.1.1 _site -p 8080 -c-1 >/tmp/gwap-http-server.log 2>&1 &
+          echo $! >/tmp/gwap-http-server.pid
+          sleep 3
+
+          echo "TECHNICAL_URL=http://127.0.0.1:8080$ARTICLE_PATH" >> "$GITHUB_ENV"
+          echo "TECHNICAL_ORIGIN=http://127.0.0.1:8080" >> "$GITHUB_ENV"
+
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            npm install --no-audit --no-fund
-            npm run build
-            npx --yes http-server@14.1.1 _site -p 8080 -c-1 >/tmp/gwap-http-server.log 2>&1 &
-            echo $! >/tmp/gwap-http-server.pid
-            sleep 3
             echo "TARGET_URL=http://127.0.0.1:8080$ARTICLE_PATH" >> "$GITHUB_ENV"
             echo "AUDIT_ORIGIN=http://127.0.0.1:8080" >> "$GITHUB_ENV"
             echo "AUDIT_MODE=branch_build" >> "$GITHUB_ENV"
@@ -173,7 +177,7 @@ jobs:
         shell: bash
         run: |
           node <<'NODE'
-          const target = new URL(process.env.TARGET_URL);
+          const target = new URL(process.env.TECHNICAL_URL);
           const canonicalExpected = process.env.PRODUCTION_URL;
 
           const response = await fetch(target, { redirect: "follow" });
@@ -213,9 +217,7 @@ jobs:
               const resolved = new URL(href, canonicalExpected);
               if (resolved.hostname !== "gwapgang.com") return [];
               const auditUrl =
-                process.env.AUDIT_MODE === "branch_build"
-                  ? new URL(resolved.pathname + resolved.search, process.env.AUDIT_ORIGIN).toString()
-                  : resolved.toString();
+                new URL(resolved.pathname + resolved.search, process.env.TECHNICAL_ORIGIN).toString();
               return [auditUrl];
             } catch {
               return [];
