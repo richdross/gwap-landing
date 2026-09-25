@@ -26,8 +26,8 @@ commercialOpportunities:
   - branded-content-packages
   - content-automation
   - creator-systems
-image: /images/gwap-gang-labs-v3.webp
-imageAlt: "Gwap Gang visual representing a one person AI powered media company"
+image: /images/blog/gwap-one-person-media.webp
+imageAlt: "Gwap logo emerging through blue and pink smoke"
 ---
 
 There was a time when starting a media company meant hiring a team.
