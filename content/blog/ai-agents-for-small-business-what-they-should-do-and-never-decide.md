@@ -29,8 +29,8 @@ commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
   - agent-enabled-operations
-image: https://d2ol7oe51mr4n9.cloudfront.net/user_3J9ZRpbUabhrJ3V54SMEkhjjL3c/2005569e-15ae-4a3b-9f57-06fc5443f6d3.jpg
-imageAlt: Gwap Gang logo in glossy neon green and red on a black background
+image: /images/blog/gwap-ai-agents.webp
+imageAlt: "Gwap green dripping logo on a dark textured background"
 description: A practical guide to giving AI agents useful business responsibilities without giving them dangerous authority over high-impact decisions.
 ctaTitle: Find where an AI agent could safely create leverage in your business.
 ctaText: Get the $49 AI Intelligence Report
