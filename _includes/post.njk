@@ -28,6 +28,7 @@
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta name="author" content="{{ author }}">
   <link rel="canonical" href="{{ canonicalUrl }}">
+  <link rel="icon" type="image/png" href="/images/gwap-gang-logo.png">
   <link rel="alternate" type="application/rss+xml" title="Gwap Intelligence RSS" href="{{ site.url }}{{ site.rssPath }}">
 
   <meta property="og:type" content="article">
@@ -48,16 +49,41 @@
   <meta name="twitter:image" content="{{ heroImageUrl }}">
   <meta name="twitter:image:alt" content="{{ imageAlt or title }}">
 
-  {% if site.preferredSourcesEnabled %}
-  <script async src="https://news.google.com/swg/js/v1/publisher.js"></script>
-  {% endif %}
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MZF7SR86XK"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-MZF7SR86XK', { page_path: '{{ page.url }}' });
+
+    (() => {
+      let thirdPartyStarted = false;
+
+      const loadScript = (id, src) => {
+        if (document.getElementById(id)) return;
+        const script = document.createElement("script");
+        script.id = id;
+        script.async = true;
+        script.src = src;
+        document.head.appendChild(script);
+      };
+
+      const startThirdParty = () => {
+        if (thirdPartyStarted) return;
+        thirdPartyStarted = true;
+        loadScript("gwap-gtag", "https://www.googletagmanager.com/gtag/js?id=G-MZF7SR86XK");
+        {% if site.preferredSourcesEnabled %}
+        loadScript("gwap-preferred-source", "https://news.google.com/swg/js/v1/publisher.js");
+        {% endif %}
+      };
+
+      ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+        window.addEventListener(eventName, startThirdParty, { once: true, passive: true });
+      });
+
+      window.addEventListener("load", () => {
+        window.setTimeout(startThirdParty, 5000);
+      }, { once: true });
+    })();
   </script>
 
   <script type="application/ld+json">
