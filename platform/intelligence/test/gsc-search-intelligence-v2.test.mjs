@@ -275,3 +275,64 @@ test("V2C builds a machine-readable recovery signal", () => {
   assert.equal(signal.normalized.repositoryEvidence.inboundEditorialReferences, 3);
   assert.equal(signal.normalized.liveHttpStatus, "NOT_VERIFIED_FROM_GITHUB_ACTIONS");
 });
+
+
+test("V2B stores a new same-day signal when Google's index state changes", () => {
+  const pageUrl = "https://gwapgang.com/blog/example/";
+  const base = {
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageUrl,
+    targetHost: "gwapgang.com",
+    today: "2026-09-26",
+    observedAt: "2026-09-26T06:00:00.000Z",
+  };
+
+  const unknown = buildIndexSignal({
+    ...base,
+    inspection: {
+      inspectionResult: {
+        indexStatusResult: {
+          verdict: "NEUTRAL",
+          coverageState: "URL is unknown to Google",
+        },
+      },
+    },
+  });
+
+  const discovered = buildIndexSignal({
+    ...base,
+    inspection: {
+      inspectionResult: {
+        indexStatusResult: {
+          verdict: "NEUTRAL",
+          coverageState: "Discovered - currently not indexed",
+        },
+      },
+    },
+  });
+
+  assert.notEqual(unknown.sourceRef, discovered.sourceRef);
+});
+
+test("V2B keeps identical same-day index observations idempotent", () => {
+  const args = {
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageUrl: "https://gwapgang.com/blog/example/",
+    targetHost: "gwapgang.com",
+    today: "2026-09-26",
+    observedAt: "2026-09-26T06:00:00.000Z",
+    inspection: {
+      inspectionResult: {
+        indexStatusResult: {
+          verdict: "PASS",
+          coverageState: "Submitted and indexed",
+          pageFetchState: "SUCCESSFUL",
+        },
+      },
+    },
+  };
+
+  assert.equal(buildIndexSignal(args).sourceRef, buildIndexSignal(args).sourceRef);
+});
