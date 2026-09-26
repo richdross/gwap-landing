@@ -21,6 +21,8 @@ businessModels:
   - AI assistants
   - commerce platforms
   - platform ecosystems
+relatedArticles:
+  - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
 commercialOpportunities:
   - ai-business-intelligence-report
   - automation-opportunity-scan
