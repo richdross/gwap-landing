@@ -7,21 +7,21 @@ eleventyExcludeFromCollections: true
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Free Revenue Rescue Preview — Gwap Gang</title>
-<meta name="description" content="Get a free Revenue Leak Score plus a personalized three-leak Revenue Rescue Preview built from bounded public evidence and the business context you provide.">
+<title>Free Growth Diagnostic — Gwap Gang</title>
+<meta name="description" content="Get a free Gwap Growth Diagnostic that combines your business intent with bounded public evidence, qualifies the opportunity, and recommends the best-fit next move.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
 <meta name="theme-color" content="#020302">
 <link rel="canonical" href="{{ site.url }}/revenue-leak-score/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Gwap Gang">
-<meta property="og:title" content="Free Revenue Rescue Preview — Gwap Gang">
-<meta property="og:description" content="Get three ranked, evidence-backed revenue leak findings, the first repair to test, and the next data Gwap would validate.">
+<meta property="og:title" content="Free Growth Diagnostic — Gwap Gang">
+<meta property="og:description" content="Identify your strongest growth bottleneck, see evidence-backed findings, and get routed to the best-fit Gwap next move.">
 <meta property="og:url" content="{{ site.url }}/revenue-leak-score/">
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
   "@type":"WebApplication",
-  "name":"Gwap Gang Revenue Leak Score V0.1",
+  "name":"Gwap Gang Growth Diagnostic V0.1",
   "url":"{{ site.url }}/revenue-leak-score/",
   "applicationCategory":"BusinessApplication",
   "operatingSystem":"Web",
@@ -65,21 +65,24 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <section class="hero">
 <div class="shell hero-grid">
 <div>
-<div class="eyebrow">Gwap Gang // Free Commercial Diagnostic</div>
-<h1>Find Where Demand Leaks.</h1>
-<p class="lead">Get a bounded public-evidence scan of your current buying path. Gwap looks for observable conversion friction, trust gaps, routing problems, and measurement blind spots without pretending we can see private revenue data.</p>
+<div class="eyebrow">Gwap Gang // Free Growth Diagnostic</div>
+<h1>Find What Is Blocking Growth.</h1>
+<p class="lead">Tell Gwap what you are trying to improve, then combine that intent with a bounded public-evidence scan. The system qualifies the opportunity and routes you toward the strongest next move without pretending it can see private revenue data.</p>
 <div class="trust"><span class="pill">Free</span><span class="pill">No login</span><span class="pill">Public evidence only</span><span class="pill">No fake revenue estimates</span></div>
 </div>
 
 <form class="form-card" id="score-form">
-<div class="eyebrow">Revenue Leak Score V0.1</div>
-<h2>Run the diagnostic.</h2>
-<p>About two minutes of context helps us distinguish a cosmetic website issue from a commercially meaningful leak.</p>
+<div class="eyebrow">Growth Diagnostic V0.1</div>
+<h2>Identify the bottleneck.</h2>
+<p>Business intent plus observable evidence helps Gwap distinguish a visibility problem, conversion leak, operational bottleneck, or measurement gap.</p>
 <div class="form-grid">
 <div class="field full"><label for="businessName">Business name</label><input id="businessName" name="businessName" autocomplete="organization" required maxlength="160" placeholder="Acme Home Services"></div>
 <div class="field full"><label for="website">Website</label><input id="website" name="website" type="url" inputmode="url" autocomplete="url" required maxlength="600" placeholder="https://example.com"></div>
 <div class="field full"><label for="industry">Industry <span style="color:#727a72">(optional)</span></label><input id="industry" name="industry" maxlength="160" placeholder="HVAC, med spa, legal, B2B services…"></div>
 <div class="field full"><label for="email">Business email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="320" placeholder="owner@example.com"></div>
+<div class="field"><label for="primaryGoal">Primary growth goal</label><select id="primaryGoal" name="primaryGoal" required><option value="">Select</option><option value="more_leads">Get more qualified leads</option><option value="better_conversion">Convert more existing demand</option><option value="improve_search_visibility">Improve search visibility</option><option value="automate_operations">Automate operations</option><option value="understand_business">Understand what to fix first</option><option value="reduce_manual_work">Reduce manual work</option><option value="unsure">Not sure yet</option></select></div>
+<div class="field"><label for="primaryProblem">Biggest problem right now</label><select id="primaryProblem" name="primaryProblem" required><option value="">Select</option><option value="traffic_visibility">Not enough visibility / traffic</option><option value="conversion_revenue_leak">Traffic or leads are not converting</option><option value="follow_up">Lead follow-up is weak or slow</option><option value="manual_operations">Too much manual work</option><option value="measurement_intelligence">I cannot tell what is working</option><option value="unsure">Not sure yet</option></select></div>
+<div class="field full"><label for="urgency">When do you want this problem moving?</label><select id="urgency" name="urgency" required><option value="">Select</option><option value="now">Now / actively solving it</option><option value="30_days">Within 30 days</option><option value="90_days">Within 90 days</option><option value="exploring">Exploring for later</option></select></div>
 <div class="field"><label for="role">Your role</label><select id="role" name="role" required><option value="">Select</option><option value="owner">Owner</option><option value="founder">Founder</option><option value="executive">Executive / GM</option><option value="marketing">Marketing</option><option value="sales">Sales</option><option value="agency">Agency / consultant</option><option value="other">Other</option></select></div>
 <div class="field"><label for="acquisitionChannel">Main source of new customers</label><select id="acquisitionChannel" name="acquisitionChannel" required><option value="">Select</option><option value="google_ads">Google Ads</option><option value="local_services_ads">Google Local Services Ads</option><option value="meta_ads">Meta / Instagram Ads</option><option value="paid_search">Other paid search</option><option value="lead_marketplace">Lead marketplaces</option><option value="mixed_paid">Several paid channels</option><option value="seo">SEO / organic search</option><option value="organic_social">Organic social</option><option value="referrals">Referrals / repeat business</option><option value="other">Other</option></select></div>
 <div class="field"><label for="customerValueBand">Approx. value of one new customer</label><select id="customerValueBand" name="customerValueBand" required><option value="">Select</option><option value="under_250">Under $250</option><option value="250_1000">$250 to $1,000</option><option value="1000_5000">$1,000 to $5,000</option><option value="over_5000">$5,000+</option></select></div>
@@ -89,9 +92,9 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <div class="field"><label for="monthlyQualifiedLeads">Qualified leads / month</label><input id="monthlyQualifiedLeads" name="monthlyQualifiedLeads" type="number" min="1" step="1" inputmode="numeric" placeholder="40"></div>
 <div class="field full"><label for="currentCloseRatePct">Current close rate %</label><input id="currentCloseRatePct" name="currentCloseRatePct" type="number" min=".01" max="100" step=".01" inputmode="decimal" placeholder="20"></div>
 <div class="field full hp" aria-hidden="true"><label for="company_website">Company website confirmation</label><input id="company_website" name="company_website" tabindex="-1" autocomplete="off"></div>
-<div class="field full"><label class="consent"><input id="followUpConsent" name="followUpConsent" type="checkbox"><span>Email me this score and allow Gwap to follow up if I request a Revenue Leak Review. I can opt out at any time.</span></label></div>
+<div class="field full"><label class="consent"><input id="followUpConsent" name="followUpConsent" type="checkbox"><span>Email me this diagnostic and allow Gwap to follow up if I explicitly request a review. I can opt out at any time.</span></label></div>
 <div class="field full"><label class="consent"><input id="newsletterConsent" name="newsletterConsent" type="checkbox"><span>Also add me to The Leverage Brief for Gwap intelligence and practical growth ideas.</span></label></div>
-<div class="field full"><button id="submit" type="submit">Calculate My Score →</button><div class="status" id="status" aria-live="polite"></div><div class="micro">The score is a diagnostic risk index. Exact economics are optional and are used only for a transparent sensitivity scenario, never as a claim about revenue you lost.</div></div>
+<div class="field full"><button id="submit" type="submit">Run My Growth Diagnostic →</button><div class="status" id="status" aria-live="polite"></div><div class="micro">The score is a diagnostic risk index. Exact economics are optional and are used only for a transparent sensitivity scenario, never as a claim about revenue you lost.</div></div>
 </div>
 </form>
 </div>
@@ -111,13 +114,14 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 
 <section id="result" class="result-shell">
 <div class="shell">
-<div class="eyebrow">Your Revenue Leak Score</div>
+<div class="eyebrow">Your Growth Diagnostic</div>
 <div class="result-head">
 <div class="score-box"><div class="score-number" id="score-number">0</div><div class="score-denom">OUT OF 100 // PUBLIC-EVIDENCE RISK INDEX</div><div class="band" id="score-band"></div></div>
 <div>
-<div class="eyebrow">Personalized Revenue Rescue Preview</div>
-<h3 class="preview-title">Three leaks worth investigating first.</h3>
+<div class="eyebrow">Commercial Intelligence Result</div>
+<h3 class="preview-title">Evidence first. Then the right route.</h3>
 <div class="context-box" id="business-context"></div>
+<div class="context-box" id="route-box" style="display:none"></div>
 <div class="preview-grid" id="preview-grid"></div>
 <div class="scenario-box" id="scenario-box" style="display:none"></div>
 <div class="flags" id="flags"></div>
@@ -194,10 +198,10 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
           event.preventDefault();
           el.disabled = true;
           const ok = await trackEvent(data.lead_id, eventType, { conversion_path: action.key || null });
-          if (item.kind === "priority_review") {
+          if (item.kind === "priority_review" || item.kind === "founder_review") {
             actionStatus.textContent = ok
               ? "Review request recorded. Gwap will follow up using the business email you provided."
-              : "A review request requires email follow-up consent. Enable it and rerun the score, or start the Sprint directly.";
+              : "A review request requires email follow-up consent. Enable it and rerun the diagnostic.";
           } else if (item.kind === "newsletter_opt_in") {
             actionStatus.textContent = ok
               ? "You're subscribed to The Leverage Brief."
@@ -233,6 +237,16 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     document.getElementById("score-band").textContent = String(data.leak_risk_band || "unknown") + " leak risk";
     document.getElementById("business-context").textContent = card.businessContext || "";
 
+    const diagnostic = data.growth_diagnostic || card.growthDiagnostic || null;
+    const routeBox = document.getElementById("route-box");
+    if (diagnostic?.route) {
+      routeBox.style.display = "block";
+      routeBox.innerHTML = `<div class="eyebrow">Best-Fit Route // ${esc(diagnostic.route.confidence || "directional")} confidence</div><h3 style="margin:10px 0 8px">${esc(diagnostic.route.offerName || "Gwap Review")}</h3><div style="color:#aeb4ac;line-height:1.6">${esc(diagnostic.route.reason || "")}</div>`;
+    } else {
+      routeBox.style.display = "none";
+      routeBox.innerHTML = "";
+    }
+
     const preview = Array.isArray(card.revenueRescuePreview) ? card.revenueRescuePreview : [];
     document.getElementById("preview-grid").innerHTML = preview.length
       ? preview.slice(0, 3).map(item => `
@@ -266,15 +280,18 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     renderAction(data, card);
     result.style.display = "block";
     result.scrollIntoView({ behavior: "smooth", block: "start" });
-    trackEvent(data.lead_id, "result_viewed", { leak_score: data.leak_score });
+    trackEvent(data.lead_id, "result_viewed", {
+      leak_score: data.leak_score,
+      offer_key: diagnostic?.route?.offerKey || "revenue_rescue_sprint"
+    });
   }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     submit.disabled = true;
-    submit.textContent = "Scanning…";
+    submit.textContent = "Diagnosing…";
     status.className = "status";
-    status.textContent = "Scanning reachable public pages and building a bounded scorecard…";
+    status.textContent = "Combining your stated growth objective with reachable public evidence…";
 
     const fd = new FormData(form);
     const payload = Object.fromEntries(fd.entries());
@@ -306,7 +323,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       status.textContent = error?.message || "We could not complete the scan. Check the URL and try again.";
     } finally {
       submit.disabled = false;
-      submit.textContent = "Calculate My Score →";
+      submit.textContent = "Run My Growth Diagnostic →";
     }
   });
 })();
