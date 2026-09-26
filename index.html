@@ -147,7 +147,7 @@ a{color:inherit}
 }
 .nav-blog-visible{left:67.1%}
 .nav-gallery-visible{left:72.85%}
-.nav-start-visible{left:78.6%}
+.nav-start-visible{left:78.6%;z-index:40;pointer-events:auto;cursor:pointer;touch-action:manipulation}
 .nav-gallery-visible::before,.nav-blog-visible::before,.nav-start-visible::before{content:"";margin:0}
 .nav-gallery-visible:hover,.nav-gallery-visible:focus-visible,
 .nav-blog-visible:hover,.nav-blog-visible:focus-visible,
@@ -308,7 +308,7 @@ a{color:inherit}
       <a class="hotspot nav-hotspot nav-intelligence" href="/intelligence/" aria-label="Intelligence">Intelligence</a>
       <a class="nav-blog-visible" href="/blog/" aria-label="Blog">Blog</a>
       <a class="nav-gallery-visible" href="/signal/" aria-label="Gallery">Gallery</a>
-      <a class="nav-start-visible" href="/start/" aria-label="Start Here">Start</a>
+      <a class="nav-start-visible" href="/start/" aria-label="Start Here" onclick="window.location.assign('/start/');return false;">Start</a>
     </nav>
     <button class="hotspot enter" type="button" data-signup>Enter the signal</button>
     <div class="signup-mask" aria-hidden="true"></div>
