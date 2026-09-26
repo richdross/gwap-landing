@@ -273,5 +273,40 @@
       "AI services"
     ],
     "minScore": 4
+  },
+  {
+    "id": "revenue-leak-score",
+    "name": "Revenue Leak Score",
+    "kind": "lead-magnet",
+    "status": "live",
+    "price": "Free",
+    "url": "/revenue-leak-score/",
+    "cta": "Get Your Score",
+    "description": "A bounded public-evidence diagnostic that reveals likely conversion friction while qualifying whether Revenue Rescue is commercially relevant.",
+    "sections": [
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "revenue systems",
+      "conversion optimization",
+      "lead generation",
+      "AI automation",
+      "small business"
+    ],
+    "entities": [
+      "Small businesses"
+    ],
+    "technologies": [
+      "AI automation",
+      "workflow automation"
+    ],
+    "businessModels": [
+      "lead generation",
+      "AI business intelligence",
+      "AI services"
+    ],
+    "minScore": 3
   }
 ]
