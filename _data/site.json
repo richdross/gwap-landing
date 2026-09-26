@@ -42,8 +42,8 @@
     "stripePaymentLinkId": "plink_1UI8UlJjydtDeANjtkYOZ9x3"
   },
   "revenueLeakScore": {
-    "version": "0.1",
-    "name": "Revenue Leak Score",
+    "version": "0.2",
+    "name": "Revenue Leak Score + Revenue Rescue Preview",
     "priceLabel": "Free",
     "salesUrl": "/revenue-leak-score/",
     "endpoint": "https://gwap-backend.onrender.com/public/revenue-leak-score",
