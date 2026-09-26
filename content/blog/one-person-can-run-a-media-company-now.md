@@ -22,6 +22,8 @@ businessModels:
   - content studio
   - creator business
   - branded content
+relatedArticles:
+  - content/blog/ai-can-copy-the-recipe-it-still-cant-give-you-the-sauce.md
 commercialOpportunities:
   - branded-content-packages
   - content-automation

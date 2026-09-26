@@ -24,6 +24,7 @@ relatedArticles:
   - content/blog/what-small-businesses-should-automate-first-with-ai.md
   - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
   - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
+  - content/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer.md
 nextMove: content/blog/what-small-businesses-should-automate-first-with-ai.md
 commercialOpportunities:
   - ai-business-intelligence-report
