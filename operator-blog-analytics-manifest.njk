@@ -1,0 +1,18 @@
+---
+permalink: /operator/blog-analytics/articles.json
+eleventyExcludeFromCollections: true
+---
+{
+  "articles": [
+    {% for post in collections.posts %}
+    {
+      "pagePath": {{ post.url | json | safe }},
+      "title": {{ post.data.title | json | safe }},
+      "publishedAt": {{ post.date | isoDate | json | safe }},
+      "updatedAt": {% if post.data.updated %}{{ post.data.updated | isoDate | json | safe }}{% else %}null{% endif %},
+      "section": {{ (post.data.section or "intelligence") | json | safe }},
+      "category": {{ (post.data.category or "Gwap Intelligence") | json | safe }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
