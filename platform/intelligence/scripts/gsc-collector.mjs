@@ -4,6 +4,7 @@ const endpoint = process.env.INTELLIGENCE_URL || "https://gwap-intelligence-v1.r
 const ingestKey = process.env.SIGNAL_INGEST_KEY;
 const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GA4_SERVICE_ACCOUNT_JSON;
 const targetHost = String(process.env.GSC_TARGET_HOST || "gwapgang.com").toLowerCase();
+const autoEnableApi = String(process.env.GSC_AUTO_ENABLE_API || "").toLowerCase() === "true";
 
 if (!ingestKey) {
   console.error("SIGNAL_INGEST_KEY is required");
@@ -43,13 +44,13 @@ function pagePath(value) {
   }
 }
 
-async function accessToken() {
+async function accessToken(scope = "https://www.googleapis.com/auth/webmasters.readonly") {
   const service = serviceAccount();
   const now = Math.floor(Date.now() / 1000);
   const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const payload = base64Url(JSON.stringify({
     iss: service.client_email,
-    scope: "https://www.googleapis.com/auth/webmasters.readonly",
+    scope,
     aud: "https://oauth2.googleapis.com/token",
     iat: now,
     exp: now + 3600,
@@ -87,9 +88,42 @@ async function googleJson(url, token, init = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`Google Search Console HTTP ${response.status}: ${data?.error?.message || data?.error_description || "unknown"}`);
+    const error = new Error(`Google Search Console HTTP ${response.status}: ${data?.error?.message || data?.error_description || "unknown"}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
   return data;
+}
+
+async function enableSearchConsoleApi(projectNumber) {
+  const token = await accessToken("https://www.googleapis.com/auth/cloud-platform");
+  const url = `https://serviceusage.googleapis.com/v1/projects/${encodeURIComponent(projectNumber)}/services/searchconsole.googleapis.com:enable`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: "",
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return { ok: false, status: response.status, message: data?.error?.message || "unknown" };
+  }
+
+  if (data.name) {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const check = await fetch(`https://serviceusage.googleapis.com/v1/${data.name}`, {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      const operation = await check.json().catch(() => ({}));
+      if (operation.done) {
+        if (operation.error) return { ok: false, status: operation.error.code || 500, message: operation.error.message || "enable operation failed" };
+        return { ok: true };
+      }
+    }
+  }
+
+  return { ok: true, pending: true };
 }
 
 async function ingest(payload) {
@@ -113,7 +147,22 @@ async function storeSignal(signal) {
 }
 
 const token = await accessToken();
-const sites = await googleJson("https://www.googleapis.com/webmasters/v3/sites", token);
+let sites;
+try {
+  sites = await googleJson("https://www.googleapis.com/webmasters/v3/sites", token);
+} catch (error) {
+  const disabled = error?.status === 403 && /has not been used|disabled/i.test(error.message || "");
+  const projectNumber = String(error?.message || "").match(/project\s+(\d+)/i)?.[1];
+  if (!autoEnableApi || !disabled || !projectNumber) throw error;
+
+  const enabled = await enableSearchConsoleApi(projectNumber);
+  if (!enabled.ok) {
+    throw new Error(`Search Console API is disabled and automatic enable failed HTTP ${enabled.status}: ${enabled.message}`);
+  }
+
+  if (enabled.pending) await new Promise((resolve) => setTimeout(resolve, 10000));
+  sites = await googleJson("https://www.googleapis.com/webmasters/v3/sites", token);
+}
 const entries = Array.isArray(sites.siteEntry) ? sites.siteEntry : [];
 const eligible = entries.filter((entry) => entry?.siteUrl && entry.permissionLevel !== "siteUnverifiedUser");
 const matching = eligible
