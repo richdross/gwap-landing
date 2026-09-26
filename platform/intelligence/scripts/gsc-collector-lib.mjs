@@ -69,6 +69,29 @@ export function indexStatusFromVerdict(verdict) {
   return "UNKNOWN";
 }
 
+export function articleUrlsFromSitemapXml(xml, targetHost = "gwapgang.com") {
+  const source = String(xml || "");
+  const urls = [];
+  const seen = new Set();
+  const matches = source.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi);
+
+  for (const match of matches) {
+    const raw = String(match[1] || "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim();
+    const path = pagePath(raw, targetHost);
+    if (!path || !path.startsWith("/blog/") || path === "/blog/") continue;
+    const normalized = normalizeUrl(raw);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    urls.push(raw);
+  }
+
+  return urls.sort();
+}
+
 export function articleUrlsFromManifest(manifest, targetHost = "gwapgang.com") {
   const articles = Array.isArray(manifest?.articles) ? manifest.articles : [];
   const base = `https://${String(targetHost).replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
