@@ -1,0 +1,315 @@
+---
+permalink: /start/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Start Here | Gwap Gang</title>
+<meta name="description" content="Choose the business problem you want to improve and Gwap Gang will route you to the smallest useful next move.">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="theme-color" content="#020302">
+<link rel="canonical" href="{{ site.url }}/start/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Gwap Gang">
+<meta property="og:title" content="Start Here | Gwap Gang">
+<meta property="og:description" content="Revenue, growth, automation, or intelligence. Start with the problem closest to the money.">
+<meta property="og:url" content="{{ site.url }}/start/">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebPage",
+  "name":"Gwap Start Here",
+  "url":"{{ site.url }}/start/",
+  "description":"A guided Gwap Gang router for choosing the right diagnostic, intelligence product, or revenue intervention.",
+  "isPartOf":{"@type":"WebSite","name":"Gwap Gang","url":"{{ site.url }}/"}
+}
+</script>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#020302;
+  --panel:#070907;
+  --panel-2:#0b0e0b;
+  --paper:#f3f1eb;
+  --muted:#969c94;
+  --soft:#c6cac3;
+  --line:#2b302b;
+  --line-strong:#3c433b;
+  --acid:#caff00;
+}
+*{box-sizing:border-box}
+html{background:#000;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--paper);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.shell{width:min(1180px,calc(100% - 34px));margin:auto}
+.head{position:relative;z-index:5;border-bottom:1px solid var(--line);background:rgba(0,0,0,.94)}
+.head-inner{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{color:var(--acid);text-decoration:none;font:950 1.08rem/1 Impact,"Arial Black",sans-serif;letter-spacing:.01em}
+.nav{display:flex;gap:22px;align-items:center}
+.nav a{color:#90968e;text-decoration:none;font:800 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+.nav a:hover,.nav a:focus-visible{color:var(--paper)}
+.hero{
+  padding:96px 0 70px;
+  border-bottom:1px solid var(--line);
+  background:
+    radial-gradient(circle at 78% 18%,rgba(202,255,0,.085),transparent 27%),
+    radial-gradient(circle at 12% 76%,rgba(202,255,0,.035),transparent 22%),
+    #020302;
+}
+.eyebrow{color:var(--acid);font:850 10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase}
+.hero h1{
+  max-width:980px;
+  margin:18px 0 24px;
+  font:950 clamp(4.1rem,9.8vw,9.4rem)/.8 Impact,"Arial Black",sans-serif;
+  letter-spacing:-.047em;
+  text-transform:uppercase;
+}
+.hero-copy{max-width:790px;color:#c2c6bf;font:20px/1.62 Georgia,serif}
+.hero-rule{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:30px;color:#777f76;font:800 8px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+.hero-rule span::before{content:"//";color:var(--acid);margin-right:8px}
+
+.section{padding:64px 0;border-bottom:1px solid var(--line)}
+.section-head{display:grid;grid-template-columns:.9fr 1.1fr;gap:42px;align-items:end;margin-bottom:30px}
+.section h2{margin:8px 0 0;font:950 clamp(2.9rem,6.4vw,6rem)/.84 Impact,"Arial Black",sans-serif;letter-spacing:-.04em;text-transform:uppercase}
+.section-intro{max-width:620px;margin:0;color:#9ca39a;line-height:1.65}
+
+.routes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.route{
+  position:relative;
+  display:flex;
+  min-height:360px;
+  flex-direction:column;
+  padding:25px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#090b09,#060706);
+  text-decoration:none;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.route:hover,.route:focus-visible{transform:translateY(-3px);border-color:#6c7767;background:#0a0d0a;outline:none}
+.route.primary{border-color:#526041;background:linear-gradient(180deg,rgba(202,255,0,.055),#070907 34%)}
+.route-number{display:flex;justify-content:space-between;gap:16px;color:var(--acid);font:850 8px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase}
+.route-number .price{color:#8d958a}
+.route h3{margin:52px 0 13px;font:950 2.1rem/.96 Impact,"Arial Black",sans-serif;letter-spacing:-.02em;text-transform:uppercase}
+.route p{margin:0;color:#959c93;line-height:1.58}
+.route .best-for{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);color:#c4c8c1;font-size:13px;line-height:1.55}
+.route .best-for strong{display:block;margin-bottom:5px;color:#747c73;font:850 8px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+.route-cta{margin-top:auto;padding-top:30px;color:var(--acid);font:900 9px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+
+.secondary-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+.secondary-card{padding:28px;border:1px solid var(--line);background:var(--panel);min-height:245px}
+.secondary-card h3{margin:24px 0 10px;font-size:1.5rem;line-height:1.08}
+.secondary-card p{margin:0;color:var(--muted);line-height:1.6}
+.link-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.ghost,.acid-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  padding:0 16px;
+  border:1px solid var(--line-strong);
+  text-decoration:none;
+  font:900 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.ghost{color:#c4c9c2;background:#070807}
+.ghost:hover,.ghost:focus-visible{border-color:#737d70}
+.acid-btn{border-color:var(--acid);background:var(--acid);color:#050505}
+.coming{display:inline-flex;margin-top:20px;padding:7px 9px;border:1px solid #44503e;color:var(--acid);font:850 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+
+.process{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line)}
+.step{position:relative;padding:24px;min-height:180px;border-right:1px solid var(--line);background:#060706}
+.step:last-child{border-right:0}
+.step small{color:var(--acid);font:850 8px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase}
+.step h3{margin:42px 0 9px;font-size:1.2rem;line-height:1.05;text-transform:uppercase}
+.step p{margin:0;color:#858d84;font-size:13px;line-height:1.5}
+.step:not(:last-child)::after{content:"→";position:absolute;right:-9px;top:50%;z-index:2;color:var(--acid);background:var(--bg);padding:3px}
+
+.boundary{padding:30px;border:1px solid var(--line);background:linear-gradient(90deg,rgba(202,255,0,.035),transparent 38%),#050605}
+.boundary-grid{display:grid;grid-template-columns:.7fr 1.3fr;gap:38px;align-items:start}
+.boundary h3{margin:12px 0 0;font:950 clamp(2rem,4vw,4rem)/.9 Impact,"Arial Black",sans-serif;text-transform:uppercase}
+.boundary p{margin:0;color:#a3aaa1;line-height:1.65}
+.boundary p+p{margin-top:12px}
+
+.final{padding:76px 0 86px;text-align:center}
+.final h2{max-width:900px;margin:12px auto 18px;font:950 clamp(3.1rem,7vw,6.4rem)/.84 Impact,"Arial Black",sans-serif;letter-spacing:-.04em;text-transform:uppercase}
+.final p{max-width:680px;margin:0 auto 28px;color:#a7aea5;line-height:1.62}
+.foot{border-top:1px solid var(--line);padding:24px 0 42px;color:#777d75;font:800 8px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase}
+.foot-inner{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.foot a{text-decoration:none;color:#929990}
+
+@media(max-width:900px){
+  .routes{grid-template-columns:1fr}
+  .route{min-height:300px}
+  .secondary-grid,.section-head,.boundary-grid{grid-template-columns:1fr}
+  .process{grid-template-columns:1fr 1fr}
+  .step:nth-child(2){border-right:0}
+  .step:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .step:nth-child(2)::after{display:none}
+}
+@media(max-width:620px){
+  .nav{display:none}
+  .hero{padding:66px 0 54px}
+  .hero-copy{font-size:18px}
+  .section{padding:48px 0}
+  .process{grid-template-columns:1fr}
+  .step{border-right:0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:0}
+  .step::after{display:none!important}
+}
+</style>
+</head>
+<body>
+<header class="head">
+  <div class="shell head-inner">
+    <a class="brand" href="/">GWAP GANG</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Home</a>
+      <a href="/intelligence/">Intelligence</a>
+      <a href="/blog/">Blog</a>
+      <a href="/brief/">The Leverage Brief</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="shell">
+    <div class="eyebrow">Gwap Gang // Start Here</div>
+    <h1>What Are You Trying To Improve?</h1>
+    <p class="hero-copy">Pick the problem closest to the money. Gwap will route you to the smallest useful next move instead of burying you in tools, jargon, or a giant consulting menu.</p>
+    <div class="hero-rule">
+      <span>Choose the problem</span>
+      <span>Get the right level of help</span>
+      <span>Move with evidence</span>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="routes">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Choose A Lane</div>
+        <h2>Start Where The Friction Is.</h2>
+      </div>
+      <p class="section-intro">These are the live Gwap paths available now. If you are unsure which one fits, start with the free diagnostic. It is designed to identify the commercial problem before asking you to buy anything.</p>
+    </div>
+
+    <div class="routes">
+      <a class="route primary" href="{{ site.revenueLeakScore.salesUrl }}" data-route="growth-diagnostic">
+        <div class="route-number"><span>01 // Diagnose Growth</span><span class="price">Free</span></div>
+        <h3>I Need More Customers Or Better Conversion.</h3>
+        <p>Run a bounded public-evidence Growth Diagnostic. Gwap looks for visible friction, ranks the strongest findings, and shows the most useful next move.</p>
+        <div class="best-for"><strong>Best for</strong>You know growth could be better, but you do not yet know what is actually blocking it.</div>
+        <div class="route-cta">Run My Free Growth Diagnostic →</div>
+      </a>
+
+      <a class="route" href="{{ site.revenueRescueSprint.salesUrl }}" data-route="revenue-rescue">
+        <div class="route-number"><span>02 // Repair Revenue</span><span class="price">{{ site.revenueRescueSprint.priceLabel }}</span></div>
+        <h3>I Know Something Is Leaking Revenue.</h3>
+        <p>Get a fixed-scope Revenue Rescue Sprint focused on the three highest-value leaks, the evidence behind them, and a prioritized 7-day execution plan.</p>
+        <div class="best-for"><strong>Best for</strong>You want a deeper diagnosis and a concrete repair sequence without signing up for an open-ended retainer.</div>
+        <div class="route-cta">Explore Revenue Rescue →</div>
+      </a>
+
+      <a class="route" href="{{ site.primaryOffer.url }}" data-route="business-intelligence">
+        <div class="route-number"><span>03 // Find Leverage</span><span class="price">$49</span></div>
+        <h3>I Need Better Business Intelligence.</h3>
+        <p>Get a practical AI Business Intelligence Report covering competitors, missed opportunities, AI leverage, revenue ideas, and a prioritized action plan.</p>
+        <div class="best-for"><strong>Best for</strong>You need a broader strategic view of where technology, competition, automation, and revenue opportunities intersect.</div>
+        <div class="route-cta">Get The $49 Intelligence Report →</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Explore Before You Buy</div>
+        <h2>Follow The Signal First.</h2>
+      </div>
+      <p class="section-intro">You do not need to purchase anything to use Gwap. The editorial side exists to help you understand what is changing, what matters, and where leverage may be forming.</p>
+    </div>
+
+    <div class="secondary-grid">
+      <div class="secondary-card">
+        <div class="eyebrow">Free Intelligence</div>
+        <h3>Read the thinking behind the products.</h3>
+        <p>Use The Leverage Brief and the Gwap Intelligence Graph to explore the ideas, technologies, business models, and commercial opportunities Gwap is tracking.</p>
+        <div class="link-row">
+          <a class="acid-btn" href="/brief/">Read The Leverage Brief →</a>
+          <a class="ghost" href="/graph/">Explore The Intelligence Graph →</a>
+          <a class="ghost" href="/blog/">Browse All Intelligence →</a>
+        </div>
+      </div>
+
+      <div class="secondary-card">
+        <div class="eyebrow">Next Capability</div>
+        <h3>Search Intelligence.</h3>
+        <p>A dedicated Gwap path for visibility, missed search demand, content gaps, index recovery, and opportunities to turn search behavior into commercial action.</p>
+        <div class="coming">In Development // Not Yet Sold Here</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">How Gwap Works</div>
+        <h2>Signal To Outcome.</h2>
+      </div>
+      <p class="section-intro">The products are different, but the operating logic stays the same. We look for evidence, turn it into a decision, and make the next action clear.</p>
+    </div>
+
+    <div class="process">
+      <div class="step"><small>01 // Signal</small><h3>Find What Changed</h3><p>Behavior, competition, technology, search, conversion friction, or operational waste.</p></div>
+      <div class="step"><small>02 // Intelligence</small><h3>Separate Signal From Noise</h3><p>Use evidence and business context to identify what deserves attention.</p></div>
+      <div class="step"><small>03 // Action</small><h3>Choose The Move</h3><p>Prioritize by commercial impact, effort, speed, dependency, and risk.</p></div>
+      <div class="step"><small>04 // Outcome</small><h3>Measure What Happened</h3><p>Keep what works, change what does not, and feed the result back into the next decision.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="boundary">
+      <div class="boundary-grid">
+        <div>
+          <div class="eyebrow">Gwap Standard</div>
+          <h3>Evidence Before Theater.</h3>
+        </div>
+        <div>
+          <p>Gwap products are designed to distinguish observed evidence from estimates, assumptions, and recommendations. We do not invent lost-revenue numbers just to make a diagnosis sound more dramatic.</p>
+          <p>When a higher-impact decision needs human judgment, the system should make that boundary visible instead of pretending automation is certainty.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="shell">
+    <div class="eyebrow">Still Not Sure?</div>
+    <h2>Start Free. Let The Evidence Decide.</h2>
+    <p>If you do not know which Gwap product fits, the Growth Diagnostic is the correct first step. You will get a result before you are asked to make a larger commitment.</p>
+    <a class="acid-btn" href="{{ site.revenueLeakScore.salesUrl }}">Run My Free Growth Diagnostic →</a>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="shell foot-inner">
+    <div>Gwap Gang // Creative Technology + Commercial Intelligence</div>
+    <div><a href="mailto:{{ site.email }}">{{ site.email }}</a> &nbsp; // &nbsp; <a href="/">Back To Homepage</a></div>
+  </div>
+</footer>
+</body>
+</html>
