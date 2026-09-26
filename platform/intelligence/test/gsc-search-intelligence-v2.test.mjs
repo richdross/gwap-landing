@@ -6,6 +6,9 @@ import {
   articleUrlsFromSitemapXml,
   buildIndexSignal,
   buildQuerySignal,
+  buildRecoverySignal,
+  classifyIndexRecovery,
+  recoveryAction,
   canonicalStatus,
   indexStatusFromVerdict,
   normalizeQueryText,
@@ -164,4 +167,111 @@ test("query normalization and stable references are deterministic", () => {
   assert.equal(normalizeQueryText(" a   b \n c "), "a b c");
   assert.equal(stableHash("same"), stableHash("same"));
   assert.notEqual(stableHash("same"), stableHash("different"));
+});
+
+
+test("V2C classifies indexed, unknown, and discovered-not-indexed states", () => {
+  assert.equal(
+    classifyIndexRecovery({
+      indexStatus: "INDEXED",
+      coverageState: "Submitted and indexed",
+      canonicalStatus: "SELF",
+    }),
+    "PROTECT_AND_MONITOR",
+  );
+
+  assert.equal(
+    classifyIndexRecovery({
+      indexStatus: "EXCLUDED",
+      coverageState: "URL is unknown to Google",
+      canonicalStatus: "UNKNOWN",
+    }),
+    "DISCOVERY_RECOVERY",
+  );
+
+  assert.equal(
+    classifyIndexRecovery({
+      indexStatus: "EXCLUDED",
+      coverageState: "Discovered - currently not indexed",
+      canonicalStatus: "UNKNOWN",
+    }),
+    "COVERAGE_EXPANSION",
+  );
+});
+
+test("V2C prioritizes concrete repository gaps before editorial changes", () => {
+  const result = recoveryAction(
+    "DISCOVERY_RECOVERY",
+    {
+      sourceExists: true,
+      sitemapTemplateIncludesPosts: false,
+      postTemplateIndexFollow: true,
+      postTemplateCanonical: true,
+      robotsAllowsSearch: true,
+      blogIndexLinksPosts: true,
+    },
+    {},
+  );
+
+  assert.equal(result.action, "FIX_TECHNICAL_DISCOVERY");
+  assert.deepEqual(result.problems, ["SITEMAP_TEMPLATE_GAP"]);
+  assert.equal(result.manualIndexRequestRecommended, false);
+});
+
+test("V2C unknown-to-Google with healthy repository evidence recommends discovery recovery", () => {
+  const result = recoveryAction(
+    "DISCOVERY_RECOVERY",
+    {
+      sourceExists: true,
+      sitemapTemplateIncludesPosts: true,
+      postTemplateIndexFollow: true,
+      postTemplateCanonical: true,
+      robotsAllowsSearch: true,
+      blogIndexLinksPosts: true,
+    },
+    {},
+  );
+
+  assert.equal(result.action, "STRENGTHEN_DISCOVERY_AND_REQUEST_INDEXING");
+  assert.equal(result.manualIndexRequestRecommended, true);
+  assert.deepEqual(result.problems, []);
+});
+
+test("V2C builds a machine-readable recovery signal", () => {
+  const pageUrl =
+    "https://gwapgang.com/blog/how-to-find-ai-automation-opportunities-in-your-business/";
+  const indexSignal = {
+    normalized: {
+      indexStatus: "EXCLUDED",
+      coverageState: "Discovered - currently not indexed",
+      canonicalStatus: "UNKNOWN",
+      pageFetchState: "PAGE_FETCH_STATE_UNSPECIFIED",
+    },
+  };
+
+  const signal = buildRecoverySignal({
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageUrl,
+    targetHost: "gwapgang.com",
+    indexSignal,
+    repoEvidence: {
+      sourceExists: true,
+      sourceFile: "content/blog/how-to-find-ai-automation-opportunities-in-your-business.md",
+      sitemapTemplateIncludesPosts: true,
+      postTemplateIndexFollow: true,
+      postTemplateCanonical: true,
+      robotsAllowsSearch: true,
+      blogIndexLinksPosts: true,
+      inboundEditorialReferences: 3,
+    },
+    today: "2026-09-26",
+    observedAt: "2026-09-26T06:00:00.000Z",
+  });
+
+  assert.equal(signal.normalized.signalKind, "index-recovery-diagnostic");
+  assert.equal(signal.normalized.recoveryClass, "COVERAGE_EXPANSION");
+  assert.equal(signal.normalized.action, "MONITOR_DISCOVERED_URL_AND_REINFORCE_LINKS");
+  assert.equal(signal.normalized.repositoryEvidence.inboundEditorialReferences, 3);
+  assert.equal(signal.normalized.liveHttpStatus, "NOT_VERIFIED_FROM_GITHUB_ACTIONS");
 });
