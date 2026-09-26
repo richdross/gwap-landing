@@ -1,0 +1,19 @@
+{
+  "id": "/voice/",
+  "name": "Gwap Voice",
+  "short_name": "Gwap Voice",
+  "description": "Gwap Gang mobile voice command center",
+  "start_url": "/voice/",
+  "scope": "/voice/",
+  "display": "standalone",
+  "background_color": "#050706",
+  "theme_color": "#050706",
+  "icons": [
+    {
+      "src": "/images/gwap-gang-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
