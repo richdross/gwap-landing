@@ -1,5 +1,6 @@
 import { createSign } from "node:crypto";
 import {
+  articleUrlsFromGitHubContents,
   articleUrlsFromManifest,
   articleUrlsFromSitemapXml,
   buildIndexSignal,
@@ -19,6 +20,9 @@ const articleManifestUrl =
   process.env.GSC_ARTICLE_MANIFEST_URL ||
   `https://${targetHost}/operator/blog-analytics/articles.json`;
 const sitemapUrl = process.env.GSC_SITEMAP_URL || `https://${targetHost}/sitemap.xml`;
+const githubInventoryUrl =
+  process.env.GSC_GITHUB_INVENTORY_URL ||
+  "https://api.github.com/repos/richdross/gwap-landing/contents/content/blog?ref=main";
 const inspectionLimit = Math.max(
   1,
   Math.min(100, Number(process.env.GSC_INDEX_INSPECTION_LIMIT || 50) || 50),
@@ -183,6 +187,24 @@ async function storeSignal(signal) {
 
 async function loadArticleUrls() {
   try {
+    const response = await fetch(githubInventoryUrl, {
+      headers: {
+        accept: "application/vnd.github+json",
+        "user-agent": "gwap-search-intelligence-v2",
+      },
+    });
+    if (response.ok) {
+      const items = await response.json();
+      const urls = articleUrlsFromGitHubContents(items, targetHost);
+      if (urls.length) {
+        return { mode: "github-contents", source: githubInventoryUrl, urls };
+      }
+    }
+  } catch {
+    // Fall through to the public site manifest.
+  }
+
+  try {
     const response = await fetch(articleManifestUrl, {
       headers: { accept: "application/json" },
     });
@@ -202,7 +224,7 @@ async function loadArticleUrls() {
   });
   if (!response.ok) {
     throw new Error(
-      `GWAP article inventory unavailable: manifest and sitemap fallback failed HTTP ${response.status}`,
+      `GWAP article inventory unavailable: GitHub, manifest, and sitemap sources failed; sitemap HTTP ${response.status}`,
     );
   }
   const xml = await response.text();

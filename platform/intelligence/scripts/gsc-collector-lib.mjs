@@ -69,6 +69,36 @@ export function indexStatusFromVerdict(verdict) {
   return "UNKNOWN";
 }
 
+export function articleUrlsFromGitHubContents(items, targetHost = "gwapgang.com") {
+  const list = Array.isArray(items) ? items : [];
+  const base = `https://${String(targetHost).replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+  const seen = new Set();
+  const urls = [];
+
+  for (const item of list) {
+    if (!item || item.type !== "file") continue;
+    const name = String(item.name || "");
+    if (!name.toLowerCase().endsWith(".md")) continue;
+
+    const slug = name.replace(/\.md$/i, "").trim();
+    if (!slug || slug.startsWith(".")) continue;
+
+    let href;
+    try {
+      href = new URL(`/blog/${slug}/`, base).href;
+    } catch {
+      continue;
+    }
+
+    const normalized = normalizeUrl(href);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    urls.push(href);
+  }
+
+  return urls.sort();
+}
+
 export function articleUrlsFromSitemapXml(xml, targetHost = "gwapgang.com") {
   const source = String(xml || "");
   const urls = [];
