@@ -160,9 +160,27 @@ a{color:inherit}
   outline:none
 }
 @media(max-width:700px){
-  .nav-blog-visible{left:66.8%;top:.36%;width:4.35%;font-size:7px;padding:0}
-  .nav-gallery-visible{left:72.55%;top:.36%;width:4.35%;font-size:7px;padding:0}
-  .nav-start-visible{left:78.3%;top:.36%;width:4.35%;font-size:7px;padding:0}
+  .nav-blog-visible,
+  .nav-gallery-visible,
+  .nav-start-visible{
+    top:.34%;
+    height:1.62%;
+    padding:0 .18%;
+    font-size:7.4px;
+    line-height:1;
+    letter-spacing:.05em;
+    border-width:1px;
+    box-shadow:0 0 6px rgba(202,255,0,.16)
+  }
+  .nav-blog-visible{left:64.9%;width:5.8%}
+  .nav-gallery-visible{left:71.8%;width:8.2%}
+  .nav-start-visible{left:81.2%;width:6.0%}
+  .nav-gallery-visible:hover,.nav-gallery-visible:focus-visible,
+  .nav-blog-visible:hover,.nav-blog-visible:focus-visible,
+  .nav-start-visible:hover,.nav-start-visible:focus-visible{
+    transform:none;
+    box-shadow:0 0 8px rgba(202,255,0,.22)
+  }
 }
 .email{left:68.15%;top:90.0%;width:17.0%;height:2.8%}
 .join{left:84.9%;top:90.0%;width:12.7%;height:2.8%}
