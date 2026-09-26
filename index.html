@@ -160,9 +160,48 @@ a{color:inherit}
   outline:none
 }
 @media(max-width:700px){
-  .nav-blog-visible{left:66.8%;top:.36%;width:4.35%;font-size:7px;padding:0}
-  .nav-gallery-visible{left:72.55%;top:.36%;width:4.35%;font-size:7px;padding:0}
-  .nav-start-visible{left:78.3%;top:.36%;width:4.35%;font-size:7px;padding:0}
+  .nav-blog-visible,
+  .nav-gallery-visible,
+  .nav-start-visible{
+    top:.39%;
+    height:1.35%;
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    font-size:7.5px;
+    letter-spacing:.075em;
+    color:#dcff46;
+    text-shadow:0 0 5px rgba(202,255,0,.18)
+  }
+  .nav-blog-visible{left:66.2%;width:5.3%}
+  .nav-gallery-visible{left:72.3%;width:7.0%}
+  .nav-start-visible{left:80.1%;width:5.5%}
+  .nav-gallery-visible:hover,.nav-gallery-visible:focus-visible,
+  .nav-blog-visible:hover,.nav-blog-visible:focus-visible,
+  .nav-start-visible:hover,.nav-start-visible:focus-visible{
+    background:transparent;
+    color:var(--acid);
+    border-color:transparent;
+    box-shadow:none;
+    transform:none
+  }
+  .home-pulse-logo img{
+    animation:none;
+    will-change:auto;
+    transform:translateY(-50%) scale(1)
+  }
+  .labs-bubble-logo .lab-bubble{display:none}
+  .live-capture button{
+    animation:none;
+    will-change:auto;
+    transform:none;
+    box-shadow:none
+  }
+  .live-capture button::after{
+    animation:none;
+    display:none
+  }
 }
 .email{left:68.15%;top:90.0%;width:17.0%;height:2.8%}
 .join{left:84.9%;top:90.0%;width:12.7%;height:2.8%}
