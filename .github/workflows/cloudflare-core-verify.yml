@@ -31,3 +31,7 @@ jobs:
       - name: Verify GA4 collector syntax
         if: ${{ hashFiles('platform/intelligence/scripts/ga4-collector.mjs') != '' }}
         run: node --check platform/intelligence/scripts/ga4-collector.mjs
+
+      - name: Verify Search Console collector syntax
+        if: ${{ hashFiles('platform/intelligence/scripts/gsc-collector.mjs') != '' }}
+        run: node --check platform/intelligence/scripts/gsc-collector.mjs
