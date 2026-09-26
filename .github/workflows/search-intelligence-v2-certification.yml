@@ -1,0 +1,31 @@
+name: Search Intelligence V2 Certification
+
+on:
+  pull_request:
+    branches:
+      - architecture/cloudflare-core-v1
+    paths:
+      - "platform/intelligence/scripts/gsc-collector.mjs"
+      - "platform/intelligence/scripts/gsc-collector-lib.mjs"
+      - "platform/intelligence/test/gsc-search-intelligence-v2.test.mjs"
+      - ".github/workflows/search-intelligence-v2-certification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Parse-check collector
+        run: |
+          node --check platform/intelligence/scripts/gsc-collector.mjs
+          node --check platform/intelligence/scripts/gsc-collector-lib.mjs
+      - name: Run Search Intelligence V2 tests
+        run: node --test platform/intelligence/test/gsc-search-intelligence-v2.test.mjs
