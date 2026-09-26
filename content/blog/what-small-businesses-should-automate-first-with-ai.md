@@ -342,6 +342,8 @@ If those answers are unclear, fix the workflow first.
 
 ---
 
+If you already know which workflow deserves attention, the next step is to test it under real operating conditions. Use [How to Run Your First AI Automation Pilot in 7 Days](/blog/how-to-run-your-first-ai-automation-pilot-in-7-days/) to turn one candidate into a measured pilot without rebuilding the whole business around it.
+
 # The GWAP Rule
 
 **Automate the repetition. Preserve the judgment.**
