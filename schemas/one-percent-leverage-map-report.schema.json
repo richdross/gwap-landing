@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gwapgang.com/schemas/one-percent-leverage-map-report.schema.json",
+  "title": "Gwap Gang 1% Personal Leverage Map Report V0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "customer",
+    "executive_summary",
+    "leverage_profile",
+    "top_plays",
+    "fastest_validation",
+    "most_defensible",
+    "thirty_day_plan",
+    "disclaimers"
+  ],
+  "properties": {
+    "version": {
+      "const": "0.1"
+    },
+    "customer": {
+      "type": "object",
+      "required": [
+        "name",
+        "email"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "objective": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "executive_summary": {
+      "type": "string",
+      "minLength": 100
+    },
+    "asset_inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "asset",
+          "evidence",
+          "potential"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "experience",
+              "project",
+              "technology",
+              "audience",
+              "access",
+              "distribution",
+              "intellectual_property",
+              "other"
+            ]
+          },
+          "asset": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "potential": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "leverage_profile": {
+      "type": "object",
+      "required": [
+        "knowledge",
+        "technology",
+        "automation",
+        "asset",
+        "distribution",
+        "access"
+      ],
+      "properties": {
+        "knowledge": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "technology": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "automation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "asset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "distribution": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "access": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "top_plays": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "rank",
+          "name",
+          "thesis",
+          "buyer",
+          "value_capture",
+          "why_now",
+          "evidence",
+          "scores",
+          "first_test",
+          "risk_flags"
+        ],
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "name": {
+            "type": "string"
+          },
+          "thesis": {
+            "type": "string"
+          },
+          "buyer": {
+            "type": "string"
+          },
+          "value_capture": {
+            "type": "string"
+          },
+          "why_now": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scores": {
+            "type": "object",
+            "required": [
+              "fit",
+              "speed",
+              "ownership",
+              "automation",
+              "distribution",
+              "evidence"
+            ],
+            "properties": {
+              "fit": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "speed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "ownership": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "automation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "distribution": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "evidence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          },
+          "first_test": {
+            "type": "string"
+          },
+          "risk_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "fastest_validation": {
+      "type": "object",
+      "required": [
+        "play_rank",
+        "test",
+        "success_metric",
+        "stop_condition"
+      ],
+      "properties": {
+        "play_rank": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "test": {
+          "type": "string"
+        },
+        "success_metric": {
+          "type": "string"
+        },
+        "stop_condition": {
+          "type": "string"
+        }
+      }
+    },
+    "most_defensible": {
+      "type": "object",
+      "required": [
+        "play_rank",
+        "reason"
+      ],
+      "properties": {
+        "play_rank": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "ai_multiplier": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "workflow",
+          "human_control",
+          "automation"
+        ],
+        "properties": {
+          "workflow": {
+            "type": "string"
+          },
+          "human_control": {
+            "type": "string"
+          },
+          "automation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "distribution_route": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "first_customer_profile": {
+      "type": "object",
+      "properties": {
+        "who": {
+          "type": "string"
+        },
+        "pain": {
+          "type": "string"
+        },
+        "where_to_find": {
+          "type": "string"
+        },
+        "offer_angle": {
+          "type": "string"
+        }
+      }
+    },
+    "do_not_do": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "thirty_day_plan": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "week",
+          "objective",
+          "actions",
+          "success_check"
+        ],
+        "properties": {
+          "week": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "objective": {
+            "type": "string"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "success_check": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "next_offer_fit": {
+      "type": "object",
+      "properties": {
+        "recommended": {
+          "type": "boolean"
+        },
+        "offer": {
+          "type": "string",
+          "enum": [
+            "none",
+            "1_percent_execution_blueprint",
+            "revenue_rescue_sprint"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "disclaimers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
