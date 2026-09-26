@@ -7,15 +7,15 @@ eleventyExcludeFromCollections: true
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Free Revenue Leak Score — Gwap Gang</title>
-<meta name="description" content="Get a free public-evidence Revenue Leak Score for your business. See the strongest conversion risk Gwap can verify without access to your private analytics.">
+<title>Free Revenue Rescue Preview — Gwap Gang</title>
+<meta name="description" content="Get a free Revenue Leak Score plus a personalized three-leak Revenue Rescue Preview built from bounded public evidence and the business context you provide.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
 <meta name="theme-color" content="#020302">
 <link rel="canonical" href="{{ site.url }}/revenue-leak-score/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Gwap Gang">
-<meta property="og:title" content="Free Revenue Leak Score — Gwap Gang">
-<meta property="og:description" content="See where your current funnel appears most likely to leak qualified demand. Public evidence only. No fake revenue estimates.">
+<meta property="og:title" content="Free Revenue Rescue Preview — Gwap Gang">
+<meta property="og:description" content="Get three ranked, evidence-backed revenue leak findings, the first repair to test, and the next data Gwap would validate.">
 <meta property="og:url" content="{{ site.url }}/revenue-leak-score/">
 <script type="application/ld+json">
 {
@@ -50,6 +50,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 .checks{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.check{min-height:180px;border:1px solid var(--line);background:var(--panel);padding:20px}.check span{color:var(--acid);font:900 9px/1 ui-monospace,monospace}.check h4{margin:22px 0 8px;font-size:1.05rem}.check p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
 #result{display:none}.result-shell{padding:62px 0}.result-head{display:grid;grid-template-columns:.7fr 1.3fr;gap:42px;align-items:start}.score-box{border:1px solid var(--acid);padding:28px;background:rgba(202,255,0,.035)}.score-number{font:950 clamp(5rem,11vw,9rem)/.8 Impact,"Arial Black",sans-serif;color:var(--acid)}.score-denom{color:#818981;font:800 10px/1 ui-monospace,monospace;letter-spacing:.09em}.band{margin-top:18px;color:#d3d7d1;text-transform:uppercase;font:900 11px/1 ui-monospace,monospace;letter-spacing:.11em}
 .finding{border-top:1px solid var(--line);padding-top:22px}.finding h3{font-size:1.6rem;margin:8px 0 12px}.finding p{color:#bcc2ba;line-height:1.65}.finding .implication{color:#8f968e}
+.preview-title{margin:8px 0 18px;font-size:1.65rem}.preview-grid{display:grid;gap:14px}.preview-card{border:1px solid var(--line);background:var(--panel);padding:20px}.preview-card .rank{color:var(--acid);font:900 9px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}.preview-card h4{font-size:1.18rem;margin:12px 0}.preview-card p{color:#aeb4ac;line-height:1.58;margin:9px 0}.preview-card strong{color:#e8ebe5}.context-box,.scenario-box,.next-action{margin-top:18px;padding:18px;border:1px solid var(--line);background:#070a07}.context-box{color:#b9bfb7;line-height:1.6}.scenario-box{border-color:#59614f}.scenario-range{font:950 1.9rem/1 Impact,"Arial Black",sans-serif;color:var(--acid);margin:9px 0}.next-action h3{margin:8px 0 10px}.next-action p{color:#9da49c;line-height:1.55}.action-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}.cta.secondary{background:transparent;color:#d8ddd6;border:1px solid #495049}
 .flags{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}.flag{border:1px solid var(--line);padding:18px;background:var(--panel)}.flag-label{font:850 9px/1 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#b7bdb5}.meter{height:7px;background:#1b201c;margin:15px 0 9px;overflow:hidden}.meter>i{display:block;height:100%;background:var(--acid);width:0}.flag small{color:#7e857e;text-transform:uppercase;font:800 9px/1 ui-monospace,monospace}
 .disclaimer{margin-top:20px;padding:16px;border:1px dashed #394039;color:#868d86;font-size:12px;line-height:1.55}.result-cta{margin-top:26px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}.result-cta .price{font:950 1.7rem/1 Impact,"Arial Black",sans-serif}
 .status{min-height:18px;margin-top:12px;color:#9fa69e;font:700 11px/1.4 ui-monospace,monospace}.status.error{color:var(--danger)}
@@ -77,14 +78,20 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <div class="form-grid">
 <div class="field full"><label for="businessName">Business name</label><input id="businessName" name="businessName" autocomplete="organization" required maxlength="160" placeholder="Acme Home Services"></div>
 <div class="field full"><label for="website">Website</label><input id="website" name="website" type="url" inputmode="url" autocomplete="url" required maxlength="600" placeholder="https://example.com"></div>
+<div class="field full"><label for="industry">Industry <span style="color:#727a72">(optional)</span></label><input id="industry" name="industry" maxlength="160" placeholder="HVAC, med spa, legal, B2B services…"></div>
 <div class="field full"><label for="email">Business email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="320" placeholder="owner@example.com"></div>
 <div class="field"><label for="role">Your role</label><select id="role" name="role" required><option value="">Select</option><option value="owner">Owner</option><option value="founder">Founder</option><option value="executive">Executive / GM</option><option value="marketing">Marketing</option><option value="sales">Sales</option><option value="agency">Agency / consultant</option><option value="other">Other</option></select></div>
 <div class="field"><label for="acquisitionChannel">Main source of new customers</label><select id="acquisitionChannel" name="acquisitionChannel" required><option value="">Select</option><option value="google_ads">Google Ads</option><option value="local_services_ads">Google Local Services Ads</option><option value="meta_ads">Meta / Instagram Ads</option><option value="paid_search">Other paid search</option><option value="lead_marketplace">Lead marketplaces</option><option value="mixed_paid">Several paid channels</option><option value="seo">SEO / organic search</option><option value="organic_social">Organic social</option><option value="referrals">Referrals / repeat business</option><option value="other">Other</option></select></div>
 <div class="field"><label for="customerValueBand">Approx. value of one new customer</label><select id="customerValueBand" name="customerValueBand" required><option value="">Select</option><option value="under_250">Under $250</option><option value="250_1000">$250 to $1,000</option><option value="1000_5000">$1,000 to $5,000</option><option value="over_5000">$5,000+</option></select></div>
 <div class="field"><label for="monthlyLeadsBand">Approx. inbound leads per month</label><select id="monthlyLeadsBand" name="monthlyLeadsBand" required><option value="">Select</option><option value="under_10">Under 10</option><option value="10_25">10 to 25</option><option value="26_75">26 to 75</option><option value="over_75">75+</option></select></div>
+<div class="field full"><div class="eyebrow" style="margin-top:8px">Optional Economics // Unlock an Illustrative Scenario</div></div>
+<div class="field"><label for="averageCustomerValue">Average customer value</label><input id="averageCustomerValue" name="averageCustomerValue" type="number" min="1" step="1" inputmode="decimal" placeholder="$2,500"></div>
+<div class="field"><label for="monthlyQualifiedLeads">Qualified leads / month</label><input id="monthlyQualifiedLeads" name="monthlyQualifiedLeads" type="number" min="1" step="1" inputmode="numeric" placeholder="40"></div>
+<div class="field full"><label for="currentCloseRatePct">Current close rate %</label><input id="currentCloseRatePct" name="currentCloseRatePct" type="number" min=".01" max="100" step=".01" inputmode="decimal" placeholder="20"></div>
 <div class="field full hp" aria-hidden="true"><label for="company_website">Company website confirmation</label><input id="company_website" name="company_website" tabindex="-1" autocomplete="off"></div>
-<div class="field full"><label class="consent"><input id="followUpConsent" name="followUpConsent" type="checkbox"><span>Email me this score and relevant follow-up about Revenue Rescue. I can opt out at any time.</span></label></div>
-<div class="field full"><button id="submit" type="submit">Calculate My Score →</button><div class="status" id="status" aria-live="polite"></div><div class="micro">The score is a diagnostic risk index based on public evidence and the business context you provide. It is not an estimate of dollars lost.</div></div>
+<div class="field full"><label class="consent"><input id="followUpConsent" name="followUpConsent" type="checkbox"><span>Email me this score and allow Gwap to follow up if I request a Revenue Leak Review. I can opt out at any time.</span></label></div>
+<div class="field full"><label class="consent"><input id="newsletterConsent" name="newsletterConsent" type="checkbox"><span>Also add me to The Leverage Brief for Gwap intelligence and practical growth ideas.</span></label></div>
+<div class="field full"><button id="submit" type="submit">Calculate My Score →</button><div class="status" id="status" aria-live="polite"></div><div class="micro">The score is a diagnostic risk index. Exact economics are optional and are used only for a transparent sensitivity scenario, never as a claim about revenue you lost.</div></div>
 </div>
 </form>
 </div>
@@ -108,10 +115,14 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <div class="result-head">
 <div class="score-box"><div class="score-number" id="score-number">0</div><div class="score-denom">OUT OF 100 // PUBLIC-EVIDENCE RISK INDEX</div><div class="band" id="score-band"></div></div>
 <div>
-<div class="finding"><div class="eyebrow">Strongest Verified Finding</div><h3 id="finding-title">Finding</h3><p id="finding-evidence"></p><p class="implication" id="finding-implication"></p></div>
+<div class="eyebrow">Personalized Revenue Rescue Preview</div>
+<h3 class="preview-title">Three leaks worth investigating first.</h3>
+<div class="context-box" id="business-context"></div>
+<div class="preview-grid" id="preview-grid"></div>
+<div class="scenario-box" id="scenario-box" style="display:none"></div>
 <div class="flags" id="flags"></div>
 <div class="disclaimer" id="disclaimer"></div>
-<div class="result-cta"><div class="price">$299</div><a class="cta" href="/revenue-rescue-sprint/">Get The Complete Revenue Rescue →</a></div>
+<div class="next-action" id="next-action"></div>
 </div>
 </div>
 </div>
@@ -122,6 +133,8 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <script>
 (() => {
   const endpoint = {{ site.revenueLeakScore.endpoint | json }};
+  const eventEndpoint = endpoint + "/event";
+  const checkoutUrl = {{ site.revenueRescueSprint.checkoutUrl | json }};
   const form = document.getElementById("score-form");
   const submit = document.getElementById("submit");
   const status = document.getElementById("status");
@@ -135,14 +148,114 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     return String(value || "verified finding").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  async function trackEvent(leadId, eventType, metadata = {}) {
+    if (!leadId || !eventType) return false;
+    try {
+      const response = await fetch(eventEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lead_id: leadId, event_type: eventType, metadata })
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  function money(value) {
+    return "$" + Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
+  }
+
+  function renderAction(data, card) {
+    const container = document.getElementById("next-action");
+    const action = card.nextAction || {};
+    const primary = action.primary || {};
+    const secondary = action.secondary || null;
+    container.innerHTML = `<div class="eyebrow">Recommended Next Action</div><h3>${esc(action.headline || "Use the evidence before making the next move.")}</h3><div class="action-row" id="action-row"></div><div class="status" id="action-status"></div>`;
+    const row = document.getElementById("action-row");
+    const actionStatus = document.getElementById("action-status");
+
+    function actionButton(item, secondaryStyle = false) {
+      if (!item || !item.kind) return null;
+      const el = document.createElement(item.url ? "a" : "button");
+      el.className = secondaryStyle ? "cta secondary" : "cta";
+      el.textContent = item.label || "Continue";
+      if (item.url) el.href = item.kind === "checkout" && checkoutUrl ? checkoutUrl : item.url;
+
+      el.addEventListener("click", async (event) => {
+        const eventType = item.event || (
+          item.kind === "case_example" ? "case_example_clicked" :
+          item.kind === "rescue_plan" ? "rescue_plan_clicked" :
+          item.kind === "checkout" ? "checkout_clicked" :
+          null
+        );
+
+        if (!item.url) {
+          event.preventDefault();
+          el.disabled = true;
+          const ok = await trackEvent(data.lead_id, eventType, { conversion_path: action.key || null });
+          if (item.kind === "priority_review") {
+            actionStatus.textContent = ok
+              ? "Review request recorded. Gwap will follow up using the business email you provided."
+              : "A review request requires email follow-up consent. Enable it and rerun the score, or start the Sprint directly.";
+          } else if (item.kind === "newsletter_opt_in") {
+            actionStatus.textContent = ok
+              ? "You're subscribed to The Leverage Brief."
+              : "Newsletter signup is temporarily unavailable.";
+          }
+          el.disabled = false;
+          return;
+        }
+
+        event.preventDefault();
+        await trackEvent(data.lead_id, eventType, { conversion_path: action.key || null });
+        window.location.href = el.href;
+      });
+      return el;
+    }
+
+    if (primary.kind === "newsletter_opt_in" && data.newsletter_synced) {
+      const note = document.createElement("div");
+      note.className = "pill";
+      note.textContent = "The Leverage Brief is already on";
+      row.appendChild(note);
+    } else {
+      const primaryEl = actionButton(primary, false);
+      if (primaryEl) row.appendChild(primaryEl);
+    }
+    const secondaryEl = actionButton(secondary, true);
+    if (secondaryEl) row.appendChild(secondaryEl);
+  }
+
   function render(data) {
     const card = data.scorecard || {};
-    const finding = card.strongestFinding || {};
     document.getElementById("score-number").textContent = String(data.leak_score ?? 0);
     document.getElementById("score-band").textContent = String(data.leak_risk_band || "unknown") + " leak risk";
-    document.getElementById("finding-title").textContent = titleFromType(finding.type);
-    document.getElementById("finding-evidence").textContent = finding.evidence || "No high-confidence public finding was returned.";
-    document.getElementById("finding-implication").textContent = finding.implication || "";
+    document.getElementById("business-context").textContent = card.businessContext || "";
+
+    const preview = Array.isArray(card.revenueRescuePreview) ? card.revenueRescuePreview : [];
+    document.getElementById("preview-grid").innerHTML = preview.length
+      ? preview.slice(0, 3).map(item => `
+        <article class="preview-card">
+          <div class="rank">#${esc(item.rank)} // ${esc(item.title)}</div>
+          <h4>${esc(item.title)}</h4>
+          <p><strong>Observed evidence:</strong> ${esc(item.evidence)}</p>
+          <p><strong>Likely business consequence:</strong> ${esc(item.likelyBusinessConsequence)}</p>
+          <p><strong>First repair to test:</strong> ${esc(item.recommendedFix)}</p>
+          <p><strong>What Gwap would investigate next:</strong> ${esc(item.investigateNext)}</p>
+        </article>`).join("")
+      : '<article class="preview-card"><div class="rank">BOUNDARY</div><h4>No three-leak story was forced.</h4><p>The public scan did not return enough evidence to justify three high-confidence findings.</p></article>';
+
+    const scenario = card.scenario;
+    const scenarioBox = document.getElementById("scenario-box");
+    if (scenario) {
+      scenarioBox.style.display = "block";
+      scenarioBox.innerHTML = `<div class="eyebrow">Illustrative Sensitivity Scenario</div><div class="scenario-range">${money(scenario.monthlyValueLowUsd)} – ${money(scenario.monthlyValueHighUsd)} / month</div><div style="color:#969d95;line-height:1.55">${esc(scenario.explanation)}</div>`;
+    } else {
+      scenarioBox.style.display = "none";
+      scenarioBox.innerHTML = "";
+    }
+
     document.getElementById("disclaimer").textContent = card.disclaimer || "";
 
     const flags = Array.isArray(card.flags) ? card.flags : [];
@@ -150,8 +263,10 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       ? flags.map(flag => `<div class="flag"><div class="flag-label">${esc(flag.label)}</div><div class="meter"><i style="width:${Math.max(0,Math.min(100,Number(flag.risk)||0))}%"></i></div><small>${esc(flag.band)} risk · ${esc(flag.risk)}/100</small></div>`).join("")
       : '<div class="flag"><div class="flag-label">Secondary flags</div><p style="color:#8f968e;margin:14px 0 0">No strong secondary public-evidence flag was found.</p></div>';
 
+    renderAction(data, card);
     result.style.display = "block";
     result.scrollIntoView({ behavior: "smooth", block: "start" });
+    trackEvent(data.lead_id, "result_viewed", { leak_score: data.leak_score });
   }
 
   form.addEventListener("submit", async (event) => {
@@ -164,6 +279,15 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     const fd = new FormData(form);
     const payload = Object.fromEntries(fd.entries());
     payload.followUpConsent = document.getElementById("followUpConsent").checked;
+    payload.newsletterConsent = document.getElementById("newsletterConsent").checked;
+    const params = new URLSearchParams(window.location.search);
+    payload.utmSource = params.get("utm_source") || "";
+    payload.utmMedium = params.get("utm_medium") || "";
+    payload.utmCampaign = params.get("utm_campaign") || "";
+    payload.utmContent = params.get("utm_content") || "";
+    payload.utmTerm = params.get("utm_term") || "";
+    payload.referrer = document.referrer || "";
+    payload.landingPath = window.location.pathname + window.location.search;
 
     try {
       const response = await fetch(endpoint, {
