@@ -40,5 +40,20 @@
     "stripeProductId": "prod_VIjxDcYKjyhdvF",
     "stripePriceId": "price_1UI8TuJjydtDeANjUuTobHaH",
     "stripePaymentLinkId": "plink_1UI8UlJjydtDeANjtkYOZ9x3"
+  },
+  "onePercentLeverageMap": {
+    "version": "0.1",
+    "name": "The 1% Personal Leverage Map",
+    "priceUsd": 49,
+    "priceLabel": "$49",
+    "checkoutUrl": "",
+    "salesUrl": "/1percent/leverage-map/",
+    "intakeUrl": "/1percent/leverage-map/intake/",
+    "intakeApiUrl": "",
+    "deliveryWindow": "3 business days",
+    "status": "prelaunch",
+    "stripeProductId": "",
+    "stripePriceId": "",
+    "stripePaymentLinkId": ""
   }
 }
