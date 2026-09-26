@@ -19,6 +19,7 @@ on:
       - 'public/robots.txt'
       - 'public/images/blog/**'
       - 'public/operator/**'
+      - 'operator-blog-analytics-manifest.njk'
       - '.github/workflows/publisher-v0.1-verify.yml'
   workflow_dispatch:
 
@@ -62,6 +63,7 @@ jobs:
           test -f _site/sitemap.xml
           test -f _site/robots.txt
           test -f _site/operator/blog-analytics/index.html
+          test -f _site/operator/blog-analytics/articles.json
 
           grep -qi 'Gwap Gang' _site/index.html
           grep -q 'All Intelligence — Gwap Gang' _site/blog/index.html
@@ -90,18 +92,31 @@ jobs:
           DASHBOARD="_site/operator/blog-analytics/index.html"
           grep -q 'noindex,nofollow' "$DASHBOARD"
           grep -q 'gwap-blog-analytics' "$DASHBOARD"
-          grep -q 'EDITORIAL INTELLIGENCE V2' "$DASHBOARD"
+          grep -q 'EDITORIAL INTELLIGENCE V2.1' "$DASHBOARD"
           grep -q 'DOUBLE DOWN' "$DASHBOARD"
           grep -q 'REPACKAGE' "$DASHBOARD"
           grep -q 'MONETIZE' "$DASHBOARD"
           grep -q 'TURN INTO VIDEO' "$DASHBOARD"
-          grep -q 'FIX TITLE/HOOK · GATED' "$DASHBOARD"
-          grep -q 'UPDATE · GATED' "$DASHBOARD"
+          grep -q 'FIX TITLE/HOOK' "$DASHBOARD"
+          grep -q 'UPDATE' "$DASHBOARD"
+          grep -q 'fixTitleMinImpressions' "$DASHBOARD"
+          grep -q 'updateAgeDays' "$DASHBOARD"
           grep -q 'x-gwap-operator-key' "$DASHBOARD"
           if grep -q 'gwap_op_' "$DASHBOARD"; then
             echo 'Operator key must never be embedded in dashboard output'
             exit 1
           fi
+
+          node <<'NODE'
+          const fs = require("fs");
+          const path = "_site/operator/blog-analytics/articles.json";
+          const data = JSON.parse(fs.readFileSync(path, "utf8"));
+          if (!Array.isArray(data.articles) || data.articles.length < 1) throw new Error("Article age manifest is empty");
+          for (const article of data.articles) {
+            if (!article.pagePath || !article.publishedAt) throw new Error("Article manifest missing pagePath/publishedAt");
+          }
+          console.log(`Editorial age manifest PASS: ${data.articles.length} articles`);
+          NODE
 
           grep -q 'User-agent: OAI-SearchBot' _site/robots.txt
           grep -q 'User-agent: Googlebot' _site/robots.txt

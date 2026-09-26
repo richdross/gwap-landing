@@ -29,11 +29,11 @@
 </head>
 <body>
   <div class="shell">
-    <header class="top"><div class="brand">GWAP GANG / OPERATOR</div><div class="badge">EDITORIAL INTELLIGENCE V2</div></header>
+    <header class="top"><div class="brand">GWAP GANG / OPERATOR</div><div class="badge">EDITORIAL INTELLIGENCE V2.1</div></header>
     <main>
       <div class="eyebrow">Editorial Intelligence</div>
       <h1>Know what to do next.</h1>
-      <p class="intro">Private editorial intelligence for Gwap Gang. V2 turns article performance into evidence-gated actions: DOUBLE DOWN, REPACKAGE, MONETIZE, TURN INTO VIDEO, or COLLECT DATA. FIX TITLE/HOOK and UPDATE remain visibly gated until search-impression and article-age evidence are connected.</p>
+      <p class="intro">Private editorial intelligence for Gwap Gang. V2.1 combines reader behavior, Search Console visibility, publication age, and attributed revenue so all six editorial moves can run from evidence.</p>
       <div class="gate">
         <input id="operator-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste operator key">
         <button id="load">Open dashboard</button>
@@ -54,7 +54,7 @@
 
         <section class="section">
           <div class="section-head"><div><div class="eyebrow">Decision Engine</div><h2>What Gwap should do next.</h2></div></div>
-          <div class="note" id="decision-note">V2 uses conservative evidence gates. Small samples stay in COLLECT DATA instead of forcing a recommendation.</div>
+          <div class="note" id="decision-note">V2.1 uses conservative evidence gates. Small samples stay in COLLECT DATA instead of forcing a recommendation.</div>
           <div class="decisions" id="decisions"></div>
         </section>
 
@@ -63,7 +63,7 @@
           <div class="note" id="data-note"></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Article</th><th>Views</th><th>Complete</th><th>Helpful</th><th>CTA</th><th>Shares</th><th>Orders</th><th>Revenue</th><th>Rev / 100 views</th></tr></thead>
+              <thead><tr><th>Article</th><th>Age</th><th>Search Impr.</th><th>Search CTR</th><th>Views</th><th>Complete</th><th>Helpful</th><th>CTA</th><th>Shares</th><th>Orders</th><th>Revenue</th><th>Rev / 100 views</th></tr></thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
@@ -93,8 +93,19 @@
     monetizeCompletion: 50,
     monetizeCtaBelow: 5,
     videoCompletion: 60,
-    videoHelpful: 70
+    videoHelpful: 70,
+    fixTitleMinImpressions: 100,
+    fixTitleCtrBelow: 2,
+    updateAgeDays: 30,
+    updateMinViews: 3
   };
+
+  function ageDaysFrom(value) {
+    if (!value) return null;
+    const ms = Date.now() - new Date(value).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return null;
+    return Math.floor(ms / 86400000);
+  }
 
   function decide(a) {
     const actions = [];
@@ -104,6 +115,13 @@
     const helpful = a.helpfulnessRate == null ? null : Number(a.helpfulnessRate);
     const feedback = Number(a.helpfulYes || 0) + Number(a.helpfulNo || 0);
     const revenue = Number(a.revenueCents || 0);
+    const impressions = a.searchImpressions == null ? null : Number(a.searchImpressions);
+    const organicCtr = a.organicCtr == null ? null : Number(a.organicCtr);
+    const ageDays = a.ageDays == null ? null : Number(a.ageDays);
+
+    if (impressions != null && organicCtr != null && impressions >= ENGINE.fixTitleMinImpressions && organicCtr < ENGINE.fixTitleCtrBelow) {
+      actions.push({label:"FIX TITLE/HOOK",priority:95,why:`${integer.format(impressions)} Google Search impressions with only ${organicCtr.toFixed(1)}% CTR.`,next:"Rewrite the search title and opening promise while keeping the URL and core article intact."});
+    }
 
     if (views >= ENGINE.minViews && completion != null && completion < ENGINE.repackageCompletionBelow) {
       actions.push({label:"REPACKAGE",priority:90,why:`${views} views but only ${completion.toFixed(1)}% completion.`,next:"Rework the opening 20%, structure, subheads, and visual pacing before sending more traffic."});
@@ -116,6 +134,9 @@
     }
     if (views >= ENGINE.minViews && feedback >= ENGINE.minFeedback && completion != null && helpful != null && completion >= ENGINE.videoCompletion && helpful >= ENGINE.videoHelpful) {
       actions.push({label:"TURN INTO VIDEO",priority:75,why:`${completion.toFixed(1)}% completion and ${helpful.toFixed(1)}% helpfulness across ${feedback} responses.`,next:"Send this article into the YouTube Constructor while preserving the same mechanism, proof, and payoff."});
+    }
+    if (ageDays != null && ageDays >= ENGINE.updateAgeDays && views >= ENGINE.updateMinViews) {
+      actions.push({label:"UPDATE",priority:60,why:`${ageDays} days old and still receiving ${views} rolling-window views.`,next:"Refresh examples, links, screenshots, claims, commercial CTA, and the updated date while preserving the URL."});
     }
 
     actions.sort((x,y)=>y.priority-x.priority);
@@ -133,11 +154,15 @@
     if (!key) { status.textContent = "Operator key required."; status.className = "error"; return; }
     status.textContent = "Loading protected analytics…"; status.className = "";
     try {
-      const response = await fetch(endpoint,{headers:{"x-gwap-operator-key":key}});
+      const [response, manifestResponse] = await Promise.all([
+        fetch(endpoint,{headers:{"x-gwap-operator-key":key}}),
+        fetch("/operator/blog-analytics/articles.json",{cache:"no-store"})
+      ]);
       const data = await response.json().catch(()=>({}));
+      const manifest = manifestResponse.ok ? await manifestResponse.json().catch(()=>({articles:[]})) : {articles:[]};
       if (!response.ok || !data.ok) throw new Error(data.error || "analytics_request_failed");
       try { sessionStorage.setItem(keyName,key); } catch (_) {}
-      render(data);
+      render(data, manifest);
       status.textContent = "Protected analytics loaded."; status.className = "success";
     } catch (error) {
       dashboard.classList.remove("visible");
@@ -146,7 +171,7 @@
     }
   }
 
-  function render(data) {
+  function render(data, manifest = {articles:[]}) {
     const t = data.totals || {};
     document.getElementById("views").textContent = integer.format(t.views || 0);
     document.getElementById("completion").textContent = pct(t.completionRate);
@@ -156,9 +181,24 @@
     document.getElementById("orders").textContent = integer.format(t.orders || 0);
     document.getElementById("revenue").textContent = money(t.revenueCents);
     document.getElementById("freshness").textContent = "Generated " + new Date(data.generatedAt).toLocaleString();
-    document.getElementById("sources").textContent = "GA4 signals: " + (data.source?.ga4Signals ?? 0) + " · Editorial outcomes: " + (data.source?.editorialOutcomeRows ?? 0);
+    document.getElementById("sources").textContent = "GA4 signals: " + (data.source?.ga4Signals ?? 0) + " · GSC signals: " + (data.source?.searchSignals ?? 0) + " · Editorial outcomes: " + (data.source?.editorialOutcomeRows ?? 0);
 
-    const articles = Array.isArray(data.articles) ? data.articles : [];
+    const metadata = new Map((Array.isArray(manifest.articles) ? manifest.articles : []).map(item => [item.pagePath,item]));
+    const articles = (Array.isArray(data.articles) ? data.articles : []).map(a => {
+      const meta = metadata.get(a.pagePath) || {};
+      return {
+        ...a,
+        publishedAt: meta.publishedAt || null,
+        updatedAt: meta.updatedAt || null,
+        ageDays: ageDaysFrom(meta.publishedAt)
+      };
+    });
+    const searchActive = Number(data.source?.searchSignals || 0) > 0;
+    const ageActive = metadata.size > 0;
+    document.getElementById("decision-note").textContent =
+      "Evidence feeds: GA4 ACTIVE · Search Console " + (searchActive ? "ACTIVE" : "CONNECTED / NO ARTICLE ROWS YET") +
+      " · Publication age " + (ageActive ? "ACTIVE" : "UNAVAILABLE") +
+      ". Low-sample articles remain COLLECT DATA.";
     const decisions = articles.map(a => ({article:a, decision:decide(a)}))
       .sort((x,y)=>y.decision.priority-x.decision.priority || (y.article.views||0)-(x.article.views||0));
 
@@ -168,14 +208,15 @@
         <h3>${escapeHtml(article.title || article.pagePath)}</h3>
         <p class="why">${escapeHtml(decision.why)}</p>
         <p>${escapeHtml(decision.next)}</p>
-        <div class="confidence">${escapeHtml(decision.confidence)} CONFIDENCE · ${integer.format(article.views || 0)} VIEWS</div>
-      </article>`).join("") +
-      `<article class="decision gated"><div class="action">FIX TITLE/HOOK · GATED</div><h3>Waiting for Search Console evidence</h3><p class="why">No article-level search impression/CTR signals are stored yet.</p><p>V2 will not infer weak titles from page views. Connect GSC before activating this rule.</p><div class="confidence">EVIDENCE REQUIRED: IMPRESSIONS + ORGANIC CTR</div></article>
-       <article class="decision gated"><div class="action">UPDATE · GATED</div><h3>Waiting for reliable article-age evidence</h3><p class="why">The current API does not expose publication age or first-seen age per article.</p><p>V2 will not guess that an article is stale. Add publication/age metadata before activating this rule.</p><div class="confidence">EVIDENCE REQUIRED: ARTICLE AGE + CONTINUING TRAFFIC</div></article>`;
+        <div class="confidence">${escapeHtml(decision.confidence)} CONFIDENCE · ${integer.format(article.views || 0)} VIEWS${article.searchImpressions != null ? " · " + integer.format(article.searchImpressions) + " SEARCH IMPR." : ""}${article.ageDays != null ? " · " + article.ageDays + " DAYS OLD" : ""}</div>
+      </article>`).join("");
     document.getElementById("rows").innerHTML = articles.length ? articles.map(a => {
       const cls = n => Number(n) > 0 ? "good" : "zero";
       return `<tr>
         <td><span class="article-title">${escapeHtml(a.title || a.pagePath)}</span><span class="path">${escapeHtml(a.pagePath || "")}</span></td>
+        <td>${a.ageDays == null ? "—" : integer.format(a.ageDays) + "d"}</td>
+        <td class="${cls(a.searchImpressions)}">${a.searchImpressions == null ? "—" : integer.format(a.searchImpressions)}</td>
+        <td>${a.organicCtr == null ? "—" : pct(a.organicCtr)}</td>
         <td class="${cls(a.views)}">${integer.format(a.views || 0)}</td>
         <td>${pct(a.completionRate)}</td>
         <td>${pct(a.helpfulnessRate)}</td>
@@ -185,7 +226,7 @@
         <td class="${cls(a.revenueCents)}">${money(a.revenueCents)}</td>
         <td>${a.revenuePer100ViewsCents == null ? "—" : money(a.revenuePer100ViewsCents)}</td>
       </tr>`;
-    }).join("") : '<tr><td colspan="9">No blog article signals are available yet.</td></tr>';
+    }).join("") : '<tr><td colspan="12">No blog article signals are available yet.</td></tr>';
 
     const notes = Array.isArray(data.notes) ? data.notes : [];
     document.getElementById("data-note").textContent = notes.join(" ");
