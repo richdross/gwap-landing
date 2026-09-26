@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  articleUrlsFromGitHubContents,
   articleUrlsFromManifest,
   articleUrlsFromSitemapXml,
   buildIndexSignal,
@@ -124,6 +125,21 @@ test("article inventory prefers only unique GWAP blog articles", () => {
     ],
   };
   assert.deepEqual(articleUrlsFromManifest(manifest, "gwapgang.com"), [
+    "https://gwapgang.com/blog/alpha/",
+    "https://gwapgang.com/blog/beta/",
+  ]);
+});
+
+test("GitHub contents inventory derives article URLs from markdown filenames", () => {
+  const items = [
+    { type: "file", name: ".gitkeep" },
+    { type: "file", name: "blog.json" },
+    { type: "file", name: "alpha.md" },
+    { type: "file", name: "beta.md" },
+    { type: "dir", name: "nested" },
+  ];
+
+  assert.deepEqual(articleUrlsFromGitHubContents(items, "gwapgang.com"), [
     "https://gwapgang.com/blog/alpha/",
     "https://gwapgang.com/blog/beta/",
   ]);
