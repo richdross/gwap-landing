@@ -122,7 +122,8 @@ a{color:inherit}
 .nav-technology{left:45.1%;width:10.2%}
 .nav-intelligence{left:56.2%;width:10.4%}
 .nav-gallery-visible,
-.nav-blog-visible{
+.nav-blog-visible,
+.nav-start-visible{
   position:absolute;
   z-index:22;
   top:.40%;
@@ -147,11 +148,19 @@ a{color:inherit}
   color:#8a8f87;
   box-shadow:0 0 0 rgba(202,255,0,0);
 }
+.nav-start-visible{
+  border:1px solid var(--acid);
+  background:rgba(8,10,8,.92);
+  color:var(--acid);
+  box-shadow:0 0 10px rgba(202,255,0,.12);
+}
 .nav-gallery-visible{left:78.0%}
 .nav-blog-visible{left:70.7%}
-.nav-gallery-visible::before,.nav-blog-visible::before{content:"";margin:0}
+.nav-start-visible{left:85.3%;min-width:6.7%}
+.nav-gallery-visible::before,.nav-blog-visible::before,.nav-start-visible::before{content:"";margin:0}
 .nav-gallery-visible:hover,.nav-gallery-visible:focus-visible,
-.nav-blog-visible:hover,.nav-blog-visible:focus-visible{
+.nav-blog-visible:hover,.nav-blog-visible:focus-visible,
+.nav-start-visible:hover,.nav-start-visible:focus-visible{
   background:var(--acid);
   color:#050505;
   border-color:var(--acid);
@@ -162,6 +171,7 @@ a{color:inherit}
 @media(max-width:700px){
   .nav-gallery-visible{left:77.0%;top:.36%;min-width:7.1%;font-size:6px;padding:0 .55%}
   .nav-blog-visible{left:68.9%;top:.36%;min-width:7.1%;font-size:6px;padding:0 .55%}
+  .nav-start-visible{left:85.0%;top:.36%;min-width:7.4%;font-size:6px;padding:0 .55%}
 }
 .email{left:68.15%;top:90.0%;width:17.0%;height:2.8%}
 .join{left:84.9%;top:90.0%;width:12.7%;height:2.8%}
@@ -288,6 +298,7 @@ a{color:inherit}
       <a class="hotspot nav-hotspot nav-intelligence" href="/intelligence/" aria-label="Intelligence">Intelligence</a>
       <a class="nav-blog-visible" href="/blog/" aria-label="Blog">Blog</a>
       <a class="nav-gallery-visible" href="/signal/" aria-label="Gallery">Gallery</a>
+      <a class="nav-start-visible" href="/start/" aria-label="Start Here">Start</a>
     </nav>
     <button class="hotspot enter" type="button" data-signup>Enter the signal</button>
     <div class="signup-mask" aria-hidden="true"></div>
@@ -334,7 +345,7 @@ a{color:inherit}
 
 <footer class="footer">
   <div>GWAP GANG // A MORE INTERESTING TOMORROW.</div>
-  <div><a href="/culture/">Culture</a> · <a href="/capital/">Capital</a> · <a href="/technology/">Technology</a> · <a href="/intelligence/">Intelligence</a> · <a href="/brief/">Leverage Brief</a> · <a href="mailto:intelligence@gwapgang.com">Contact</a></div>
+  <div><a href="/culture/">Culture</a> · <a href="/capital/">Capital</a> · <a href="/technology/">Technology</a> · <a href="/intelligence/">Intelligence</a> · <a href="/brief/">Leverage Brief</a> · <a href="/start/">Start Here</a> · <a href="mailto:intelligence@gwapgang.com">Contact</a></div>
 </footer>
 
 <section class="sr-only" aria-label="Gwap Gang site content for search and accessibility">
@@ -351,6 +362,7 @@ a{color:inherit}
     <a href="/capital/">Capital</a>
     <a href="/technology/">Technology</a>
     <a href="/intelligence/">Intelligence</a>
+    <a href="/start/">Start Here</a>
   </nav>
 </section>
 
