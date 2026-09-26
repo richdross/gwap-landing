@@ -5,6 +5,7 @@ import {
   articleUrlsFromSitemapXml,
   buildIndexSignal,
   buildQuerySignal,
+  buildRecoverySignal,
   dayBucket,
   number,
   pagePath,
@@ -197,7 +198,7 @@ async function loadArticleUrls() {
       const items = await response.json();
       const urls = articleUrlsFromGitHubContents(items, targetHost);
       if (urls.length) {
-        return { mode: "github-contents", source: githubInventoryUrl, urls };
+        return { mode: "github-contents", source: githubInventoryUrl, urls, items };
       }
     }
   } catch {
@@ -233,6 +234,91 @@ async function loadArticleUrls() {
     throw new Error("GWAP article inventory contains no /blog/ article URLs");
   }
   return { mode: "sitemap", source: sitemapUrl, urls };
+}
+
+async function fetchGithubRaw(path) {
+  const url = `https://raw.githubusercontent.com/richdross/gwap-landing/main/${path}`;
+  const response = await fetch(url, {
+    headers: { "user-agent": "gwap-search-intelligence-v2c" },
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub raw fetch failed HTTP ${response.status} for ${path}`);
+  }
+  return response.text();
+}
+
+async function loadRepositoryRecoveryEvidence(inventory, articleUrls) {
+  let items = Array.isArray(inventory?.items) ? inventory.items : null;
+  if (!items) {
+    const response = await fetch(githubInventoryUrl, {
+      headers: {
+        accept: "application/vnd.github+json",
+        "user-agent": "gwap-search-intelligence-v2c",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub article inventory failed HTTP ${response.status}`);
+    }
+    items = await response.json();
+  }
+
+  const articleItems = (Array.isArray(items) ? items : []).filter(
+    (item) => item?.type === "file" && /\.md$/i.test(String(item.name || "")),
+  );
+
+  const [postTemplate, sitemapTemplate, robotsText, blogIndex] = await Promise.all([
+    fetchGithubRaw("_includes/post.njk"),
+    fetchGithubRaw("sitemap.njk"),
+    fetchGithubRaw("robots.txt"),
+    fetchGithubRaw("blog/index.njk"),
+  ]);
+
+  const articleSources = new Map();
+  for (const item of articleItems) {
+    const path = `content/blog/${item.name}`;
+    articleSources.set(path, await fetchGithubRaw(path));
+  }
+
+  const globalEvidence = {
+    sitemapTemplateIncludesPosts:
+      /collections\.posts/.test(sitemapTemplate) &&
+      /<loc>\s*{{\s*site\.url\s*}}\s*{{\s*post\.url\s*}}\s*<\/loc>/.test(sitemapTemplate),
+    postTemplateIndexFollow:
+      /<meta\s+name=["']robots["'][^>]*index,follow/i.test(postTemplate),
+    postTemplateCanonical:
+      /<link\s+rel=["']canonical["'][^>]*href=["']{{\s*canonicalUrl\s*}}["']/i.test(postTemplate),
+    robotsAllowsSearch:
+      /User-agent:\s*\*[\s\S]*?Allow:\s*\//i.test(robotsText),
+    blogIndexLinksPosts: /post\.url/.test(blogIndex),
+  };
+
+  const byUrl = new Map();
+  for (const pageUrl of articleUrls) {
+    const path = pagePath(pageUrl, targetHost);
+    const fileSlug = String(path || "")
+      .split("/")
+      .filter(Boolean)
+      .pop();
+    const sourceFile = fileSlug ? `content/blog/${fileSlug}.md` : null;
+    const sourceExists = Boolean(sourceFile && articleSources.has(sourceFile));
+
+    let inboundEditorialReferences = 0;
+    if (sourceFile) {
+      for (const [pathName, source] of articleSources.entries()) {
+        if (pathName === sourceFile) continue;
+        if (source.includes(sourceFile)) inboundEditorialReferences++;
+      }
+    }
+
+    byUrl.set(pageUrl, {
+      ...globalEvidence,
+      sourceExists,
+      sourceFile,
+      inboundEditorialReferences,
+    });
+  }
+
+  return { byUrl, globalEvidence, articleSourceCount: articleSources.size };
 }
 
 function emptyStats() {
@@ -423,6 +509,32 @@ const articleUrls = inventory.urls.slice(0, inspectionLimit);
 const indexStats = emptyStats();
 indexStats.rowsReturned = articleUrls.length;
 
+const recoveryStats = emptyStats();
+recoveryStats.rowsReturned = articleUrls.length;
+let recoveryEvidence = null;
+let recoveryEvidenceError = null;
+try {
+  recoveryEvidence = await loadRepositoryRecoveryEvidence(inventory, articleUrls);
+} catch (error) {
+  recoveryEvidenceError = String(error?.message || error).slice(0, 1000);
+  console.error(
+    JSON.stringify({
+      source: "gsc",
+      signalKind: "index-recovery-diagnostic",
+      error: recoveryEvidenceError,
+    }),
+  );
+}
+
+const recoveryClasses = {
+  PROTECT_AND_MONITOR: 0,
+  DISCOVERY_RECOVERY: 0,
+  COVERAGE_EXPANSION: 0,
+  CANONICAL_REVIEW: 0,
+  CRAWLABILITY_REVIEW: 0,
+  TECHNICAL_DIAGNOSIS: 0,
+};
+
 for (const pageUrl of articleUrls) {
   try {
     const inspection = await googleJson(
@@ -450,9 +562,36 @@ for (const pageUrl of articleUrls) {
 
     if (!signal) {
       indexStats.skipped++;
+      recoveryStats.skipped++;
       continue;
     }
     record(indexStats, await storeSignal(signal));
+
+    if (!recoveryEvidence) {
+      recoveryStats.failed++;
+      continue;
+    }
+
+    const recoverySignal = buildRecoverySignal({
+      siteUrl,
+      permissionLevel: site.permissionLevel,
+      pageUrl,
+      targetHost,
+      indexSignal: signal,
+      repoEvidence: recoveryEvidence.byUrl.get(pageUrl) || {},
+      today,
+      observedAt,
+    });
+
+    if (!recoverySignal) {
+      recoveryStats.skipped++;
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(recoveryClasses, recoverySignal.normalized.recoveryClass)) {
+      recoveryClasses[recoverySignal.normalized.recoveryClass]++;
+    }
+    record(recoveryStats, await storeSignal(recoverySignal));
   } catch (error) {
     indexStats.failed++;
     console.error(
@@ -467,13 +606,13 @@ for (const pageUrl of articleUrls) {
 }
 
 const totalStored =
-  pageStats.stored + queryStats.stored + indexStats.stored;
+  pageStats.stored + queryStats.stored + indexStats.stored + recoveryStats.stored;
 const totalDuplicate =
-  pageStats.duplicate + queryStats.duplicate + indexStats.duplicate;
+  pageStats.duplicate + queryStats.duplicate + indexStats.duplicate + recoveryStats.duplicate;
 const totalFailed =
-  pageStats.failed + queryStats.failed + indexStats.failed;
+  pageStats.failed + queryStats.failed + indexStats.failed + recoveryStats.failed;
 const totalSkipped =
-  pageStats.skipped + queryStats.skipped + indexStats.skipped;
+  pageStats.skipped + queryStats.skipped + indexStats.skipped + recoveryStats.skipped;
 
 console.log(
   JSON.stringify(
@@ -501,6 +640,15 @@ console.log(
         inventoryUrls: inventory.urls.length,
         inspectedUrls: articleUrls.length,
         inspectionLimit,
+      },
+
+      v2cIndexRecovery: {
+        ...recoveryStats,
+        recoveryClasses,
+        repositoryEvidenceLoaded: Boolean(recoveryEvidence),
+        repositoryArticleSources: recoveryEvidence?.articleSourceCount || 0,
+        globalRepositoryEvidence: recoveryEvidence?.globalEvidence || null,
+        evidenceError: recoveryEvidenceError,
       },
 
       totals: {
