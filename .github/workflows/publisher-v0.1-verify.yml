@@ -20,6 +20,7 @@ on:
       - 'public/images/blog/**'
       - 'public/operator/**'
       - 'operator-blog-analytics-manifest.njk'
+      - 'revenue-leak-score.njk'
       - '.github/workflows/publisher-v0.1-verify.yml'
   workflow_dispatch:
 
@@ -64,6 +65,27 @@ jobs:
           test -f _site/robots.txt
           test -f _site/operator/blog-analytics/index.html
           test -f _site/operator/blog-analytics/articles.json
+          test -f _site/revenue-leak-score/index.html
+
+          GROWTH_DIAGNOSTIC="_site/revenue-leak-score/index.html"
+          grep -q 'Growth Diagnostic V0.1' "$GROWTH_DIAGNOSTIC"
+          grep -q 'name="primaryGoal"' "$GROWTH_DIAGNOSTIC"
+          grep -q 'name="primaryProblem"' "$GROWTH_DIAGNOSTIC"
+          grep -q 'name="urgency"' "$GROWTH_DIAGNOSTIC"
+          grep -q 'Best-Fit Route' "$GROWTH_DIAGNOSTIC"
+          grep -q 'founder_review' "$GROWTH_DIAGNOSTIC"
+          grep -q 'growth_diagnostic' "$GROWTH_DIAGNOSTIC"
+
+          node <<'NODE'
+          const fs = require("fs");
+          const html = fs.readFileSync("_site/revenue-leak-score/index.html", "utf8");
+          const scripts = [...html.matchAll(/<script(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g)]
+            .map((match) => match[1].trim())
+            .filter(Boolean);
+          if (!scripts.length) throw new Error("Growth Diagnostic client script missing");
+          for (const script of scripts) new Function(script);
+          console.log("Growth Diagnostic client JavaScript PASS");
+          NODE
 
           grep -qi 'Gwap Gang' _site/index.html
           grep -q 'All Intelligence — Gwap Gang' _site/blog/index.html
