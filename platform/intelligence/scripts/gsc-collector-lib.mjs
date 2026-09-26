@@ -212,10 +212,20 @@ export function buildIndexSignal({
   const result = inspection?.inspectionResult || {};
   const index = result.indexStatusResult || {};
   const verdict = String(index.verdict || "VERDICT_UNSPECIFIED");
+  const indexStateSignature = stableHash(JSON.stringify({
+    verdict,
+    coverageState: index.coverageState || null,
+    robotsTxtState: index.robotsTxtState || null,
+    indexingState: index.indexingState || null,
+    pageFetchState: index.pageFetchState || null,
+    googleCanonical: index.googleCanonical || null,
+    userCanonical: index.userCanonical || null,
+    lastCrawlTime: index.lastCrawlTime || null,
+  }));
 
   return {
     sourceType: "gsc",
-    sourceRef: `gsc:${slug(siteUrl)}:url-index:${stableHash(pageUrl)}:${today}`,
+    sourceRef: `gsc:${slug(siteUrl)}:url-index:${stableHash(pageUrl)}:${today}:${indexStateSignature}`,
     title: `Index status: ${path}`,
     url: pageUrl,
     observedAt,
@@ -356,9 +366,19 @@ export function buildRecoverySignal({
   const recoveryClass = classifyIndexRecovery(index);
   const decision = recoveryAction(recoveryClass, repoEvidence, index);
 
+  const recoveryStateSignature = stableHash(JSON.stringify({
+    recoveryClass,
+    action: decision.action,
+    indexStatus: index.indexStatus || "UNKNOWN",
+    coverageState: index.coverageState || null,
+    canonicalStatus: index.canonicalStatus || "UNKNOWN",
+    sourceExists: repoEvidence.sourceExists ?? null,
+    inboundEditorialReferences: Number(repoEvidence.inboundEditorialReferences || 0),
+  }));
+
   return {
     sourceType: "gsc",
-    sourceRef: `gsc:${slug(siteUrl)}:index-recovery:${stableHash(pageUrl)}:${today}`,
+    sourceRef: `gsc:${slug(siteUrl)}:index-recovery:${stableHash(pageUrl)}:${today}:${recoveryStateSignature}`,
     title: `Index recovery: ${path}`,
     url: pageUrl,
     observedAt,
