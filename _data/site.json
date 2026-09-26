@@ -46,7 +46,7 @@
     "name": "Revenue Leak Score",
     "priceLabel": "Free",
     "salesUrl": "/revenue-leak-score/",
-    "endpoint": "https://gwap-automation-api.onrender.com/public/revenue-leak-score",
+    "endpoint": "https://gwap-backend.onrender.com/public/revenue-leak-score",
     "status": "live"
   }
 }
