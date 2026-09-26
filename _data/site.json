@@ -40,5 +40,13 @@
     "stripeProductId": "prod_VIjxDcYKjyhdvF",
     "stripePriceId": "price_1UI8TuJjydtDeANjUuTobHaH",
     "stripePaymentLinkId": "plink_1UI8UlJjydtDeANjtkYOZ9x3"
+  },
+  "revenueLeakScore": {
+    "version": "0.1",
+    "name": "Revenue Leak Score",
+    "priceLabel": "Free",
+    "salesUrl": "/revenue-leak-score/",
+    "endpoint": "https://gwap-automation-api.onrender.com/public/revenue-leak-score",
+    "status": "live"
   }
 }
