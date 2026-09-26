@@ -92,7 +92,14 @@ jobs:
           DASHBOARD="_site/operator/blog-analytics/index.html"
           grep -q 'noindex,nofollow' "$DASHBOARD"
           grep -q 'gwap-blog-analytics' "$DASHBOARD"
-          grep -q 'EDITORIAL INTELLIGENCE V2.1' "$DASHBOARD"
+          grep -q 'EDITORIAL INTELLIGENCE V2.2' "$DASHBOARD"
+          grep -q 'gwap-editorial-actions' "$DASHBOARD"
+          grep -q 'Prepare mission' "$DASHBOARD"
+          grep -q 'Ready for review' "$DASHBOARD"
+          grep -q 'action-queue' "$DASHBOARD"
+          grep -q 'data-prepare-action' "$DASHBOARD"
+          grep -q 'data-review-action' "$DASHBOARD"
+          grep -q 'method:"POST"' "$DASHBOARD"
           grep -q 'DOUBLE DOWN' "$DASHBOARD"
           grep -q 'REPACKAGE' "$DASHBOARD"
           grep -q 'MONETIZE' "$DASHBOARD"
@@ -106,6 +113,17 @@ jobs:
             echo 'Operator key must never be embedded in dashboard output'
             exit 1
           fi
+
+          node <<'NODE'
+          const fs = require("fs");
+          const html = fs.readFileSync("_site/operator/blog-analytics/index.html", "utf8");
+          const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)]
+            .map((match) => match[1].trim())
+            .filter(Boolean);
+          if (!scripts.length) throw new Error("Dashboard script missing");
+          for (const script of scripts) new Function(script);
+          console.log("Editorial Intelligence V2.2 dashboard JavaScript PASS");
+          NODE
 
           node <<'NODE'
           const fs = require("fs");
