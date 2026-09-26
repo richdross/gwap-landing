@@ -1,0 +1,94 @@
+---
+permalink: /1percent/leverage-map/intake/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>1% Personal Leverage Map Intake — Gwap Gang</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
+<style>
+:root{color-scheme:dark;--bg:#020302;--panel:#080a08;--paper:#f4f2ec;--muted:#9ca29a;--line:#30342f;--acid:#caff00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--paper);font-family:Arial,Helvetica,sans-serif}.shell{width:min(920px,calc(100% - 32px));margin:auto}.head{border-bottom:1px solid var(--line);background:#000}.head-inner{min-height:68px;display:flex;align-items:center;justify-content:space-between}.brand{color:var(--acid);text-decoration:none;font:950 1.08rem/1 Impact,"Arial Black",sans-serif}.meta{color:#838981;font:800 8px/1.4 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+main{padding:64px 0 90px}.eyebrow{color:var(--acid);font:850 10px/1.4 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}h1{margin:16px 0 18px;font:950 clamp(3.5rem,9vw,7.6rem)/.82 Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:-.04em}.lead{max-width:720px;color:#b9beb6;line-height:1.65}
+form{margin-top:38px}.group{margin-top:34px;padding:24px;border:1px solid var(--line);background:var(--panel)}.group h2{margin:0 0 6px;font-size:1.35rem}.group>p{margin:0 0 20px;color:var(--muted);line-height:1.55}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{margin-top:17px}.field:first-child{margin-top:0}.field label{display:block;margin-bottom:7px;color:#c9cdc6;font:800 9px/1.4 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}.field input,.field select,.field textarea{width:100%;border:1px solid #444a43;background:#030403;color:#fff;padding:13px 12px;font:15px/1.5 Arial,sans-serif;outline:none;border-radius:0}.field textarea{min-height:120px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--acid)}.hint{display:block;margin-top:6px;color:#777e76;font-size:12px;line-height:1.45}.submit{margin-top:26px;display:flex;flex-wrap:wrap;align-items:center;gap:16px}.submit button{min-height:52px;border:1px solid var(--acid);background:var(--acid);color:#050505;padding:0 20px;font:900 9px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.submit button:disabled{opacity:.6;cursor:wait}.status{color:#92988f;font:800 9px/1.5 ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase}.status.ok{color:var(--acid)}.status.err{color:#f5ff4a}
+@media(max-width:700px){.row{grid-template-columns:1fr}main{padding-top:46px}}
+</style>
+</head>
+<body>
+<header class="head"><div class="shell head-inner"><a class="brand" href="/">GWAP GANG</a><div class="meta">1% Playbook // Secure Intake</div></div></header>
+<main><div class="shell">
+<div class="eyebrow">The 1% Personal Leverage Map</div>
+<h1>Give Us The Real Inputs.</h1>
+<p class="lead">The quality of your map depends on the quality of the context. Be specific. Rough notes are fine. The goal is to understand what you can already do, what you already own, what you can access, and what outcome matters now.</p>
+
+<form id="leverage-intake" novalidate>
+<input type="hidden" id="stripe_session_id" name="stripe_session_id" value="">
+<div class="group"><h2>01 // Identity + objective</h2><p>Who are we building this for and what needs to change?</p>
+<div class="row"><div class="field"><label for="name">Full name *</label><input id="name" name="name" autocomplete="name" required></div><div class="field"><label for="email">Purchase email *</label><input id="email" name="email" type="email" autocomplete="email" required></div></div>
+<div class="field"><label for="objective">Primary objective *</label><textarea id="objective" name="objective" required placeholder="Example: I want to create an additional $2,000/month from assets and skills I already have."></textarea></div>
+<div class="row"><div class="field"><label for="income_target">Target monthly income</label><input id="income_target" name="income_target" placeholder="$2,000/month"></div><div class="field"><label for="time_horizon">Time horizon</label><select id="time_horizon" name="time_horizon"><option value="">Select</option><option>30 days</option><option>90 days</option><option>6 months</option><option>12 months</option></select></div></div>
+</div>
+
+<div class="group"><h2>02 // Skills + experience</h2><p>What can you already do that another person or company might value?</p>
+<div class="field"><label for="skills">Strongest skills *</label><textarea id="skills" name="skills" required placeholder="Technical, creative, business, operational, sales, management, research, trade skills, domain expertise..."></textarea></div>
+<div class="field"><label for="experience">Work and life experience</label><textarea id="experience" name="experience" placeholder="Industries, roles, unusual experience, problems you have solved, communities you understand..."></textarea></div>
+</div>
+
+<div class="group"><h2>03 // Assets + unfinished value</h2><p>List what already exists before we invent something new.</p>
+<div class="field"><label for="projects">Existing projects, products, code, content or ideas *</label><textarea id="projects" name="projects" required placeholder="Include unfinished or abandoned work. Add names, links, current state, or short descriptions."></textarea></div>
+<div class="field"><label for="tools">Tools and technology you already have</label><textarea id="tools" name="tools" placeholder="Software, AI tools, equipment, domains, hosting, automation, cameras, computers, APIs, datasets..."></textarea></div>
+<div class="field"><label for="links">Relevant links</label><textarea id="links" name="links" placeholder="Portfolio, GitHub, website, social profiles, storefront, product pages, public project links..."></textarea><span class="hint">Do not submit passwords, API keys, private credentials, or sensitive account information.</span></div>
+</div>
+
+<div class="group"><h2>04 // Access + distribution</h2><p>Leverage often comes from reach, trust, or access as much as skill.</p>
+<div class="field"><label for="audience">Audience, network and access</label><textarea id="audience" name="audience" placeholder="Communities, customers, followers, industry contacts, geographic access, professional relationships, email lists, groups..."></textarea></div>
+<div class="field"><label for="customer_insight">People or businesses you understand unusually well</label><textarea id="customer_insight" name="customer_insight" placeholder="Who do you understand because you have lived, worked, sold, built, managed, or participated in their world?"></textarea></div>
+</div>
+
+<div class="group"><h2>05 // Constraints</h2><p>A strong opportunity has to fit the life and resources you actually have.</p>
+<div class="row"><div class="field"><label for="hours_per_week">Hours available per week</label><input id="hours_per_week" name="hours_per_week" type="number" min="0" max="168" placeholder="10"></div><div class="field"><label for="budget">Budget available</label><input id="budget" name="budget" placeholder="$0, $100, $500..."></div></div>
+<div class="field"><label for="constraints">Important constraints</label><textarea id="constraints" name="constraints" placeholder="Job, family, transportation, location, equipment, legal restrictions, energy, schedule, technical limits..."></textarea></div>
+<div class="field"><label for="avoid">What do you NOT want to do?</label><textarea id="avoid" name="avoid" placeholder="Examples: cold calling, inventory, heavy coding, showing my face, paid ads, client meetings..."></textarea></div>
+</div>
+
+<div class="group"><h2>06 // Evidence so far</h2><p>Tell us what has already been tried so we do not send you back into the same rabbit hole.</p>
+<div class="field"><label for="attempts">What have you tried already?</label><textarea id="attempts" name="attempts"></textarea></div>
+<div class="field"><label for="traction">Any traction, proof or signals?</label><textarea id="traction" name="traction" placeholder="Revenue, customers, subscribers, views, replies, requests, downloads, usage, referrals, positive feedback..."></textarea></div>
+</div>
+
+<div class="submit"><button id="submit-button" type="submit">Submit My Leverage Intake →</button><div class="status" id="status" aria-live="polite">Complete all required fields before submitting.</div></div>
+</form>
+</div></main>
+
+<script>
+(()=>{
+  const api={{ site.onePercentLeverageMap.intakeApiUrl | json | safe }};
+  const form=document.getElementById('leverage-intake');
+  const status=document.getElementById('status');
+  const button=document.getElementById('submit-button');
+  const params=new URLSearchParams(location.search);
+  document.getElementById('stripe_session_id').value=params.get('session_id')||'';
+  form.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    if(!form.checkValidity()){form.reportValidity();status.textContent='COMPLETE THE REQUIRED FIELDS.';status.className='status err';return}
+    if(!api){status.textContent='INTAKE ENDPOINT NOT ACTIVE YET // CONTACT INTELLIGENCE@GWAPGANG.COM';status.className='status err';return}
+    const data=Object.fromEntries(new FormData(form).entries());
+    button.disabled=true;button.textContent='SUBMITTING…';status.textContent='BUILDING YOUR CASE FILE…';status.className='status';
+    try{
+      const r=await fetch(api,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
+      const out=await r.json().catch(()=>({}));
+      if(!r.ok||!out.ok)throw new Error(out.error||'submit failed');
+      form.querySelectorAll('input,textarea,select,button').forEach(el=>el.disabled=true);
+      button.textContent='INTAKE RECEIVED';
+      status.textContent='RECEIVED // YOUR LEVERAGE MAP IS NOW IN THE GWAP QUEUE.';
+      status.className='status ok';
+    }catch(err){button.disabled=false;button.textContent='Submit My Leverage Intake →';status.textContent='INTAKE INTERRUPTED // TRY AGAIN OR EMAIL INTELLIGENCE@GWAPGANG.COM';status.className='status err'}
+  });
+})();
+</script>
+</body>
+</html>
