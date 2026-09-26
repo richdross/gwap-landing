@@ -1,0 +1,191 @@
+---
+permalink: /revenue-leak-score/index.html
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Free Revenue Leak Score — Gwap Gang</title>
+<meta name="description" content="Get a free public-evidence Revenue Leak Score for your business. See the strongest conversion risk Gwap can verify without access to your private analytics.">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="theme-color" content="#020302">
+<link rel="canonical" href="{{ site.url }}/revenue-leak-score/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Gwap Gang">
+<meta property="og:title" content="Free Revenue Leak Score — Gwap Gang">
+<meta property="og:description" content="See where your current funnel appears most likely to leak qualified demand. Public evidence only. No fake revenue estimates.">
+<meta property="og:url" content="{{ site.url }}/revenue-leak-score/">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebApplication",
+  "name":"Gwap Gang Revenue Leak Score V0.1",
+  "url":"{{ site.url }}/revenue-leak-score/",
+  "applicationCategory":"BusinessApplication",
+  "operatingSystem":"Web",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+  "provider":{"@type":"Organization","name":"Gwap Gang","url":"{{ site.url }}/"}
+}
+</script>
+<style>
+:root{color-scheme:dark;--bg:#020302;--panel:#090c09;--panel2:#0d120e;--paper:#f2f0e8;--muted:#99a097;--line:#2a302b;--acid:#caff00;--danger:#ff6b6b}
+*{box-sizing:border-box}html{background:#000;scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--paper);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}.shell{width:min(1180px,calc(100% - 32px));margin:auto}
+.head{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--line);background:rgba(0,0,0,.88);backdrop-filter:blur(14px)}
+.head-inner{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{color:var(--acid);text-decoration:none;font:950 1.08rem/1 Impact,"Arial Black",sans-serif}.nav{display:flex;gap:20px}.nav a{color:#8f968e;text-decoration:none;font:800 9px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+.hero{padding:84px 0 64px;border-bottom:1px solid var(--line);background:radial-gradient(circle at 80% 12%,rgba(202,255,0,.12),transparent 25%),linear-gradient(180deg,#020302,#040604)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}.eyebrow{color:var(--acid);font:850 10px/1.4 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}
+h1{max-width:790px;margin:18px 0 22px;font:950 clamp(4rem,8vw,8rem)/.82 Impact,"Arial Black",sans-serif;letter-spacing:-.045em;text-transform:uppercase}
+.lead{max-width:690px;color:#c4c9c2;font:20px/1.58 Georgia,serif}.trust{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}.pill{border:1px solid var(--line);padding:9px 11px;border-radius:999px;color:#9ea59d;font:800 8px/1 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase}
+.form-card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));padding:26px;box-shadow:0 25px 80px rgba(0,0,0,.35)}
+.form-card h2{margin:5px 0 8px;font-size:1.6rem}.form-card>p{margin:0 0 22px;color:var(--muted);line-height:1.55}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font:800 9px/1.3 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#c1c6bf}
+input,select{width:100%;min-height:48px;border:1px solid #39403a;background:#050705;color:#f3f1eb;padding:0 13px;border-radius:0;font:600 14px/1 Arial,sans-serif;outline:none}input:focus,select:focus{border-color:var(--acid);box-shadow:0 0 0 1px var(--acid)}
+button,.cta{display:inline-flex;align-items:center;justify-content:center;min-height:50px;border:0;padding:0 18px;background:var(--acid);color:#050505;text-decoration:none;font:950 9px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-items:flex-start;color:#8f968e;font-size:12px;line-height:1.45}.consent input{width:16px;min-height:16px;height:16px;margin-top:1px;accent-color:var(--acid)}
+.micro{color:#757c75;font:700 10px/1.45 ui-monospace,monospace;margin-top:10px}.hp{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+.section{padding:62px 0;border-bottom:1px solid var(--line)}h3.section-title{margin:10px 0 28px;font:950 clamp(2.6rem,6vw,5.4rem)/.88 Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:-.035em}
+.checks{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.check{min-height:180px;border:1px solid var(--line);background:var(--panel);padding:20px}.check span{color:var(--acid);font:900 9px/1 ui-monospace,monospace}.check h4{margin:22px 0 8px;font-size:1.05rem}.check p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+#result{display:none}.result-shell{padding:62px 0}.result-head{display:grid;grid-template-columns:.7fr 1.3fr;gap:42px;align-items:start}.score-box{border:1px solid var(--acid);padding:28px;background:rgba(202,255,0,.035)}.score-number{font:950 clamp(5rem,11vw,9rem)/.8 Impact,"Arial Black",sans-serif;color:var(--acid)}.score-denom{color:#818981;font:800 10px/1 ui-monospace,monospace;letter-spacing:.09em}.band{margin-top:18px;color:#d3d7d1;text-transform:uppercase;font:900 11px/1 ui-monospace,monospace;letter-spacing:.11em}
+.finding{border-top:1px solid var(--line);padding-top:22px}.finding h3{font-size:1.6rem;margin:8px 0 12px}.finding p{color:#bcc2ba;line-height:1.65}.finding .implication{color:#8f968e}
+.flags{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}.flag{border:1px solid var(--line);padding:18px;background:var(--panel)}.flag-label{font:850 9px/1 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#b7bdb5}.meter{height:7px;background:#1b201c;margin:15px 0 9px;overflow:hidden}.meter>i{display:block;height:100%;background:var(--acid);width:0}.flag small{color:#7e857e;text-transform:uppercase;font:800 9px/1 ui-monospace,monospace}
+.disclaimer{margin-top:20px;padding:16px;border:1px dashed #394039;color:#868d86;font-size:12px;line-height:1.55}.result-cta{margin-top:26px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}.result-cta .price{font:950 1.7rem/1 Impact,"Arial Black",sans-serif}
+.status{min-height:18px;margin-top:12px;color:#9fa69e;font:700 11px/1.4 ui-monospace,monospace}.status.error{color:var(--danger)}
+.foot{padding:28px 0 44px;color:#747b74;font:800 8px/1.6 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
+@media(max-width:900px){.hero-grid,.result-head{grid-template-columns:1fr}.checks{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.nav{display:none}.hero{padding-top:54px}.form-grid,.flags,.checks{grid-template-columns:1fr}.field.full{grid-column:auto}.form-card{padding:20px}h1{font-size:clamp(3.6rem,18vw,6.1rem)}}
+</style>
+</head>
+<body>
+<header class="head"><div class="shell head-inner"><a class="brand" href="/">GWAP GANG</a><nav class="nav"><a href="/intelligence/">Intelligence</a><a href="/capital/">Capital</a><a href="/revenue-rescue-sprint/">Revenue Rescue</a></nav></div></header>
+<main>
+<section class="hero">
+<div class="shell hero-grid">
+<div>
+<div class="eyebrow">Gwap Gang // Free Commercial Diagnostic</div>
+<h1>Find Where Demand Leaks.</h1>
+<p class="lead">Get a bounded public-evidence scan of your current buying path. Gwap looks for observable conversion friction, trust gaps, routing problems, and measurement blind spots without pretending we can see private revenue data.</p>
+<div class="trust"><span class="pill">Free</span><span class="pill">No login</span><span class="pill">Public evidence only</span><span class="pill">No fake revenue estimates</span></div>
+</div>
+
+<form class="form-card" id="score-form">
+<div class="eyebrow">Revenue Leak Score V0.1</div>
+<h2>Run the diagnostic.</h2>
+<p>About two minutes of context helps us distinguish a cosmetic website issue from a commercially meaningful leak.</p>
+<div class="form-grid">
+<div class="field full"><label for="businessName">Business name</label><input id="businessName" name="businessName" autocomplete="organization" required maxlength="160" placeholder="Acme Home Services"></div>
+<div class="field full"><label for="website">Website</label><input id="website" name="website" type="url" inputmode="url" autocomplete="url" required maxlength="600" placeholder="https://example.com"></div>
+<div class="field full"><label for="email">Business email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="320" placeholder="owner@example.com"></div>
+<div class="field"><label for="role">Your role</label><select id="role" name="role" required><option value="">Select</option><option value="owner">Owner</option><option value="founder">Founder</option><option value="executive">Executive / GM</option><option value="marketing">Marketing</option><option value="sales">Sales</option><option value="agency">Agency / consultant</option><option value="other">Other</option></select></div>
+<div class="field"><label for="acquisitionChannel">Main source of new customers</label><select id="acquisitionChannel" name="acquisitionChannel" required><option value="">Select</option><option value="google_ads">Google Ads</option><option value="local_services_ads">Google Local Services Ads</option><option value="meta_ads">Meta / Instagram Ads</option><option value="paid_search">Other paid search</option><option value="lead_marketplace">Lead marketplaces</option><option value="mixed_paid">Several paid channels</option><option value="seo">SEO / organic search</option><option value="organic_social">Organic social</option><option value="referrals">Referrals / repeat business</option><option value="other">Other</option></select></div>
+<div class="field"><label for="customerValueBand">Approx. value of one new customer</label><select id="customerValueBand" name="customerValueBand" required><option value="">Select</option><option value="under_250">Under $250</option><option value="250_1000">$250 to $1,000</option><option value="1000_5000">$1,000 to $5,000</option><option value="over_5000">$5,000+</option></select></div>
+<div class="field"><label for="monthlyLeadsBand">Approx. inbound leads per month</label><select id="monthlyLeadsBand" name="monthlyLeadsBand" required><option value="">Select</option><option value="under_10">Under 10</option><option value="10_25">10 to 25</option><option value="26_75">26 to 75</option><option value="over_75">75+</option></select></div>
+<div class="field full hp" aria-hidden="true"><label for="company_website">Company website confirmation</label><input id="company_website" name="company_website" tabindex="-1" autocomplete="off"></div>
+<div class="field full"><label class="consent"><input id="followUpConsent" name="followUpConsent" type="checkbox"><span>Email me this score and relevant follow-up about Revenue Rescue. I can opt out at any time.</span></label></div>
+<div class="field full"><button id="submit" type="submit">Calculate My Score →</button><div class="status" id="status" aria-live="polite"></div><div class="micro">The score is a diagnostic risk index based on public evidence and the business context you provide. It is not an estimate of dollars lost.</div></div>
+</div>
+</form>
+</div>
+</section>
+
+<section class="section"><div class="shell">
+<div class="eyebrow">What The Scanner Checks</div>
+<h3 class="section-title">Five places demand can disappear.</h3>
+<div class="checks">
+<div class="check"><span>01</span><h4>Demand capture</h4><p>Can a high-intent visitor take a clear next step without hunting for it?</p></div>
+<div class="check"><span>02</span><h4>Conversion friction</h4><p>Does the buying path ask for too much, create confusion, or send people through generic steps?</p></div>
+<div class="check"><span>03</span><h4>Trust architecture</h4><p>Is credible proof visible where a buyer is deciding whether to act?</p></div>
+<div class="check"><span>04</span><h4>Follow-up and routing</h4><p>Do different intents appear to have a sensible path into the business?</p></div>
+<div class="check"><span>05</span><h4>Measurement readiness</h4><p>Can the business tell which traffic and conversion work is actually paying off?</p></div>
+</div>
+</div></section>
+
+<section id="result" class="result-shell">
+<div class="shell">
+<div class="eyebrow">Your Revenue Leak Score</div>
+<div class="result-head">
+<div class="score-box"><div class="score-number" id="score-number">0</div><div class="score-denom">OUT OF 100 // PUBLIC-EVIDENCE RISK INDEX</div><div class="band" id="score-band"></div></div>
+<div>
+<div class="finding"><div class="eyebrow">Strongest Verified Finding</div><h3 id="finding-title">Finding</h3><p id="finding-evidence"></p><p class="implication" id="finding-implication"></p></div>
+<div class="flags" id="flags"></div>
+<div class="disclaimer" id="disclaimer"></div>
+<div class="result-cta"><div class="price">$299</div><a class="cta" href="/revenue-rescue-sprint/">Get The Complete Revenue Rescue →</a></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="foot"><div class="shell">Gwap Gang // Intelligence should end in action.</div></footer>
+
+<script>
+(() => {
+  const endpoint = {{ site.revenueLeakScore.endpoint | json }};
+  const form = document.getElementById("score-form");
+  const submit = document.getElementById("submit");
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function titleFromType(value) {
+    return String(value || "verified finding").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function render(data) {
+    const card = data.scorecard || {};
+    const finding = card.strongestFinding || {};
+    document.getElementById("score-number").textContent = String(data.leak_score ?? 0);
+    document.getElementById("score-band").textContent = String(data.leak_risk_band || "unknown") + " leak risk";
+    document.getElementById("finding-title").textContent = titleFromType(finding.type);
+    document.getElementById("finding-evidence").textContent = finding.evidence || "No high-confidence public finding was returned.";
+    document.getElementById("finding-implication").textContent = finding.implication || "";
+    document.getElementById("disclaimer").textContent = card.disclaimer || "";
+
+    const flags = Array.isArray(card.flags) ? card.flags : [];
+    document.getElementById("flags").innerHTML = flags.length
+      ? flags.map(flag => `<div class="flag"><div class="flag-label">${esc(flag.label)}</div><div class="meter"><i style="width:${Math.max(0,Math.min(100,Number(flag.risk)||0))}%"></i></div><small>${esc(flag.band)} risk · ${esc(flag.risk)}/100</small></div>`).join("")
+      : '<div class="flag"><div class="flag-label">Secondary flags</div><p style="color:#8f968e;margin:14px 0 0">No strong secondary public-evidence flag was found.</p></div>';
+
+    result.style.display = "block";
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    submit.disabled = true;
+    submit.textContent = "Scanning…";
+    status.className = "status";
+    status.textContent = "Scanning reachable public pages and building a bounded scorecard…";
+
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
+    payload.followUpConsent = document.getElementById("followUpConsent").checked;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.ok) throw new Error(body.error || "Score request failed");
+      render(body);
+      status.textContent = body.email_sent
+        ? "Score complete. A copy was also sent to your email."
+        : "Score complete.";
+    } catch (error) {
+      status.className = "status error";
+      status.textContent = error?.message || "We could not complete the scan. Check the URL and try again.";
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Calculate My Score →";
+    }
+  });
+})();
+</script>
+</body>
+</html>
