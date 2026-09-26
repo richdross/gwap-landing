@@ -244,3 +244,155 @@ export function buildIndexSignal({
     },
   };
 }
+
+
+export function classifyIndexRecovery(index = {}) {
+  const status = String(index.indexStatus || "UNKNOWN");
+  const coverage = String(index.coverageState || "").toLowerCase();
+  const robots = String(index.robotsTxtState || "");
+  const indexing = String(index.indexingState || "");
+  const canonical = String(index.canonicalStatus || "UNKNOWN");
+
+  if (status === "INDEXED") return "PROTECT_AND_MONITOR";
+  if (canonical === "OTHER") return "CANONICAL_REVIEW";
+  if (/blocked|disallow/i.test(robots) || /blocked|disallow/i.test(indexing)) {
+    return "CRAWLABILITY_REVIEW";
+  }
+  if (coverage.includes("unknown to google")) return "DISCOVERY_RECOVERY";
+  if (coverage.includes("discovered") && coverage.includes("not indexed")) {
+    return "COVERAGE_EXPANSION";
+  }
+  return "TECHNICAL_DIAGNOSIS";
+}
+
+export function recoveryAction(recoveryClass, repoEvidence = {}, index = {}) {
+  const problems = [];
+  if (repoEvidence.sourceExists === false) problems.push("ARTICLE_SOURCE_MISSING");
+  if (repoEvidence.sitemapTemplateIncludesPosts === false) problems.push("SITEMAP_TEMPLATE_GAP");
+  if (repoEvidence.postTemplateIndexFollow === false) problems.push("INDEX_META_GAP");
+  if (repoEvidence.postTemplateCanonical === false) problems.push("CANONICAL_TEMPLATE_GAP");
+  if (repoEvidence.robotsAllowsSearch === false) problems.push("ROBOTS_POLICY_GAP");
+  if (repoEvidence.blogIndexLinksPosts === false) problems.push("BLOG_INDEX_LINK_GAP");
+
+  if (problems.length) {
+    return {
+      action: "FIX_TECHNICAL_DISCOVERY",
+      rationale: "Repository evidence contains a concrete technical discovery gap.",
+      problems,
+      manualIndexRequestRecommended: false,
+    };
+  }
+
+  if (recoveryClass === "PROTECT_AND_MONITOR") {
+    return {
+      action: "PROTECT_URL_AND_COLLECT_DATA",
+      rationale: "Google reports the URL indexed. Preserve URL, canonical, and crawlability while collecting search data.",
+      problems,
+      manualIndexRequestRecommended: false,
+    };
+  }
+
+  if (recoveryClass === "DISCOVERY_RECOVERY") {
+    return {
+      action: "STRENGTHEN_DISCOVERY_AND_REQUEST_INDEXING",
+      rationale:
+        "Google reports the URL as unknown. Repository discovery signals are healthy, so strengthen internal discovery and use Search Console's manual request-indexing workflow rather than rewriting the article.",
+      problems,
+      manualIndexRequestRecommended: true,
+    };
+  }
+
+  if (recoveryClass === "COVERAGE_EXPANSION") {
+    return {
+      action: "MONITOR_DISCOVERED_URL_AND_REINFORCE_LINKS",
+      rationale:
+        "Google has discovered the URL but has not indexed it. Keep the URL stable, reinforce relevant internal links, and monitor subsequent inspections before making editorial changes.",
+      problems,
+      manualIndexRequestRecommended: true,
+    };
+  }
+
+  if (recoveryClass === "CANONICAL_REVIEW") {
+    return {
+      action: "REVIEW_CANONICAL_SELECTION",
+      rationale: "Google or the page declares a different canonical URL. Resolve canonical intent before content optimization.",
+      problems,
+      manualIndexRequestRecommended: false,
+    };
+  }
+
+  if (recoveryClass === "CRAWLABILITY_REVIEW") {
+    return {
+      action: "REVIEW_CRAWLABILITY",
+      rationale: "Robots or indexing evidence suggests a crawl/indexing restriction.",
+      problems,
+      manualIndexRequestRecommended: false,
+    };
+  }
+
+  return {
+    action: "DIAGNOSE_BEFORE_EDITING",
+    rationale:
+      "The index state is not sufficiently explained by current evidence. Preserve the URL and gather more technical evidence before changing content.",
+    problems,
+    manualIndexRequestRecommended: false,
+  };
+}
+
+export function buildRecoverySignal({
+  siteUrl,
+  permissionLevel,
+  pageUrl,
+  targetHost,
+  indexSignal,
+  repoEvidence = {},
+  today,
+  observedAt,
+}) {
+  const path = pagePath(pageUrl, targetHost);
+  if (!path || !path.startsWith("/blog/")) return null;
+
+  const index = indexSignal?.normalized || {};
+  const recoveryClass = classifyIndexRecovery(index);
+  const decision = recoveryAction(recoveryClass, repoEvidence, index);
+
+  return {
+    sourceType: "gsc",
+    sourceRef: `gsc:${slug(siteUrl)}:index-recovery:${stableHash(pageUrl)}:${today}`,
+    title: `Index recovery: ${path}`,
+    url: pageUrl,
+    observedAt,
+    normalized: {
+      adapter: "gsc-index-recovery-github-v2c",
+      signalKind: "index-recovery-diagnostic",
+      sniperKey: slug(path),
+      siteUrl,
+      permissionLevel,
+      pageUrl,
+      pagePath: path,
+      recoveryClass,
+      action: decision.action,
+      rationale: decision.rationale,
+      problems: decision.problems,
+      manualIndexRequestRecommended: decision.manualIndexRequestRecommended,
+      indexStatus: index.indexStatus || "UNKNOWN",
+      coverageState: index.coverageState || null,
+      canonicalStatus: index.canonicalStatus || "UNKNOWN",
+      googleFetchEvidence:
+        index.pageFetchState === "SUCCESSFUL"
+          ? "GOOGLE_LAST_FETCH_SUCCESSFUL"
+          : "NOT_AVAILABLE",
+      liveHttpStatus: "NOT_VERIFIED_FROM_GITHUB_ACTIONS",
+      repositoryEvidence: {
+        sourceExists: repoEvidence.sourceExists ?? null,
+        sitemapTemplateIncludesPosts: repoEvidence.sitemapTemplateIncludesPosts ?? null,
+        postTemplateIndexFollow: repoEvidence.postTemplateIndexFollow ?? null,
+        postTemplateCanonical: repoEvidence.postTemplateCanonical ?? null,
+        robotsAllowsSearch: repoEvidence.robotsAllowsSearch ?? null,
+        blogIndexLinksPosts: repoEvidence.blogIndexLinksPosts ?? null,
+        inboundEditorialReferences: Number(repoEvidence.inboundEditorialReferences || 0),
+        sourceFile: repoEvidence.sourceFile || null,
+      },
+    },
+  };
+}

@@ -110,3 +110,51 @@ New proof sections are added as:
 - `totals`
 
 A failed V2A/V2B store or inspection makes the run fail visibly instead of silently claiming success.
+
+
+## V2C — Index Recovery + Coverage Expansion
+
+V2C turns URL Inspection evidence into bounded recovery decisions.
+
+For every inspected article, GWAP now classifies the page into one of these states:
+
+- `PROTECT_AND_MONITOR`
+- `DISCOVERY_RECOVERY`
+- `COVERAGE_EXPANSION`
+- `CANONICAL_REVIEW`
+- `CRAWLABILITY_REVIEW`
+- `TECHNICAL_DIAGNOSIS`
+
+The collector also verifies repository-side discovery evidence from the current production source:
+
+- article source exists in `content/blog`
+- sitemap template emits `collections.posts`
+- article template emits `index,follow`
+- article template emits the canonical link
+- `robots.txt` allows the general search crawler
+- blog index template links article URLs
+- number of explicit editorial references from other article source files
+
+V2C stores a separate `index-recovery-diagnostic` signal for each article so the recovery recommendation remains traceable to the same daily evidence window.
+
+### Decision rule
+
+Technical defects win over editorial speculation.
+
+If the repository contains a concrete discovery or crawlability gap, V2C emits `FIX_TECHNICAL_DISCOVERY`.
+
+If repository evidence is healthy and Google reports `URL is unknown to Google`, V2C emits `STRENGTHEN_DISCOVERY_AND_REQUEST_INDEXING`.
+
+If repository evidence is healthy and Google reports `Discovered - currently not indexed`, V2C emits `MONITOR_DISCOVERED_URL_AND_REINFORCE_LINKS`.
+
+If Google reports the URL indexed, V2C emits `PROTECT_URL_AND_COLLECT_DATA`.
+
+### Important boundary
+
+The Search Console URL Inspection API does not provide a general-purpose programmatic request-indexing operation for normal blog articles. V2C may recommend the Search Console manual request-indexing workflow, but it does not claim to submit that request automatically.
+
+GitHub Actions is currently blocked from performing a trustworthy live HTTP check against gwapgang.com by Cloudflare bot policy. V2C therefore records:
+
+`liveHttpStatus = NOT_VERIFIED_FROM_GITHUB_ACTIONS`
+
+rather than inventing a 200 result. Indexed pages can separately carry Google's last successful fetch evidence from URL Inspection.
