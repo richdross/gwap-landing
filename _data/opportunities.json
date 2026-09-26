@@ -1,5 +1,46 @@
 [
   {
+    "id": "one-percent-personal-leverage-map",
+    "name": "The 1% Personal Leverage Map",
+    "kind": "personalized intelligence",
+    "status": "prelaunch",
+    "price": "$49",
+    "url": "/1percent/leverage-map/",
+    "cta": "Build Your Leverage Map",
+    "description": "A personalized Gwap Gang decision file identifying the three strongest leverage opportunities inside a person's existing skills, tools, projects, experience, audience, access, and assets.",
+    "sections": [
+      "culture",
+      "capital",
+      "technology",
+      "intelligence"
+    ],
+    "topics": [
+      "operational leverage",
+      "AI automation",
+      "creator economy",
+      "business operations",
+      "human judgment",
+      "workflow discovery"
+    ],
+    "entities": [
+      "Creators",
+      "Founders",
+      "Freelancers",
+      "AI power users"
+    ],
+    "technologies": [
+      "AI automation",
+      "AI agents",
+      "generative AI"
+    ],
+    "businessModels": [
+      "personalized intelligence",
+      "creator economy",
+      "AI services"
+    ],
+    "minScore": 5
+  },
+  {
     "id": "ai-business-intelligence-report",
     "name": "AI Business Intelligence Report",
     "kind": "report",

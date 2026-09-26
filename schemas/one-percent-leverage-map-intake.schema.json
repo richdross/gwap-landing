@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gwapgang.com/schemas/one-percent-leverage-map-intake.schema.json",
+  "title": "Gwap Gang 1% Personal Leverage Map Intake V0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "email",
+    "objective",
+    "skills",
+    "projects"
+  ],
+  "properties": {
+    "stripe_session_id": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 254
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 4000
+    },
+    "income_target": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "time_horizon": {
+      "type": "string",
+      "enum": [
+        "",
+        "30 days",
+        "90 days",
+        "6 months",
+        "12 months"
+      ]
+    },
+    "skills": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 6000
+    },
+    "experience": {
+      "type": "string",
+      "maxLength": 6000
+    },
+    "projects": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 8000
+    },
+    "tools": {
+      "type": "string",
+      "maxLength": 6000
+    },
+    "links": {
+      "type": "string",
+      "maxLength": 6000
+    },
+    "audience": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "customer_insight": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "hours_per_week": {
+      "type": [
+        "string",
+        "number"
+      ],
+      "maxLength": 3
+    },
+    "budget": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "constraints": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "avoid": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "attempts": {
+      "type": "string",
+      "maxLength": 6000
+    },
+    "traction": {
+      "type": "string",
+      "maxLength": 5000
+    }
+  }
+}
