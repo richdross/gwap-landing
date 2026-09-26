@@ -136,9 +136,9 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 
 <script>
 (() => {
-  const endpoint = {{ site.revenueLeakScore.endpoint | json }};
+  const endpoint = {{ site.revenueLeakScore.endpoint | json | safe }};
   const eventEndpoint = endpoint + "/event";
-  const checkoutUrl = {{ site.revenueRescueSprint.checkoutUrl | json }};
+  const checkoutUrl = {{ site.revenueRescueSprint.checkoutUrl | json | safe }};
   const form = document.getElementById("score-form");
   const submit = document.getElementById("submit");
   const status = document.getElementById("status");
