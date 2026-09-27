@@ -407,7 +407,7 @@ a{color:inherit}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){status.textContent='ENTER A VALID EMAIL TO JOIN THE SIGNAL.';status.className='status err';return}
     button.disabled=true;button.textContent='CONNECTING…';status.textContent='LOCKING ONTO THE SIGNAL…';status.className='status';
     try{
-      const r=await fetch('https://gwap-automation-api.onrender.com/newsletter/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:value})});
+      const r=await fetch('https://gwap-backend.onrender.com/newsletter/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:value})});
       const data=await r.json().catch(()=>({}));if(!r.ok||!data.ok)throw new Error('signup failed');
       status.textContent=data.created?'ACCESS GRANTED // WELCOME TO THE GANG.':'YOU’RE ALREADY IN // SIGNAL CONFIRMED.';status.className='status ok';email.disabled=true;button.textContent='YOU’RE IN';
     }catch{status.textContent='SIGNAL INTERRUPTED // TRY AGAIN.';status.className='status err';button.disabled=false;button.textContent='JOIN THE GANG →'}
@@ -436,7 +436,7 @@ a{color:inherit}
     status.textContent='LOCKING ONTO THE SIGNAL…';
     status.className='live-capture-status';
     try{
-      const r=await fetch('https://gwap-automation-api.onrender.com/newsletter/subscribe',{
+      const r=await fetch('https://gwap-backend.onrender.com/newsletter/subscribe',{
         method:'POST',
         headers:{'Content-Type':'application/json','Accept':'application/json'},
         body:JSON.stringify({email:value})
