@@ -64,3 +64,6 @@ jobs:
           set -euo pipefail
           node platform/intelligence/scripts/ga4-collector.mjs | tee ga4-result.json
 
+# Scheduler intentionally lives on main so GitHub cron can trigger it.
+# Runtime code is checked out from architecture/cloudflare-core-v1.
+# This workflow does not deploy or modify production routes.
