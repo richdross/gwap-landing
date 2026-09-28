@@ -258,9 +258,9 @@ jobs:
           NODE
 
       - name: Upload Lighthouse evidence
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: gwap-ai-commerce-lighthouse
           path: lighthouse/*.json
-          retention-days: 30
+          retention-days: 1

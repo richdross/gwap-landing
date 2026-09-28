@@ -59,11 +59,3 @@ jobs:
           set -euo pipefail
           node platform/intelligence/scripts/gsc-collector.mjs | tee gsc-result.json
 
-      - name: Upload Search Console proof
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gsc-signal-proof-${{ github.run_id }}
-          path: gsc-result.json
-          if-no-files-found: warn
-          retention-days: 7
