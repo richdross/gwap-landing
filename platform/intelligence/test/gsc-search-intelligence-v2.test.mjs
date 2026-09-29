@@ -11,6 +11,7 @@ import {
   buildRecoverySignal,
   clusterQueriesByIntent,
   compareEngineIndexStates,
+  countInboundEditorialReferences,
   classifyIndexRecovery,
   recoveryAction,
   canonicalStatus,
@@ -464,4 +465,38 @@ test("V2D derives a bounded Google index decision without inventing Bing data", 
   assert.equal(signal.normalized.bingIndexStatus, "NOT_COLLECTED");
   assert.equal(signal.normalized.decision, "GOOGLE_INDEX_RECOVERY");
   assert.equal(signal.normalized.evidenceBoundary, "BING_INDEX_EVIDENCE_NOT_CONNECTED");
+});
+
+
+test("V2C counts both graph metadata and normal inline blog links", () => {
+  const pageUrl = "https://gwapgang.com/blog/how-to-run-your-first-ai-automation-pilot-in-7-days/";
+  const sourceFile = "content/blog/how-to-run-your-first-ai-automation-pilot-in-7-days.md";
+  const articleSources = new Map([
+    [
+      "content/blog/what-small-businesses-should-automate-first-with-ai.md",
+      "Use [the pilot](/blog/how-to-run-your-first-ai-automation-pilot-in-7-days/) next.",
+    ],
+    [
+      "content/blog/how-to-find-ai-automation-opportunities-in-your-business.md",
+      "relatedArticles:\n  - content/blog/how-to-run-your-first-ai-automation-pilot-in-7-days.md",
+    ],
+    [
+      sourceFile,
+      "Self references must not count /blog/how-to-run-your-first-ai-automation-pilot-in-7-days/",
+    ],
+    [
+      "content/blog/unrelated.md",
+      "No relationship here.",
+    ],
+  ]);
+
+  assert.equal(
+    countInboundEditorialReferences(
+      articleSources,
+      sourceFile,
+      pageUrl,
+      "gwapgang.com",
+    ),
+    2,
+  );
 });
