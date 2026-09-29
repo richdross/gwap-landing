@@ -158,3 +158,57 @@ GitHub Actions is currently blocked from performing a trustworthy live HTTP chec
 `liveHttpStatus = NOT_VERIFIED_FROM_GITHUB_ACTIONS`
 
 rather than inventing a 200 result. Indexed pages can separately carry Google's last successful fetch evidence from URL Inspection.
+
+
+## V2D — Intent + Index Diagnostics
+
+V2D extends the same collector. It does not add another SEO platform, datastore, secret, or automatic publishing path.
+
+### Highest-impression intent diagnostics
+
+Each run ranks current GWAP blog pages by Search Console impressions and analyzes the top pages first. The default analysis limit is five pages and may be bounded with:
+
+- `GSC_V2D_PAGE_LIMIT` — defaults to 5, bounded to 1–25
+
+For each selected page, V2D groups observed Search Console queries into deterministic lexical + search-intent clusters and stores a `search-intent-diagnostic` signal.
+
+Possible decisions:
+
+- `KEEP_FOCUSED`
+- `COLLECT_MORE_DATA`
+- `REVIEW_INTENT_SPLIT`
+
+`REVIEW_INTENT_SPLIT` is not permission to create a page. It means at least two material query clusters exist on a page with enough evidence to justify Founder Review. Separate SERP validation is still required before any split.
+
+Low-volume pages, pages with fewer than three visible queries, and pages where visible query rows cover less than half of page impressions remain `COLLECT_MORE_DATA`.
+
+### Index diagnostics
+
+V2D also converts existing V2B URL Inspection + V2C recovery evidence into a simpler action state:
+
+- `PROTECT_URL_AND_COLLECT_DATA`
+- `GOOGLE_INDEX_RECOVERY`
+- `TECHNICAL_INVESTIGATION`
+- `HOLD`
+
+A cross-engine comparator is included for future Bing index-state evidence:
+
+- both Google + Bing indexed -> `CROSS_ENGINE_HEALTHY`
+- Google not indexed + Bing indexed -> `GOOGLE_INDEX_RECOVERY`
+- both not indexed -> `SITE_TECHNICAL_INVESTIGATION`
+- Google indexed + Bing not indexed -> `BING_DIAGNOSTIC`
+
+GWAP currently has Bing Webmaster ownership and IndexNow distribution, but this collector does not yet have a Bing index-state API adapter. Until real Bing evidence is connected, every V2D index signal records:
+
+`evidenceBoundary = BING_INDEX_EVIDENCE_NOT_CONNECTED`
+
+and derives its current decision only from verified Google + repository evidence.
+
+### Output proof
+
+The collector result adds:
+
+- `v2dIntentDiagnostics`
+- `v2dIndexDiagnostics`
+
+Both are included in the run totals. Any failed V2D signal persistence makes the run fail visibly.
