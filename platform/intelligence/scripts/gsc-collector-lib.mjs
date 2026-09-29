@@ -151,6 +151,36 @@ export function articleUrlsFromManifest(manifest, targetHost = "gwapgang.com") {
   return urls.sort();
 }
 
+export function countInboundEditorialReferences(
+  articleSources,
+  sourceFile,
+  pageUrl,
+  targetHost = "gwapgang.com",
+) {
+  if (!sourceFile || !articleSources || typeof articleSources.entries !== "function") return 0;
+
+  const path = pagePath(pageUrl, targetHost);
+  const normalizedPageUrl = normalizeUrl(pageUrl);
+  let count = 0;
+
+  for (const [pathName, rawSource] of articleSources.entries()) {
+    if (pathName === sourceFile) continue;
+    const source = String(rawSource || "");
+
+    const referencesSourceFile = source.includes(sourceFile);
+    const referencesRelativeUrl = Boolean(path && source.includes(path));
+    const referencesAbsoluteUrl = Boolean(
+      normalizedPageUrl && source.includes(normalizedPageUrl),
+    );
+
+    if (referencesSourceFile || referencesRelativeUrl || referencesAbsoluteUrl) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
 export function buildQuerySignal({
   siteUrl,
   permissionLevel,
