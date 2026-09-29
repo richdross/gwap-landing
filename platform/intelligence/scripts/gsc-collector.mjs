@@ -8,6 +8,7 @@ import {
   buildIntentDiagnosticSignal,
   buildQuerySignal,
   buildRecoverySignal,
+  countInboundEditorialReferences,
   dayBucket,
   number,
   pagePath,
@@ -309,13 +310,12 @@ async function loadRepositoryRecoveryEvidence(inventory, articleUrls) {
     const sourceFile = fileSlug ? `content/blog/${fileSlug}.md` : null;
     const sourceExists = Boolean(sourceFile && articleSources.has(sourceFile));
 
-    let inboundEditorialReferences = 0;
-    if (sourceFile) {
-      for (const [pathName, source] of articleSources.entries()) {
-        if (pathName === sourceFile) continue;
-        if (source.includes(sourceFile)) inboundEditorialReferences++;
-      }
-    }
+    const inboundEditorialReferences = countInboundEditorialReferences(
+      articleSources,
+      sourceFile,
+      pageUrl,
+      targetHost,
+    );
 
     byUrl.set(pageUrl, {
       ...globalEvidence,
