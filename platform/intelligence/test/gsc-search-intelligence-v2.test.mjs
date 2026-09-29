@@ -4,14 +4,19 @@ import {
   articleUrlsFromGitHubContents,
   articleUrlsFromManifest,
   articleUrlsFromSitemapXml,
+  buildIndexDiagnosticSignal,
   buildIndexSignal,
+  buildIntentDiagnosticSignal,
   buildQuerySignal,
   buildRecoverySignal,
+  clusterQueriesByIntent,
+  compareEngineIndexStates,
   classifyIndexRecovery,
   recoveryAction,
   canonicalStatus,
   indexStatusFromVerdict,
   normalizeQueryText,
+  rankPagesByImpressions,
   stableHash,
 } from "../scripts/gsc-collector-lib.mjs";
 
@@ -335,4 +340,128 @@ test("V2B keeps identical same-day index observations idempotent", () => {
   };
 
   assert.equal(buildIndexSignal(args).sourceRef, buildIndexSignal(args).sourceRef);
+});
+
+
+test("V2D ranks highest-impression blog pages first", () => {
+  const rows = [
+    { keys: ["https://gwapgang.com/blog/low/"], impressions: 8, clicks: 1, ctr: 0.125, position: 7 },
+    { keys: ["https://gwapgang.com/"], impressions: 500, clicks: 20, ctr: 0.04, position: 2 },
+    { keys: ["https://gwapgang.com/blog/high/"], impressions: 120, clicks: 9, ctr: 0.075, position: 3 },
+    { keys: ["https://gwapgang.com/blog/mid/"], impressions: 40, clicks: 3, ctr: 0.075, position: 5 },
+  ];
+
+  assert.deepEqual(
+    rankPagesByImpressions(rows, "gwapgang.com", 2).map((page) => page.pagePath),
+    ["/blog/high/", "/blog/mid/"],
+  );
+});
+
+test("V2D clusters materially different query intents for one page", () => {
+  const clusters = clusterQueriesByIntent([
+    { query: "how to automate invoices", impressions: 12, clicks: 2, position: 4 },
+    { query: "automate invoice workflow", impressions: 8, clicks: 1, position: 5 },
+    { query: "best ai automation software", impressions: 10, clicks: 1, position: 6 },
+    { query: "ai automation tools", impressions: 7, clicks: 1, position: 6.5 },
+  ]);
+
+  assert.equal(clusters.length, 2);
+  assert.equal(clusters[0].impressions, 20);
+  assert.equal(clusters[1].impressions, 17);
+});
+
+test("V2D flags a well-supported multi-intent page for Founder Review", () => {
+  const pageUrl = "https://gwapgang.com/blog/example/";
+  const signal = buildIntentDiagnosticSignal({
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageMetrics: {
+      pageUrl,
+      impressions: 37,
+      clicks: 5,
+      ctr: 5 / 37,
+      position: 5.1,
+    },
+    queryRows: [
+      { query: "how to automate invoices", impressions: 12, clicks: 2, position: 4 },
+      { query: "automate invoice workflow", impressions: 8, clicks: 1, position: 5 },
+      { query: "best ai automation software", impressions: 10, clicks: 1, position: 6 },
+      { query: "ai automation tools", impressions: 7, clicks: 1, position: 6.5 },
+    ],
+    targetHost: "gwapgang.com",
+    startDate: "2026-09-01",
+    endDate: "2026-09-28",
+    today: "2026-09-29",
+    observedAt: "2026-09-29T19:00:00.000Z",
+  });
+
+  assert.equal(signal.normalized.decision, "REVIEW_INTENT_SPLIT");
+  assert.equal(signal.normalized.serpValidationRequired, true);
+  assert.equal(signal.normalized.founderReviewRequired, true);
+  assert.equal(signal.normalized.qualifiedClusterCount, 2);
+});
+
+test("V2D refuses to recommend a split on thin search evidence", () => {
+  const signal = buildIntentDiagnosticSignal({
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageMetrics: {
+      pageUrl: "https://gwapgang.com/blog/thin/",
+      impressions: 4,
+      clicks: 0,
+      ctr: 0,
+      position: 8,
+    },
+    queryRows: [
+      { query: "automation guide", impressions: 2, clicks: 0, position: 8 },
+      { query: "automation software", impressions: 2, clicks: 0, position: 8 },
+    ],
+    targetHost: "gwapgang.com",
+    startDate: "2026-09-01",
+    endDate: "2026-09-28",
+    today: "2026-09-29",
+    observedAt: "2026-09-29T19:00:00.000Z",
+  });
+
+  assert.equal(signal.normalized.decision, "COLLECT_MORE_DATA");
+  assert.equal(signal.normalized.founderReviewRequired, false);
+});
+
+test("V2D cross-engine comparator stays explicit when Bing evidence is missing", () => {
+  assert.equal(compareEngineIndexStates("INDEXED", null), "BING_EVIDENCE_MISSING");
+  assert.equal(compareEngineIndexStates("EXCLUDED", "INDEXED"), "GOOGLE_INDEX_RECOVERY");
+  assert.equal(compareEngineIndexStates("EXCLUDED", "NOT_INDEXED"), "SITE_TECHNICAL_INVESTIGATION");
+  assert.equal(compareEngineIndexStates("INDEXED", "NOT_INDEXED"), "BING_DIAGNOSTIC");
+  assert.equal(compareEngineIndexStates("INDEXED", "INDEXED"), "CROSS_ENGINE_HEALTHY");
+});
+
+test("V2D derives a bounded Google index decision without inventing Bing data", () => {
+  const pageUrl = "https://gwapgang.com/blog/example/";
+  const signal = buildIndexDiagnosticSignal({
+    siteUrl: "sc-domain:gwapgang.com",
+    permissionLevel: "siteFullUser",
+    pageUrl,
+    targetHost: "gwapgang.com",
+    indexSignal: {
+      normalized: {
+        indexStatus: "EXCLUDED",
+        coverageState: "Discovered - currently not indexed",
+        canonicalStatus: "UNKNOWN",
+      },
+    },
+    recoverySignal: {
+      normalized: {
+        recoveryClass: "COVERAGE_EXPANSION",
+        action: "MONITOR_DISCOVERED_URL_AND_REINFORCE_LINKS",
+      },
+    },
+    bingIndexStatus: null,
+    today: "2026-09-29",
+    observedAt: "2026-09-29T19:00:00.000Z",
+  });
+
+  assert.equal(signal.normalized.engineComparison, "BING_EVIDENCE_MISSING");
+  assert.equal(signal.normalized.bingIndexStatus, "NOT_COLLECTED");
+  assert.equal(signal.normalized.decision, "GOOGLE_INDEX_RECOVERY");
+  assert.equal(signal.normalized.evidenceBoundary, "BING_INDEX_EVIDENCE_NOT_CONNECTED");
 });
