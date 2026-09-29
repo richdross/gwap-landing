@@ -26,6 +26,7 @@ relatedArticles:
   - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
   - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
   - content/blog/one-person-can-run-a-media-company-now.md
+  - content/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer.md
 nextMove: content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
 commercialOpportunities:
   - leverage-brief
