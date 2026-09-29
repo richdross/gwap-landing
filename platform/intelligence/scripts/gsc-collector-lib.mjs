@@ -416,3 +416,374 @@ export function buildRecoverySignal({
     },
   };
 }
+
+
+// Search Intelligence V2D: intent + index diagnostics.
+// This layer stays deterministic and evidence-gated. It identifies pages that
+// deserve Founder Review; it never auto-splits content or claims Bing evidence
+// that has not actually been collected.
+const INTENT_STOPWORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does",
+  "for", "from", "how", "i", "in", "is", "it", "my", "of", "on", "or",
+  "our", "should", "that", "the", "their", "to", "with", "your",
+  "small", "business", "ai", "artificial", "intelligence"
+]);
+
+function normalizeIntentToken(token) {
+  let value = String(token || "").toLowerCase();
+  if (/^(automation|automations|automating|automated|automate)$/.test(value)) return "automate";
+  if (/^(software|tool|tools|platform|platforms)$/.test(value)) return "tool";
+  if (/^(consultant|consultants|consulting)$/.test(value)) return "consulting";
+  if (/^(service|services)$/.test(value)) return "service";
+  if (/^(workflow|workflows)$/.test(value)) return "workflow";
+  if (/^(agent|agents)$/.test(value)) return "agent";
+  if (value.length > 4 && value.endsWith("ies")) value = `${value.slice(0, -3)}y`;
+  else if (value.length > 4 && value.endsWith("s")) value = value.slice(0, -1);
+  return value;
+}
+
+export function intentClass(query = "") {
+  const value = normalizeQueryText(query).toLowerCase();
+  if (/\b(vs\.?|versus|compare|comparison|alternative|alternatives)\b/.test(value)) return "COMPARISON";
+  if (/\b(best|top|review|reviews|price|pricing|cost|costs|software|tool|tools|platform|service|services)\b/.test(value)) {
+    return "COMMERCIAL_RESEARCH";
+  }
+  if (/\b(near me|chicago|illinois|local|hire|quote|agency|consultant|consulting|company)\b/.test(value)) {
+    return "LOCAL_TRANSACTIONAL";
+  }
+  if (/\b(how|guide|tutorial|steps|setup|set up|start|implement|implementation|build|create)\b/.test(value)) {
+    return "HOW_TO";
+  }
+  if (/\b(what|why|meaning|definition|define)\b/.test(value)) return "INFORMATIONAL";
+  return "OTHER";
+}
+
+export function intentTokens(query = "") {
+  return [...new Set(
+    normalizeQueryText(query)
+      .toLowerCase()
+      .match(/[a-z0-9]+/g)
+      ?.map(normalizeIntentToken)
+      .filter((token) => token.length > 2 && !INTENT_STOPWORDS.has(token)) || []
+  )];
+}
+
+function overlapCoefficient(a = [], b = []) {
+  const left = new Set(a);
+  const right = new Set(b);
+  if (!left.size || !right.size) return 0;
+  let overlap = 0;
+  for (const token of left) if (right.has(token)) overlap++;
+  return overlap / Math.min(left.size, right.size);
+}
+
+export function clusterQueriesByIntent(queryRows = []) {
+  const rows = (Array.isArray(queryRows) ? queryRows : [])
+    .map((row) => ({
+      query: normalizeQueryText(row?.query ?? row?.queryText),
+      clicks: number(row?.clicks),
+      impressions: number(row?.impressions),
+      ctr: number(row?.ctr),
+      position: number(row?.position),
+    }))
+    .filter((row) => row.query && row.impressions > 0)
+    .sort((a, b) => b.impressions - a.impressions || a.query.localeCompare(b.query));
+
+  if (!rows.length) return [];
+
+  const tokenRows = rows.map((row) => ({
+    ...row,
+    intent: intentClass(row.query),
+    rawTokens: intentTokens(row.query),
+  }));
+
+  const frequency = new Map();
+  for (const row of tokenRows) {
+    for (const token of new Set(row.rawTokens)) {
+      frequency.set(token, (frequency.get(token) || 0) + 1);
+    }
+  }
+  const commonThreshold = Math.max(2, Math.ceil(tokenRows.length * 0.6));
+  for (const row of tokenRows) {
+    const reduced = row.rawTokens.filter((token) => (frequency.get(token) || 0) < commonThreshold);
+    row.tokens = reduced.length ? reduced : row.rawTokens;
+  }
+
+  const clusters = [];
+  for (const row of tokenRows) {
+    let best = null;
+    let bestScore = 0;
+
+    for (const cluster of clusters) {
+      const lexical = overlapCoefficient(row.tokens, [...cluster.tokens]);
+      const sameIntent = row.intent !== "OTHER" && row.intent === cluster.primaryIntent;
+      const score = lexical + (sameIntent ? 0.2 : 0);
+      if (score > bestScore) {
+        best = cluster;
+        bestScore = score;
+      }
+    }
+
+    if (!best || bestScore < 0.5) {
+      clusters.push({
+        representativeQuery: row.query,
+        representativeImpressions: row.impressions,
+        primaryIntent: row.intent,
+        queryCount: 1,
+        clicks: row.clicks,
+        impressions: row.impressions,
+        weightedPosition: row.position * row.impressions,
+        tokens: new Set(row.tokens),
+        intentCounts: new Map([[row.intent, 1]]),
+      });
+      continue;
+    }
+
+    best.queryCount++;
+    best.clicks += row.clicks;
+    best.impressions += row.impressions;
+    best.weightedPosition += row.position * row.impressions;
+    for (const token of row.tokens) best.tokens.add(token);
+    best.intentCounts.set(row.intent, (best.intentCounts.get(row.intent) || 0) + 1);
+
+    if (row.impressions > best.representativeImpressions) {
+      best.representativeQuery = row.query;
+      best.representativeImpressions = row.impressions;
+    }
+
+    best.primaryIntent = [...best.intentCounts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+  }
+
+  return clusters
+    .map((cluster) => ({
+      representativeQuery: cluster.representativeQuery,
+      intentClass: cluster.primaryIntent,
+      queryCount: cluster.queryCount,
+      clicks: cluster.clicks,
+      impressions: cluster.impressions,
+      avgPosition:
+        cluster.impressions > 0 ? cluster.weightedPosition / cluster.impressions : 0,
+      terms: [...cluster.tokens].sort().slice(0, 8),
+    }))
+    .sort((a, b) => b.impressions - a.impressions || a.representativeQuery.localeCompare(b.representativeQuery));
+}
+
+export function rankPagesByImpressions(pageRows = [], targetHost = "gwapgang.com", limit = 5) {
+  const boundedLimit = Math.max(1, Math.min(25, Number(limit) || 5));
+  const pages = [];
+  const seen = new Set();
+
+  for (const row of Array.isArray(pageRows) ? pageRows : []) {
+    const pageUrl = row?.keys?.[0] || row?.pageUrl;
+    const path = pagePath(pageUrl, targetHost);
+    if (!pageUrl || !path || !path.startsWith("/blog/")) continue;
+
+    const normalized = normalizeUrl(pageUrl);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    pages.push({
+      pageUrl,
+      pagePath: path,
+      clicks: number(row?.clicks),
+      impressions: number(row?.impressions),
+      ctr: number(row?.ctr),
+      position: number(row?.position),
+    });
+  }
+
+  return pages
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.pagePath.localeCompare(b.pagePath))
+    .slice(0, boundedLimit);
+}
+
+export function buildIntentDiagnosticSignal({
+  siteUrl,
+  permissionLevel,
+  pageMetrics,
+  queryRows,
+  targetHost,
+  startDate,
+  endDate,
+  today,
+  observedAt,
+}) {
+  const pageUrl = pageMetrics?.pageUrl;
+  const path = pagePath(pageUrl, targetHost);
+  if (!path || !path.startsWith("/blog/")) return null;
+
+  const rows = Array.isArray(queryRows) ? queryRows : [];
+  const clusters = clusterQueriesByIntent(rows);
+  const pageImpressions = number(pageMetrics?.impressions);
+  const visibleQueryImpressions = rows.reduce((sum, row) => sum + number(row?.impressions), 0);
+  const queryCoverageRatio =
+    pageImpressions > 0 ? Math.min(1, visibleQueryImpressions / pageImpressions) : 0;
+  const clusterThresholdImpressions = Math.max(3, Math.ceil(Math.max(visibleQueryImpressions, 1) * 0.15));
+  const qualifiedClusters = clusters.filter(
+    (cluster) => cluster.impressions >= clusterThresholdImpressions,
+  );
+
+  let decision = "KEEP_FOCUSED";
+  let rationale = "Observed query demand is concentrated enough to keep the current page focused.";
+
+  if (pageImpressions < 20 || rows.length < 3 || queryCoverageRatio < 0.5) {
+    decision = "COLLECT_MORE_DATA";
+    rationale =
+      "Search evidence is still too small or incomplete to justify a structural page decision.";
+  } else if (qualifiedClusters.length >= 2) {
+    decision = "REVIEW_INTENT_SPLIT";
+    rationale =
+      "This high-impression page has at least two material query clusters. Validate separate SERPs before creating any new page.";
+  }
+
+  const confidence =
+    decision === "COLLECT_MORE_DATA"
+      ? "LOW"
+      : pageImpressions >= 100 && queryCoverageRatio >= 0.75
+        ? "HIGH"
+        : "MEDIUM";
+
+  const stateSignature = stableHash(JSON.stringify({
+    decision,
+    pageImpressions,
+    visibleQueryImpressions,
+    clusters: clusters.slice(0, 8).map((cluster) => [
+      cluster.representativeQuery,
+      cluster.intentClass,
+      cluster.impressions,
+    ]),
+  }));
+
+  return {
+    sourceType: "gsc",
+    sourceRef: `gsc:${slug(siteUrl)}:intent-diagnostic:${stableHash(pageUrl)}:${today}:${stateSignature}`,
+    title: `Intent diagnostic: ${path}`,
+    url: pageUrl,
+    observedAt,
+    normalized: {
+      adapter: "gsc-intent-diagnostics-github-v2d",
+      signalKind: "search-intent-diagnostic",
+      sniperKey: slug(path),
+      siteUrl,
+      permissionLevel,
+      pageUrl,
+      pagePath: path,
+      period: `${startDate}:${endDate}`,
+      pageClicks: number(pageMetrics?.clicks),
+      pageImpressions,
+      pageCtr: number(pageMetrics?.ctr),
+      pagePosition: number(pageMetrics?.position),
+      queryCount: rows.length,
+      visibleQueryImpressions,
+      queryCoverageRatio,
+      clusterCount: clusters.length,
+      qualifiedClusterCount: qualifiedClusters.length,
+      clusterThresholdImpressions,
+      decision,
+      confidence,
+      rationale,
+      serpValidationRequired: decision === "REVIEW_INTENT_SPLIT",
+      founderReviewRequired: decision === "REVIEW_INTENT_SPLIT",
+      clusters: clusters.slice(0, 8).map((cluster) => ({
+        ...cluster,
+        impressionShare:
+          visibleQueryImpressions > 0 ? cluster.impressions / visibleQueryImpressions : 0,
+      })),
+    },
+  };
+}
+
+function normalizeEngineIndexStatus(status) {
+  const value = String(status || "").toUpperCase();
+  if (!value) return "MISSING";
+  if (["INDEXED", "PASS"].includes(value)) return "INDEXED";
+  if (["EXCLUDED", "ERROR", "FAIL", "NOT_INDEXED", "NOT INDEXED"].includes(value)) return "NOT_INDEXED";
+  return "UNKNOWN";
+}
+
+export function compareEngineIndexStates(googleStatus, bingStatus) {
+  const google = normalizeEngineIndexStatus(googleStatus);
+  const bing = normalizeEngineIndexStatus(bingStatus);
+
+  if (bing === "MISSING" || bing === "UNKNOWN") return "BING_EVIDENCE_MISSING";
+  if (google === "INDEXED" && bing === "INDEXED") return "CROSS_ENGINE_HEALTHY";
+  if (google === "NOT_INDEXED" && bing === "NOT_INDEXED") return "SITE_TECHNICAL_INVESTIGATION";
+  if (google === "NOT_INDEXED" && bing === "INDEXED") return "GOOGLE_INDEX_RECOVERY";
+  if (google === "INDEXED" && bing === "NOT_INDEXED") return "BING_DIAGNOSTIC";
+  return "HOLD";
+}
+
+export function buildIndexDiagnosticSignal({
+  siteUrl,
+  permissionLevel,
+  pageUrl,
+  targetHost,
+  indexSignal,
+  recoverySignal,
+  bingIndexStatus = null,
+  today,
+  observedAt,
+}) {
+  const path = pagePath(pageUrl, targetHost);
+  if (!path || !path.startsWith("/blog/")) return null;
+
+  const index = indexSignal?.normalized || {};
+  const recovery = recoverySignal?.normalized || {};
+  const engineComparison = compareEngineIndexStates(index.indexStatus, bingIndexStatus);
+
+  let decision = engineComparison;
+  if (engineComparison === "BING_EVIDENCE_MISSING") {
+    if (index.indexStatus === "INDEXED") {
+      decision = "PROTECT_URL_AND_COLLECT_DATA";
+    } else if (
+      recovery.action === "FIX_TECHNICAL_DISCOVERY" ||
+      ["CANONICAL_REVIEW", "CRAWLABILITY_REVIEW", "TECHNICAL_DIAGNOSIS"].includes(recovery.recoveryClass)
+    ) {
+      decision = "TECHNICAL_INVESTIGATION";
+    } else if (["DISCOVERY_RECOVERY", "COVERAGE_EXPANSION"].includes(recovery.recoveryClass)) {
+      decision = "GOOGLE_INDEX_RECOVERY";
+    } else {
+      decision = "HOLD";
+    }
+  }
+
+  const stateSignature = stableHash(JSON.stringify({
+    indexStatus: index.indexStatus || "UNKNOWN",
+    coverageState: index.coverageState || null,
+    recoveryClass: recovery.recoveryClass || null,
+    recoveryAction: recovery.action || null,
+    bingIndexStatus: bingIndexStatus || null,
+    engineComparison,
+    decision,
+  }));
+
+  return {
+    sourceType: "gsc",
+    sourceRef: `gsc:${slug(siteUrl)}:index-diagnostic:${stableHash(pageUrl)}:${today}:${stateSignature}`,
+    title: `Index diagnostic: ${path}`,
+    url: pageUrl,
+    observedAt,
+    normalized: {
+      adapter: "search-index-diagnostics-github-v2d",
+      signalKind: "search-index-diagnostic",
+      sniperKey: slug(path),
+      siteUrl,
+      permissionLevel,
+      pageUrl,
+      pagePath: path,
+      googleIndexStatus: index.indexStatus || "UNKNOWN",
+      googleCoverageState: index.coverageState || null,
+      googleCanonicalStatus: index.canonicalStatus || "UNKNOWN",
+      recoveryClass: recovery.recoveryClass || null,
+      recoveryAction: recovery.action || null,
+      bingIndexStatus: bingIndexStatus || "NOT_COLLECTED",
+      engineComparison,
+      decision,
+      founderReviewRequired: decision !== "PROTECT_URL_AND_COLLECT_DATA",
+      evidenceBoundary:
+        bingIndexStatus == null
+          ? "BING_INDEX_EVIDENCE_NOT_CONNECTED"
+          : "GOOGLE_AND_BING_EVIDENCE_AVAILABLE",
+    },
+  };
+}
