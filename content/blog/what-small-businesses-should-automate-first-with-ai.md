@@ -24,6 +24,7 @@ relatedArticles:
   - content/blog/how-to-find-ai-automation-opportunities-in-your-business.md
   - content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
   - content/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool.md
+  - content/blog/how-to-run-your-first-ai-automation-pilot-in-7-days.md
 nextMove: content/blog/ai-agents-for-small-business-what-they-should-do-and-never-decide.md
 commercialOpportunities:
   - ai-business-intelligence-report
