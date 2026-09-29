@@ -3,12 +3,15 @@ import {
   articleUrlsFromGitHubContents,
   articleUrlsFromManifest,
   articleUrlsFromSitemapXml,
+  buildIndexDiagnosticSignal,
   buildIndexSignal,
+  buildIntentDiagnosticSignal,
   buildQuerySignal,
   buildRecoverySignal,
   dayBucket,
   number,
   pagePath,
+  rankPagesByImpressions,
   slug,
 } from "./gsc-collector-lib.mjs";
 
@@ -27,6 +30,10 @@ const githubInventoryUrl =
 const inspectionLimit = Math.max(
   1,
   Math.min(100, Number(process.env.GSC_INDEX_INSPECTION_LIMIT || 50) || 50),
+);
+const v2dPageLimit = Math.max(
+  1,
+  Math.min(25, Number(process.env.GSC_V2D_PAGE_LIMIT || 5) || 5),
 );
 
 if (!ingestKey) {
@@ -501,6 +508,58 @@ for (const row of queryReport.rows || []) {
   record(queryStats, await storeSignal(signal));
 }
 
+// Search Intelligence V2D: diagnose the highest-impression pages first.
+// A split recommendation is only a Founder Review candidate. It requires
+// separate SERP validation before any page is created or changed.
+const v2dIntentStats = emptyStats();
+const v2dIntentDecisions = {
+  REVIEW_INTENT_SPLIT: 0,
+  KEEP_FOCUSED: 0,
+  COLLECT_MORE_DATA: 0,
+};
+const topIntentPages = rankPagesByImpressions(pageReport.rows || [], targetHost, v2dPageLimit);
+v2dIntentStats.rowsReturned = topIntentPages.length;
+
+const queryRowsByPage = new Map();
+for (const row of queryReport.rows || []) {
+  const query = row.keys?.[0];
+  const pageUrl = row.keys?.[1];
+  if (!query || !pageUrl) continue;
+  const normalized = {
+    query,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: row.ctr,
+    position: row.position,
+  };
+  if (!queryRowsByPage.has(pageUrl)) queryRowsByPage.set(pageUrl, []);
+  queryRowsByPage.get(pageUrl).push(normalized);
+}
+
+for (const pageMetrics of topIntentPages) {
+  const signal = buildIntentDiagnosticSignal({
+    siteUrl,
+    permissionLevel: site.permissionLevel,
+    pageMetrics,
+    queryRows: queryRowsByPage.get(pageMetrics.pageUrl) || [],
+    targetHost,
+    startDate,
+    endDate,
+    today,
+    observedAt,
+  });
+
+  if (!signal) {
+    v2dIntentStats.skipped++;
+    continue;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(v2dIntentDecisions, signal.normalized.decision)) {
+    v2dIntentDecisions[signal.normalized.decision]++;
+  }
+  record(v2dIntentStats, await storeSignal(signal));
+}
+
 // Search Intelligence V2B: inspect every current article URL and persist
 // Google's indexed-version status, canonical selection, crawl/fetch state,
 // and inspection evidence. The API does not perform live URL testing.
@@ -511,6 +570,25 @@ indexStats.rowsReturned = articleUrls.length;
 
 const recoveryStats = emptyStats();
 recoveryStats.rowsReturned = articleUrls.length;
+const v2dIndexStats = emptyStats();
+v2dIndexStats.rowsReturned = articleUrls.length;
+const v2dIndexDecisions = {
+  PROTECT_URL_AND_COLLECT_DATA: 0,
+  GOOGLE_INDEX_RECOVERY: 0,
+  TECHNICAL_INVESTIGATION: 0,
+  SITE_TECHNICAL_INVESTIGATION: 0,
+  BING_DIAGNOSTIC: 0,
+  CROSS_ENGINE_HEALTHY: 0,
+  HOLD: 0,
+};
+const v2dEngineComparisons = {
+  BING_EVIDENCE_MISSING: 0,
+  CROSS_ENGINE_HEALTHY: 0,
+  SITE_TECHNICAL_INVESTIGATION: 0,
+  GOOGLE_INDEX_RECOVERY: 0,
+  BING_DIAGNOSTIC: 0,
+  HOLD: 0,
+};
 let recoveryEvidence = null;
 let recoveryEvidenceError = null;
 try {
@@ -569,6 +647,7 @@ for (const pageUrl of articleUrls) {
 
     if (!recoveryEvidence) {
       recoveryStats.failed++;
+      v2dIndexStats.failed++;
       continue;
     }
 
@@ -592,6 +671,33 @@ for (const pageUrl of articleUrls) {
       recoveryClasses[recoverySignal.normalized.recoveryClass]++;
     }
     record(recoveryStats, await storeSignal(recoverySignal));
+
+    const indexDiagnosticSignal = buildIndexDiagnosticSignal({
+      siteUrl,
+      permissionLevel: site.permissionLevel,
+      pageUrl,
+      targetHost,
+      indexSignal: signal,
+      recoverySignal,
+      // Bing Webmaster ownership exists, but no Bing index-state API adapter is
+      // connected to this collector yet. Keep that evidence boundary explicit.
+      bingIndexStatus: null,
+      today,
+      observedAt,
+    });
+
+    if (!indexDiagnosticSignal) {
+      v2dIndexStats.skipped++;
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(v2dIndexDecisions, indexDiagnosticSignal.normalized.decision)) {
+      v2dIndexDecisions[indexDiagnosticSignal.normalized.decision]++;
+    }
+    if (Object.prototype.hasOwnProperty.call(v2dEngineComparisons, indexDiagnosticSignal.normalized.engineComparison)) {
+      v2dEngineComparisons[indexDiagnosticSignal.normalized.engineComparison]++;
+    }
+    record(v2dIndexStats, await storeSignal(indexDiagnosticSignal));
   } catch (error) {
     indexStats.failed++;
     console.error(
@@ -606,13 +712,17 @@ for (const pageUrl of articleUrls) {
 }
 
 const totalStored =
-  pageStats.stored + queryStats.stored + indexStats.stored + recoveryStats.stored;
+  pageStats.stored + queryStats.stored + indexStats.stored + recoveryStats.stored +
+  v2dIntentStats.stored + v2dIndexStats.stored;
 const totalDuplicate =
-  pageStats.duplicate + queryStats.duplicate + indexStats.duplicate + recoveryStats.duplicate;
+  pageStats.duplicate + queryStats.duplicate + indexStats.duplicate + recoveryStats.duplicate +
+  v2dIntentStats.duplicate + v2dIndexStats.duplicate;
 const totalFailed =
-  pageStats.failed + queryStats.failed + indexStats.failed + recoveryStats.failed;
+  pageStats.failed + queryStats.failed + indexStats.failed + recoveryStats.failed +
+  v2dIntentStats.failed + v2dIndexStats.failed;
 const totalSkipped =
-  pageStats.skipped + queryStats.skipped + indexStats.skipped + recoveryStats.skipped;
+  pageStats.skipped + queryStats.skipped + indexStats.skipped + recoveryStats.skipped +
+  v2dIntentStats.skipped + v2dIndexStats.skipped;
 
 console.log(
   JSON.stringify(
@@ -649,6 +759,24 @@ console.log(
         repositoryArticleSources: recoveryEvidence?.articleSourceCount || 0,
         globalRepositoryEvidence: recoveryEvidence?.globalEvidence || null,
         evidenceError: recoveryEvidenceError,
+      },
+
+      v2dIntentDiagnostics: {
+        ...v2dIntentStats,
+        pageLimit: v2dPageLimit,
+        analyzedPages: topIntentPages.map((page) => ({
+          pagePath: page.pagePath,
+          impressions: page.impressions,
+          clicks: page.clicks,
+        })),
+        decisions: v2dIntentDecisions,
+      },
+
+      v2dIndexDiagnostics: {
+        ...v2dIndexStats,
+        decisions: v2dIndexDecisions,
+        engineComparisons: v2dEngineComparisons,
+        bingAdapter: "NOT_CONNECTED",
       },
 
       totals: {
