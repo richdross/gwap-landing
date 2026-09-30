@@ -137,8 +137,11 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 <script>
 (() => {
   const endpoint = {{ site.revenueLeakScore.endpoint | json | safe }};
+  const funnelBase = new URL(endpoint).origin;
+  const startEndpoint = funnelBase + "/public/funnel/start";
   const eventEndpoint = endpoint + "/event";
   const checkoutUrl = {{ site.revenueRescueSprint.checkoutUrl | json | safe }};
+  let funnelSessionId = crypto.randomUUID();
   const form = document.getElementById("score-form");
   const submit = document.getElementById("submit");
   const status = document.getElementById("status");
@@ -152,13 +155,13 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     return String(value || "verified finding").replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
   }
 
-  async function trackEvent(leadId, eventType, metadata = {}) {
-    if (!leadId || !eventType) return false;
+  async function trackResultView(funnelToken) {
+    if (!funnelToken) return false;
     try {
       const response = await fetch(eventEndpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ lead_id: leadId, event_type: eventType, metadata })
+        body: JSON.stringify({ funnel_token: funnelToken, event_type: "result_viewed" })
       });
       return response.ok;
     } catch {
@@ -184,36 +187,14 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       const el = document.createElement(item.url ? "a" : "button");
       el.className = secondaryStyle ? "cta secondary" : "cta";
       el.textContent = item.label || "Continue";
-      if (item.url) el.href = item.kind === "checkout" && checkoutUrl ? checkoutUrl : item.url;
+      if (item.url) {
+        el.href = item.kind === "checkout" && checkoutUrl ? checkoutUrl : item.url;
+        return el;
+      }
 
       el.addEventListener("click", async (event) => {
-        const eventType = item.event || (
-          item.kind === "case_example" ? "case_example_clicked" :
-          item.kind === "rescue_plan" ? "rescue_plan_clicked" :
-          item.kind === "checkout" ? "checkout_clicked" :
-          null
-        );
-
-        if (!item.url) {
-          event.preventDefault();
-          el.disabled = true;
-          const ok = await trackEvent(data.lead_id, eventType, { conversion_path: action.key || null });
-          if (item.kind === "priority_review" || item.kind === "founder_review") {
-            actionStatus.textContent = ok
-              ? "Review request recorded. Gwap will follow up using the business email you provided."
-              : "A review request requires email follow-up consent. Enable it and rerun the diagnostic.";
-          } else if (item.kind === "newsletter_opt_in") {
-            actionStatus.textContent = ok
-              ? "You're subscribed to The Leverage Brief."
-              : "Newsletter signup is temporarily unavailable.";
-          }
-          el.disabled = false;
-          return;
-        }
-
         event.preventDefault();
-        await trackEvent(data.lead_id, eventType, { conversion_path: action.key || null });
-        window.location.href = el.href;
+        actionStatus.textContent = "This action is temporarily unavailable. Please rerun the diagnostic.";
       });
       return el;
     }
@@ -280,10 +261,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     renderAction(data, card);
     result.style.display = "block";
     result.scrollIntoView({ behavior: "smooth", block: "start" });
-    trackEvent(data.lead_id, "result_viewed", {
-      leak_score: data.leak_score,
-      offer_key: diagnostic?.route?.offerKey || "revenue_rescue_sprint"
-    });
+    void trackResultView(data.funnel_token);
   }
 
   form.addEventListener("submit", async (event) => {
@@ -305,8 +283,17 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     payload.utmTerm = params.get("utm_term") || "";
     payload.referrer = document.referrer || "";
     payload.landingPath = window.location.pathname + window.location.search;
+    payload.funnelSessionId = funnelSessionId;
 
     try {
+      const startResponse = await fetch(startEndpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const startBody = await startResponse.json().catch(() => ({}));
+      if (!startResponse.ok || !startBody.ok) throw new Error(startBody.error || "Score session could not be started");
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -315,8 +302,8 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       const body = await response.json().catch(() => ({}));
       if (!response.ok || !body.ok) throw new Error(body.error || "Score request failed");
       render(body);
-      status.textContent = body.email_sent
-        ? "Score complete. A copy was also sent to your email."
+      status.textContent = body.email_queued
+        ? "Score complete. A copy is queued for your email."
         : "Score complete.";
     } catch (error) {
       status.className = "status error";
