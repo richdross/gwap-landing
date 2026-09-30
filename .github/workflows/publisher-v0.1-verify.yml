@@ -73,7 +73,8 @@ jobs:
           grep -q 'name="primaryProblem"' "$GROWTH_DIAGNOSTIC"
           grep -q 'name="urgency"' "$GROWTH_DIAGNOSTIC"
           grep -q 'Best-Fit Route' "$GROWTH_DIAGNOSTIC"
-          grep -q 'founder_review' "$GROWTH_DIAGNOSTIC"
+          grep -q 'funnelSessionId' "$GROWTH_DIAGNOSTIC"
+          grep -q 'funnel_token' "$GROWTH_DIAGNOSTIC"
           grep -q 'growth_diagnostic' "$GROWTH_DIAGNOSTIC"
 
           node <<'NODE'
