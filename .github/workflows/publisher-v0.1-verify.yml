@@ -66,6 +66,9 @@ jobs:
           test -f _site/operator/blog-analytics/index.html
           test -f _site/operator/blog-analytics/articles.json
           test -f _site/revenue-leak-score/index.html
+          test -f _site/revenue-leak-playbook/index.html
+          grep -q 'Revenue Leak Playbook V1' _site/revenue-leak-playbook/index.html
+          grep -q 'playbook_checkout' _site/revenue-leak-playbook/index.html
 
           GROWTH_DIAGNOSTIC="_site/revenue-leak-score/index.html"
           grep -q 'Growth Diagnostic V0.1' "$GROWTH_DIAGNOSTIC"
