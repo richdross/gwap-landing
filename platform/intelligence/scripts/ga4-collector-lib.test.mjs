@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { signalKey, hourBucket, isEditorialArticlePath } from "./ga4-collector-lib.mjs";
+import { signalKey, hourBucket, sixHourBucket, isEditorialArticlePath } from "./ga4-collector-lib.mjs";
 
 test("signal keys distinguish similar slugs", () => {
   assert.equal(signalKey("/blog/a/"), signalKey("/blog/a/"));
@@ -17,4 +17,11 @@ test("both editorial routes are supported", () => {
   for (const p of ["/","/start/","/blog/","/brief/","/revenue-leak-score/","/blog/a/b/"]) {
     assert.equal(isEditorialArticlePath(p), false);
   }
+});
+
+test("6-hour data snapshots bound storage growth while collector health stays hourly", () => {
+  assert.equal(sixHourBucket("2026-10-09T00:01:00Z"), "2026-10-09-00");
+  assert.equal(sixHourBucket("2026-10-09T05:59:59Z"), "2026-10-09-00");
+  assert.equal(sixHourBucket("2026-10-09T06:00:00Z"), "2026-10-09-06");
+  assert.equal(sixHourBucket("2026-10-09T23:59:59Z"), "2026-10-09-18");
 });
