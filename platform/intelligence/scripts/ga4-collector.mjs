@@ -1,5 +1,5 @@
 import { createSign } from "node:crypto";
-import { hourBucket, signalKey, isEditorialArticlePath } from "./ga4-collector-lib.mjs";
+import { hourBucket, sixHourBucket, signalKey, isEditorialArticlePath } from "./ga4-collector-lib.mjs";
 
 const endpoint = process.env.INTELLIGENCE_URL || "https://gwap-intelligence-v1.richdross.workers.dev";
 const ingestKey = process.env.SIGNAL_INGEST_KEY;
@@ -73,7 +73,8 @@ async function storeSignal(signal) {
 }
 
 const token = await accessToken();
-const snapshot = hourBucket();
+const snapshot = sixHourBucket();
+const heartbeat = hourBucket();
 let stored = 0, duplicate = 0, failed = 0, realtimeUsed = false;
 const summaries = [];
 
@@ -199,10 +200,10 @@ if (standardPages === 0 && standardEvents === 0) {
 
 const healthOutcome = await storeSignal({
   sourceType: "ga4",
-  sourceRef: `ga4:${propertyId}:collector-health:${snapshot}`,
+  sourceRef: `ga4:${propertyId}:collector-health:${heartbeat}`,
   title: "GA4 collector execution",
   observedAt: new Date().toISOString(),
-  normalized: { adapter: "ga4-collector-health-v1", signalKind: "collector-health", propertyId, snapshot, standardPages, standardEvents, articleEvents, realtimeUsed, failedBeforeHeartbeat: failed }
+  normalized: { adapter: "ga4-collector-health-v1", signalKind: "collector-health", propertyId, snapshot, heartbeat, standardPages, standardEvents, articleEvents, realtimeUsed, failedBeforeHeartbeat: failed }
 });
 if (healthOutcome === "stored") stored++;
 else if (healthOutcome === "duplicate") duplicate++;
