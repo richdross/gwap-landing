@@ -31,6 +31,7 @@ async function probeLivePages() {
         cfRayPresent: Boolean(r.headers.get("cf-ray")),
         tagIdPresent: html.includes("G-MZF7SR86XK"),
         sharedBootstrapPresent: html.includes("window.gwapTrack"),
+        navigationHandoffPresent: html.includes("gwap_pending_navigation_event_v1"),
         canonicalPresent: html.includes('<link rel="canonical"'),
       };
       results.push(row);
