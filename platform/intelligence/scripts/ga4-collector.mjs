@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+import { hourBucket, signalKey, isEditorialArticlePath } from "./ga4-collector-lib.mjs";
 
 const endpoint = process.env.INTELLIGENCE_URL || "https://gwap-intelligence-v1.richdross.workers.dev";
 const ingestKey = process.env.SIGNAL_INGEST_KEY;
@@ -72,22 +73,22 @@ async function storeSignal(signal) {
 }
 
 const token = await accessToken();
-const today = dayBucket();
+const snapshot = hourBucket();
 let stored = 0, duplicate = 0, failed = 0, realtimeUsed = false;
 const summaries = [];
 
 const pageReport = await analyticsRequest(token, "runReport", {
   dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
-  dimensions: [{ name: "pagePath" }, { name: "pageTitle" }],
+  dimensions: [{ name: "pagePath" }],
   metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }, { name: "sessions" }, { name: "eventCount" }, { name: "userEngagementDuration" }],
   orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }], limit: "50",
 });
 
 for (const row of pageReport.rows || []) {
   const path = row.dimensionValues?.[0]?.value || "/";
-  const title = row.dimensionValues?.[1]?.value || path;
+  const title = path; // Canonical path merges title variants.
   const metrics = row.metricValues || [];
-  const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:page:${slug(path)}:${today}`, title, observedAt: new Date().toISOString(), normalized: {
+  const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:page:${slug(path)}-${signalKey(path)}:${snapshot}`, title, observedAt: new Date().toISOString(), normalized: {
     adapter: "ga4-data-api-github-v1", signalKind: "page-behavior", sniperKey: slug(title || path), propertyId, pagePath: path, pageTitle: title,
     screenPageViews: number(metrics[0]?.value), activeUsers: number(metrics[1]?.value), sessions: number(metrics[2]?.value), eventCount: number(metrics[3]?.value), userEngagementDuration: number(metrics[4]?.value), period: "7daysAgo:today",
   }});
@@ -102,7 +103,7 @@ const eventReport = await analyticsRequest(token, "runReport", {
 for (const row of eventReport.rows || []) {
   const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
   const metrics = row.metricValues || [];
-  const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:event:${slug(eventName)}:${today}`, title: `GA4 event: ${eventName}`, observedAt: new Date().toISOString(), normalized: {
+  const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:event:${slug(eventName)}-${signalKey(eventName)}:${snapshot}`, title: `GA4 event: ${eventName}`, observedAt: new Date().toISOString(), normalized: {
     adapter: "ga4-data-api-github-v1", signalKind: "event-behavior", sniperKey: slug(eventName), propertyId, eventName, eventCount: number(metrics[0]?.value), activeUsers: number(metrics[1]?.value), period: "7daysAgo:today",
   }});
   if (outcome === "stored") stored++; else if (outcome === "duplicate") duplicate++; else failed++;
@@ -126,7 +127,7 @@ const articleEventNames = new Set([
 
 const articleEventReport = await analyticsRequest(token, "runReport", {
   dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
-  dimensions: [{ name: "eventName" }, { name: "pagePath" }, { name: "pageTitle" }],
+  dimensions: [{ name: "eventName" }, { name: "pagePath" }],
   metrics: [{ name: "eventCount" }, { name: "activeUsers" }],
   orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
   limit: "500",
@@ -136,14 +137,14 @@ let articleEvents = 0;
 for (const row of articleEventReport.rows || []) {
   const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
   const path = row.dimensionValues?.[1]?.value || "/";
-  const title = row.dimensionValues?.[2]?.value || path;
-  if (!path.startsWith("/blog/") || !articleEventNames.has(eventName)) continue;
+  const title = path;
+  if (!isEditorialArticlePath(path) || !articleEventNames.has(eventName)) continue;
 
   articleEvents++;
   const metrics = row.metricValues || [];
   const outcome = await storeSignal({
     sourceType: "ga4",
-    sourceRef: `ga4:${propertyId}:article-event:${slug(eventName)}:${slug(path)}:${today}`,
+    sourceRef: `ga4:${propertyId}:article-event:${slug(eventName)}-${signalKey(eventName)}:${slug(path)}-${signalKey(path)}:${snapshot}`,
     title: `GA4 article event: ${eventName} — ${title}`,
     observedAt: new Date().toISOString(),
     normalized: {
@@ -175,7 +176,7 @@ if (standardPages === 0 && standardEvents === 0) {
   for (const row of realtimePages.rows || []) {
     const screenName = row.dimensionValues?.[0]?.value || "unknown-page";
     const metrics = row.metricValues || [];
-    const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:realtime-page:${slug(screenName)}:${today}`, title: screenName, observedAt: new Date().toISOString(), normalized: {
+    const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:realtime-page:${slug(screenName)}-${signalKey(screenName)}:${snapshot}`, title: screenName, observedAt: new Date().toISOString(), normalized: {
       adapter: "ga4-data-api-realtime-github-v1", signalKind: "page-behavior-realtime", sniperKey: slug(screenName), propertyId, pageTitle: screenName, screenPageViews: number(metrics[0]?.value), period: "last-30-minutes",
     }});
     if (outcome === "stored") stored++; else if (outcome === "duplicate") duplicate++; else failed++;
@@ -187,7 +188,7 @@ if (standardPages === 0 && standardEvents === 0) {
   for (const row of realtimeEvents.rows || []) {
     const eventName = row.dimensionValues?.[0]?.value || "unknown_event";
     const metrics = row.metricValues || [];
-    const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:realtime-event:${slug(eventName)}:${today}`, title: `GA4 realtime event: ${eventName}`, observedAt: new Date().toISOString(), normalized: {
+    const outcome = await storeSignal({ sourceType: "ga4", sourceRef: `ga4:${propertyId}:realtime-event:${slug(eventName)}-${signalKey(eventName)}:${snapshot}`, title: `GA4 realtime event: ${eventName}`, observedAt: new Date().toISOString(), normalized: {
       adapter: "ga4-data-api-realtime-github-v1", signalKind: "event-behavior-realtime", sniperKey: slug(eventName), propertyId, eventName, eventCount: number(metrics[0]?.value), period: "last-30-minutes",
     }});
     if (outcome === "stored") stored++; else if (outcome === "duplicate") duplicate++; else failed++;
@@ -196,5 +197,15 @@ if (standardPages === 0 && standardEvents === 0) {
   summaries.push({ mode: "realtime-fallback", pages: realtimePages.rows?.length || 0, events: realtimeEvents.rows?.length || 0 });
 }
 
-console.log(JSON.stringify({ ok: failed === 0, source: "ga4", mode: "active", propertyId, realtimeUsed, stored, duplicate, failed, summaries }, null, 2));
+const healthOutcome = await storeSignal({
+  sourceType: "ga4",
+  sourceRef: `ga4:${propertyId}:collector-health:${snapshot}`,
+  title: "GA4 collector execution",
+  observedAt: new Date().toISOString(),
+  normalized: { adapter: "ga4-collector-health-v1", signalKind: "collector-health", propertyId, snapshot, standardPages, standardEvents, articleEvents, realtimeUsed, failedBeforeHeartbeat: failed }
+});
+if (healthOutcome === "stored") stored++;
+else if (healthOutcome === "duplicate") duplicate++;
+else failed++;
+console.log(JSON.stringify({ ok: failed === 0, source: "ga4", mode: "active", propertyId, snapshot, realtimeUsed, stored, duplicate, failed, summaries }, null, 2));
 if (failed > 0) process.exit(4);
