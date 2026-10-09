@@ -130,6 +130,20 @@ async function gaAudit() {
 console.log("GWAP_GA4_PRODUCTION_PROBE_BEGIN");
 const pages=await probeLivePages();
 console.log("PUBLIC_HTML_PROBE "+JSON.stringify(pages));
+const triage=[
+  {label:"top_chrome_ua",url:base+targets[0],agent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"},
+  {label:"top_pages_dev",url:"https://gwap-landing.pages.dev"+targets[0],agent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36"},
+  {label:"other_blog_chrome",url:base+"/blog/how-to-calculate-ai-automation-roi-before-you-buy-another-tool/",agent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36"}
+];
+const triageReport=[];
+for(const item of triage) {
+  try {
+    const response=await getWithTimeout(item.url,{redirect:"follow",headers:{"user-agent":item.agent}});
+    const body=await response.text();
+    triageReport.push({label:item.label,status:response.status,cfRayPresent:Boolean(response.headers.get("cf-ray")),hasTag:body.includes("G-MZF7SR86XK"),challengeHint:/cf-chl|just a moment|attention required|access denied/i.test(body.slice(0,11000)),bytes:body.length});
+  }catch(err){triageReport.push({label:item.label,error:summarizeFailure(err)});}
+}
+console.log("CLOUDFLARE_TRIAGE "+JSON.stringify(triageReport));
 let ga;
 try { ga=await gaAudit(); } catch(e) { ga={status:"error",reason:summarizeFailure(e)}; }
 console.log("GA4_REPORT_MATRIX "+JSON.stringify(ga));
