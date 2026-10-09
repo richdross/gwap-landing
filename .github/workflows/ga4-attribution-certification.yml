@@ -1,0 +1,26 @@
+name: GWAP GA4 Attribution Certification
+on:
+  pull_request:
+    paths:
+      - "_includes/analytics.njk"
+      - "_includes/post.njk"
+      - "start.njk"
+      - "revenue-leak-score.njk"
+      - "revenue-rescue-sprint.njk"
+      - "revenue-leak-playbook.njk"
+      - "scripts/verify-ga4-attribution.mjs"
+      - ".github/workflows/ga4-attribution-certification.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify GA4 attribution and privacy-safe browser events
+        run: node --test scripts/verify-ga4-attribution.mjs
