@@ -161,6 +161,7 @@ a{color:inherit}
   .step::after{display:none!important}
 }
 </style>
+{% include "analytics.njk" %}
 </head>
 <body>
 <header class="head">
@@ -200,7 +201,7 @@ a{color:inherit}
     </div>
 
     <div class="routes">
-      <a class="route primary" href="{{ site.revenueLeakScore.salesUrl }}" data-route="growth-diagnostic">
+      <a class="route primary" href="{{ site.revenueLeakScore.salesUrl }}" data-route="growth-diagnostic" data-gwap-track="gwap_route_selected" data-gwap-offer="revenue_leak_score">
         <div class="route-number"><span>01 // Diagnose Growth</span><span class="price">Free</span></div>
         <h3>I Need More Customers Or Better Conversion.</h3>
         <p>Run a bounded public-evidence Growth Diagnostic. Gwap looks for visible friction, ranks the strongest findings, and shows the most useful next move.</p>
@@ -208,7 +209,7 @@ a{color:inherit}
         <div class="route-cta">Run My Free Growth Diagnostic →</div>
       </a>
 
-      <a class="route" href="{{ site.revenueRescueSprint.salesUrl }}" data-route="revenue-rescue">
+      <a class="route" href="{{ site.revenueRescueSprint.salesUrl }}" data-route="revenue-rescue" data-gwap-track="gwap_route_selected" data-gwap-offer="revenue_rescue_sprint">
         <div class="route-number"><span>02 // Repair Revenue</span><span class="price">{{ site.revenueRescueSprint.priceLabel }}</span></div>
         <h3>I Know Something Is Leaking Revenue.</h3>
         <p>Get a fixed-scope Revenue Rescue Sprint focused on the three highest-value leaks, the evidence behind them, and a prioritized 7-day execution plan.</p>
@@ -216,7 +217,7 @@ a{color:inherit}
         <div class="route-cta">Explore Revenue Rescue →</div>
       </a>
 
-      <a class="route" href="{{ site.primaryOffer.url }}" data-route="business-intelligence">
+      <a class="route" href="{{ site.primaryOffer.url }}" data-route="business-intelligence" data-gwap-track="gwap_route_selected" data-gwap-offer="business_intelligence_report">
         <div class="route-number"><span>03 // Find Leverage</span><span class="price">$49</span></div>
         <h3>I Need Better Business Intelligence.</h3>
         <p>Get a practical AI Business Intelligence Report covering competitors, missed opportunities, AI leverage, revenue ideas, and a prioritized action plan.</p>
@@ -300,7 +301,7 @@ a{color:inherit}
     <div class="eyebrow">Still Not Sure?</div>
     <h2>Start Free. Let The Evidence Decide.</h2>
     <p>If you do not know which Gwap product fits, the Growth Diagnostic is the correct first step. You will get a result before you are asked to make a larger commitment.</p>
-    <a class="acid-btn" href="{{ site.revenueLeakScore.salesUrl }}">Run My Free Growth Diagnostic →</a>
+    <a class="acid-btn" href="{{ site.revenueLeakScore.salesUrl }}" data-gwap-track="gwap_route_selected" data-gwap-offer="revenue_leak_score" data-gwap-placement="start_final">Run My Free Growth Diagnostic →</a>
   </div>
 </section>
 </main>
