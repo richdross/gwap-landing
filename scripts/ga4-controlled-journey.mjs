@@ -1,7 +1,9 @@
 import { chromium } from "playwright-core";
 import { execFileSync } from "node:child_process";
 
-const base = "https://gwapgang.com";
+const productionBase = "https://gwapgang.com";
+const pagesBase = "https://gwap-landing.pages.dev";
+let base = productionBase;
 const first = "/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/";
 const backup = "/brief/001-ai-is-getting-cheaper-leverage-is-getting-more-valuable/";
 const googleParams = [];
@@ -44,6 +46,15 @@ if(initialStatus!==200){
   articleResponse=await page.goto(base+backup,{waitUntil:"domcontentloaded",timeout:25000});
   articlePath=backup;
 }
+if (articleResponse?.status() !== 200) {
+  base = pagesBase;
+  articleResponse = await page.goto(base+first,{waitUntil:"domcontentloaded",timeout:25000});
+  articlePath=first;
+  if (articleResponse?.status() !== 200) {
+    articleResponse = await page.goto(base+backup,{waitUntil:"domcontentloaded",timeout:25000});
+    articlePath=backup;
+  }
+}
 await page.waitForTimeout(1200);
 const articleTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
 const articleOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
@@ -56,7 +67,7 @@ const startOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gw
 const selectorCount = await page.locator('a[data-route="growth-diagnostic"]').count();
 const startTitle=await page.title();
 if (selectorCount === 0) {
-  console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({headlessChrome:true,firstArticleStatus:initialStatus,finalArticleStatus:articleStatus,articlePath,articleTag,articleOrigin,startStatus,startHasTag,startOrigin,startTitle,reason:"growth_diagnostic_route_absent_or_challenged",capturedRequests:googleParams,formSubmitted:false,paymentAttempted:false}));
+  console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({headlessChrome:true,hostTested:base,firstArticleStatus:initialStatus,finalArticleStatus:articleStatus,articlePath,articleTag,articleOrigin,startStatus,startHasTag,startOrigin,startTitle,reason:"growth_diagnostic_route_absent_or_challenged",capturedRequests:googleParams,formSubmitted:false,paymentAttempted:false}));
   await browser.close();
   process.exit(0);
 }
@@ -67,7 +78,7 @@ const scoreHasTag=await page.evaluate(()=>Boolean(document.querySelector('script
 const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const events=googleParams.filter(e=>e.tagMatch);
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
-  headlessChrome:true, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
+  headlessChrome:true, hostTested:base, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
   articlePath, articleTag, startStatus, startHasTag, scoreHasTag,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
