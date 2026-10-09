@@ -68,6 +68,10 @@ const startEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).m
 const startOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const selectorCount = await page.locator('a[data-route="growth-diagnostic"]').count();
 const startTitle=await page.title();
+await page.evaluate(() => window.addEventListener("pagehide", () => {
+  const captured=Array.from(window.dataLayer||[]).map(x=>Array.from(x)).filter(x=>x[0]==="event").map(x=>x[1]);
+  try{sessionStorage.setItem("__gwap_audit_start_queued",JSON.stringify(captured));}catch{}
+}));
 if (selectorCount === 0) {
   console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({headlessChrome:true,hostTested:base,firstArticleStatus:initialStatus,finalArticleStatus:articleStatus,articlePath,articleTag,articleOrigin,startStatus,startHasTag,startOrigin,startTitle,reason:"growth_diagnostic_route_absent_or_challenged",capturedRequests:googleParams,formSubmitted:false,paymentAttempted:false}));
   await browser.close();
@@ -77,13 +81,14 @@ await page.locator('a[data-route="growth-diagnostic"]').first().click({timeout:1
 await page.waitForURL("**/revenue-leak-score/**",{timeout:25000});
 await page.waitForTimeout(4500);
 const scoreHasTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
+const startEventsQueued=await page.evaluate(()=>{try{return JSON.parse(sessionStorage.getItem("__gwap_audit_start_queued")||"[]");}catch{return [];}});
 const scoreEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const events=googleParams.filter(e=>e.tagMatch);
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   headlessChrome:true, hostTested:base, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
   articlePath, articleTag, startStatus, startHasTag, scoreHasTag,
-  articleEventQueue,startEventQueue,scoreEventQueue,
+  articleEventQueue,startEventQueue,scoreEventQueue,startEventsQueued,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
   requests: events,
