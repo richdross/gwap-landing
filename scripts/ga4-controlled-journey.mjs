@@ -20,15 +20,7 @@ const browser=await chromium.launch({headless:true,executablePath,args:["--no-sa
 const context=await browser.newContext({locale:"en-US",viewport:{width:1300,height:850}});
 await context.addInitScript(() => {
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function(...args) {
-    if (args[0] === "config" && args[1] === "G-MZF7SR86XK") {
-      args[2] = { ...(args[2] || {}), debug_mode: true };
-    }
-    if (args[0] === "event") {
-      args[2] = { ...(args[2] || {}), debug_mode: true };
-    }
-    window.dataLayer.push(args);
-  };
+  window.dataLayer.push(["set", {debug_mode: true}]);
 });
 const page=await context.newPage();
 page.on("request",request=>{
