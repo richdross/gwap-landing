@@ -27,17 +27,46 @@
       window.gtag("event", eventName, { ...safe, transport_type: "beacon" });
     };
 
+    // Record successful same-tab navigation on arrival, not while unloading.
+    // This prevents the short-lived page from dropping a queued gtag event.
+    const pendingKey = "gwap_pending_navigation_event_v1";
+    try {
+      const raw = sessionStorage.getItem(pendingKey);
+      if (raw) {
+        sessionStorage.removeItem(pendingKey);
+        const pending = JSON.parse(raw);
+        if (pending && pending.destination_path === current &&
+            Date.now() - pending.at >= 0 && Date.now() - pending.at < 30000) {
+          window.gwapTrack(pending.event_name, pending.details);
+        }
+      }
+    } catch (_) { /* Fallback click tracking still applies if storage is unavailable. */ }
+
     document.addEventListener("click", (event) => {
       const link = event.target.closest("a[data-gwap-track]");
       if (!link) return;
-      let destinationPath = "";
-      try { destinationPath = new URL(link.href, location.href).pathname; } catch (_) {}
-      window.gwapTrack(link.dataset.gwapTrack, {
+      let destination;
+      try { destination = new URL(link.href, location.href); } catch (_) { return; }
+      const details = {
         offer_key: link.dataset.gwapOffer || "",
         route_key: link.dataset.route || "",
         placement: link.dataset.gwapPlacement || "",
-        destination_path: destinationPath
-      });
+        destination_path: destination.pathname
+      };
+      const normalTabClick = !event.metaKey && !event.ctrlKey &&
+        !event.shiftKey && !event.altKey && (!link.target || link.target === "_self");
+      if (destination.origin === location.origin && destination.pathname !== current && normalTabClick) {
+        try {
+          sessionStorage.setItem(pendingKey, JSON.stringify({
+            event_name: link.dataset.gwapTrack,
+            destination_path: destination.pathname,
+            details,
+            at: Date.now()
+          }));
+          return;
+        } catch (_) { /* Fall back to best-effort beacon on source page. */ }
+      }
+      window.gwapTrack(link.dataset.gwapTrack, details);
     });
   })();
 </script>

@@ -1,0 +1,30 @@
+name: GWAP GA4 Browser Route Smoke
+on:
+  pull_request:
+    paths:
+      - '_includes/analytics.njk'
+      - 'scripts/ga4-local-route-smoke.mjs'
+      - '.github/workflows/ga4-browser-route-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build GWAP site
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Install local browser runner
+        run: npm install --no-save --no-audit --no-fund playwright-core@1.55.0
+      - name: Run static site in isolated CI
+        run: |
+          python3 -m http.server 8080 --directory _site >/tmp/gwap-ga4-smoke.log 2>&1 &
+          sleep 3
+      - name: Certify destination-delivered CTA and no replay
+        run: node --test scripts/ga4-local-route-smoke.mjs
