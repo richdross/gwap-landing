@@ -1,0 +1,25 @@
+name: GWAP GA4 Read-only Production Probe
+on:
+  pull_request:
+    paths:
+      - 'scripts/ga4-production-probe.mjs'
+      - '.github/workflows/ga4-production-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GA4_PROPERTY_ID: '550617706'
+      GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify probe syntax
+        run: node --check scripts/ga4-production-probe.mjs
+      - name: Inspect deployed HTML and GA4 report availability
+        run: node scripts/ga4-production-probe.mjs
