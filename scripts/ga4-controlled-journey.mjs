@@ -48,10 +48,18 @@ await page.waitForTimeout(1200);
 const articleTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
 const articleOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const articleStatus=articleResponse?.status()||0;
-await page.goto(base+"/start/",{waitUntil:"domcontentloaded",timeout:25000});
+const startResponse = await page.goto(base+"/start/",{waitUntil:"domcontentloaded",timeout:25000});
+const startStatus = startResponse?.status()||0;
 await page.waitForTimeout(1000);
 const startHasTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
 const startOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
+const selectorCount = await page.locator('a[data-route="growth-diagnostic"]').count();
+const startTitle=await page.title();
+if (selectorCount === 0) {
+  console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({headlessChrome:true,firstArticleStatus:initialStatus,finalArticleStatus:articleStatus,articlePath,articleTag,articleOrigin,startStatus,startHasTag,startOrigin,startTitle,reason:"growth_diagnostic_route_absent_or_challenged",capturedRequests:googleParams,formSubmitted:false,paymentAttempted:false}));
+  await browser.close();
+  process.exit(0);
+}
 await page.locator('a[data-route="growth-diagnostic"]').first().click({timeout:12000});
 await page.waitForURL("**/revenue-leak-score/**",{timeout:25000});
 await page.waitForTimeout(1300);
@@ -60,7 +68,7 @@ const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gw
 const events=googleParams.filter(e=>e.tagMatch);
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   headlessChrome:true, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
-  articlePath, articleTag, startHasTag, scoreHasTag,
+  articlePath, articleTag, startStatus, startHasTag, scoreHasTag,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
   requests: events,
