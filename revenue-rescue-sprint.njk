@@ -49,6 +49,7 @@ h2{margin:0 0 26px;font:950 clamp(2.6rem,6vw,5.4rem)/.87 Impact,"Arial Black",sa
 .foot{border-top:1px solid var(--line);padding:24px 0 42px;color:#777d75;font:800 8px/1.6 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
 @media(max-width:800px){.grid,.split{grid-template-columns:1fr}.nav{display:none}.hero{padding-top:62px}}
 </style>
+{% include "analytics.njk" %}
 </head>
 <body>
 <header class="head"><div class="shell head-inner"><a class="brand" href="/">GWAP GANG</a><nav class="nav"><a href="/capital/">Capital</a><a href="/intelligence/">Intelligence</a><a href="/graph/">Graph</a><a href="/blog/">All Intelligence</a></nav></div></header>
@@ -60,7 +61,7 @@ h2{margin:0 0 26px;font:950 clamp(2.6rem,6vw,5.4rem)/.87 Impact,"Arial Black",sa
 <div class="price-row">
 <div class="price">{{ site.revenueRescueSprint.priceLabel }}</div>
 {% if site.revenueRescueSprint.checkoutUrl %}
-<a class="cta" href="{{ site.revenueRescueSprint.checkoutUrl }}">Start the Sprint →</a>
+<a class="cta" href="{{ site.revenueRescueSprint.checkoutUrl }}" data-gwap-track="gwap_checkout_click" data-gwap-offer="revenue_rescue_sprint" data-gwap-placement="sales_page">Start the Sprint →</a>
 {% else %}
 <a class="cta" href="mailto:{{ site.email }}?subject=Revenue%20Rescue%20Sprint">Request the Sprint →</a>
 {% endif %}
