@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - '_includes/analytics.njk'
+      - 'revenue-rescue-sprint.njk'
+      - 'content/blog/**'
       - 'scripts/ga4-local-route-smoke.mjs'
       - '.github/workflows/ga4-browser-route-smoke.yml'
 permissions:
