@@ -35,4 +35,27 @@ if(token){
     if(!report.projectFound)report.projectFound=false;
   }catch(e){report.error=String(e?.name||"network_error").slice(0,100);}
 }
+if (token) {
+  try {
+    const zones=await cf("/zones?name=gwapgang.com");
+    const zoneList=Array.isArray(zones.result)?zones.result:[];
+    const zone={status:zones.status,success:zones.success,found:zoneList.length>0};
+    if(zoneList.length){
+      const id=encodeURIComponent(zoneList[0].id);
+      const phases=["http_request_firewall_custom","http_request_firewall_managed"];
+      zone.rules=[];
+      for(const phase of phases){
+        const answer=await cf("/zones/"+id+"/rulesets/phases/"+phase+"/entrypoint");
+        const rows=Array.isArray(answer.result?.rules)?answer.result.rules:[];
+        zone.rules.push({phase,status:answer.status,success:answer.success,
+          count:rows.length,
+          mentionsBlog:rows.filter(x=>String(x.expression||"").includes("/blog")).length,
+          challengeOrBlock:rows.filter(x=>/challenge|block/i.test(String(x.action||""))).length
+        });
+      }
+    }
+    console.log("CLOUDFLARE_ZONE_TRIAGE "+JSON.stringify(zone));
+  } catch(e) { console.log("CLOUDFLARE_ZONE_TRIAGE "+JSON.stringify({error:String(e?.name||"network_error")})); }
+}
+
 console.log("CLOUDFLARE_PAGES_METADATA "+JSON.stringify(report));
