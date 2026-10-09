@@ -81,6 +81,10 @@ async function gaRequest(token, method, body, prop) {
   return {
     status:"ok",rowCount:data.rowCount??rows.length,rowsReturned:rows.length,
     totals:metricTotals,
+    dailyActivity:body.dimensions?.[0]?.name==="date" ? rows.map(r=>({
+      day:r.dimensionValues?.[0]?.value || "",
+      events:Number(r.metricValues?.[0]?.value||0)
+    })).slice(0,45) : undefined,
     nonzeroRows:rows.filter(x=>x.metricValues?.some(m=>Number(m.value)>0)).length,
     dateSpan:rows.length&&rows[0]?.dimensionValues?.[0]?.value?.match(/^20\d{6}$/)?[rows[0].dimensionValues[0].value,rows.at(-1).dimensionValues[0].value]:null,
   };
@@ -109,6 +113,11 @@ async function gaAudit() {
       dateRanges:[{startDate:"2026-10-01",endDate:"2026-10-08"}],
       dimensions:[{name:"eventName"}],
       metrics:[{name:"eventCount"}],limit:100
+    }},
+    {name:"full_period_by_date",method:"runReport",body:{
+      dateRanges:[{startDate:"2026-09-12",endDate:"2026-10-09"}],
+      dimensions:[{name:"date"}],
+      metrics:[{name:"eventCount"}],limit:35
     }},
     {name:"today_by_date",method:"runReport",body:{
       dateRanges:[{startDate:"7daysAgo",endDate:"today"}],
