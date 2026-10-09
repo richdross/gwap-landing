@@ -7,6 +7,7 @@ let base = productionBase;
 const first = "/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-becoming-the-real-power-layer/";
 const backup = "/brief/001-ai-is-getting-cheaper-leverage-is-getting-more-valuable/";
 const googleParams = [];
+const googleResponses = [];
 const errors = [];
 const findChrome = () => {
   for(const name of ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"]){
@@ -19,7 +20,15 @@ const browser=await chromium.launch({headless:true,executablePath,args:["--no-sa
 const context=await browser.newContext({locale:"en-US",viewport:{width:1300,height:850}});
 await context.addInitScript(() => {
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(["set", {debug_mode: true}]);
+  window.gtag = function(...args) {
+    if (args[0] === "config" && args[1] === "G-MZF7SR86XK") {
+      args[2] = { ...(args[2] || {}), debug_mode: true };
+    }
+    if (args[0] === "event") {
+      args[2] = { ...(args[2] || {}), debug_mode: true };
+    }
+    window.dataLayer.push(args);
+  };
 });
 const page=await context.newPage();
 page.on("request",request=>{
@@ -37,6 +46,12 @@ page.on("request",request=>{
       })()
     });
   }catch(e){errors.push("url_parse");}
+});
+page.on("response",response=>{
+  if(/google-analytics\\.com\\/g\\/collect/.test(response.url())) {
+    const u=new URL(response.url());
+    googleResponses.push({status:response.status(),event:u.searchParams.get("en")||"unknown"});
+  }
 });
 page.on("pageerror",e=>{if(errors.length<5)errors.push(String(e.name||"page_error"));});
 let articleResponse=await page.goto(base+first,{waitUntil:"domcontentloaded",timeout:25000});
@@ -91,7 +106,7 @@ console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   articleEventQueue,startEventQueue,scoreEventQueue,startEventsQueued,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
-  requests: events,
+  requests: events, googleResponses,
   routeSelectedSent: events.some(e=>e.event==="gwap_route_selected"),
   clickTestOnly:true, formSubmitted:false, paymentAttempted:false,
   javascriptErrors:errors
