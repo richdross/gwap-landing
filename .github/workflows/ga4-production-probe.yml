@@ -1,0 +1,37 @@
+name: GWAP GA4 Read-only Production Probe
+on:
+  pull_request:
+    paths:
+      - 'scripts/ga4-production-probe.mjs'
+      - 'scripts/ga4-controlled-journey.mjs'
+      - 'scripts/cloudflare-production-probe.mjs'
+      - 'scripts/cloudflare-security-events-probe.mjs'
+      - '.github/workflows/ga4-production-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GA4_PROPERTY_ID: '550617706'
+      GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify probe syntax
+        run: node --check scripts/ga4-production-probe.mjs
+      - name: Inspect deployed HTML and GA4 report availability
+        run: node scripts/ga4-production-probe.mjs
+      - name: Query Cloudflare Pages deployment metadata (read-only)
+        run: node scripts/cloudflare-production-probe.mjs
+      - name: Inspect Cloudflare Security Events (read-only)
+        run: node scripts/cloudflare-security-events-probe.mjs
+      - name: Install headless browser driver
+        run: npm install --no-save --no-audit --no-fund playwright-core@1.55.0
+      - name: Simulate read-only article-to-diagnostic journey
+        run: node scripts/ga4-controlled-journey.mjs
