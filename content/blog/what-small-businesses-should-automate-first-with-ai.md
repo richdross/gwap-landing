@@ -360,3 +360,12 @@ The businesses that benefit most from AI will not necessarily be the ones with t
 They will be the ones that understand exactly **where automation creates leverage and where human judgment still earns its keep**.
 
 That is where we would start.
+
+
+---
+
+## Want to find where your business is losing leads?
+
+Start with the [free GWAP Growth Diagnostic](/revenue-leak-score/) to review publicly observable friction in your website, conversion path, and follow-up process. The diagnostic does not access your private sales records or guarantee additional revenue.
+
+If you already know the problem and want a fixed-scope review, the [$299 Revenue Rescue Sprint](/revenue-rescue-sprint/) provides an evidence-based diagnosis, three prioritized revenue leaks where supported by evidence, and a 7-day action plan. Implementation is scoped separately.
