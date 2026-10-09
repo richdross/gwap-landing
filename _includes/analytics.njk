@@ -1,0 +1,43 @@
+{# Shared GA4 bootstrap. Never emit personal data or payment confirmations from the browser. #}
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MZF7SR86XK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+  window.gtag("js", new Date());
+  window.gtag("config", "G-MZF7SR86XK", { page_path: window.location.pathname });
+  (() => {
+    const current = window.location.pathname;
+    const isEditorial = /^\/(blog|brief)\/[^/]+\/?$/.test(current);
+    let originArticle = "";
+    try {
+      if (isEditorial && !sessionStorage.getItem("gwap_origin_article")) {
+        sessionStorage.setItem("gwap_origin_article", current);
+      }
+      originArticle = sessionStorage.getItem("gwap_origin_article") || "";
+    } catch (_) { /* Browsers may disable session storage. */ }
+
+    window.gwapTrack = (eventName, details = {}) => {
+      if (!/^gwap_[a-z_]+$/.test(eventName)) return;
+      const safe = {};
+      for (const key of ["offer_key", "route_key", "stage", "placement", "destination_path"]) {
+        const value = details[key];
+        if (typeof value === "string") safe[key] = value.slice(0, 120);
+      }
+      if (originArticle) safe.origin_article_path = originArticle;
+      window.gtag("event", eventName, { ...safe, transport_type: "beacon" });
+    };
+
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[data-gwap-track]");
+      if (!link) return;
+      let destinationPath = "";
+      try { destinationPath = new URL(link.href, location.href).pathname; } catch (_) {}
+      window.gwapTrack(link.dataset.gwapTrack, {
+        offer_key: link.dataset.gwapOffer || "",
+        route_key: link.dataset.route || "",
+        placement: link.dataset.gwapPlacement || "",
+        destination_path: destinationPath
+      });
+    });
+  })();
+</script>
