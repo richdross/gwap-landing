@@ -1,0 +1,25 @@
+name: GWAP GA4 Collector Certification
+on:
+  pull_request:
+    paths:
+      - "platform/intelligence/scripts/ga4-collector.mjs"
+      - "platform/intelligence/scripts/ga4-collector-lib.mjs"
+      - "platform/intelligence/scripts/ga4-collector-lib.test.mjs"
+      - ".github/workflows/ga4-collector-certification.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Collector syntax and behavior contract
+        run: |
+          node --check platform/intelligence/scripts/ga4-collector.mjs
+          node --check platform/intelligence/scripts/ga4-collector-lib.mjs
+          node --test platform/intelligence/scripts/ga4-collector-lib.test.mjs
