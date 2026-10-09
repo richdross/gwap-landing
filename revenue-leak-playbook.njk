@@ -40,6 +40,7 @@ h1{max-width:1000px;margin:18px 0 24px;font:950 clamp(4rem,9vw,8.6rem)/.82 Impac
 .final{padding:70px 0 86px;text-align:center}.final p{max-width:650px;margin:0 auto 26px;color:#abb1a9;line-height:1.6}.foot{border-top:1px solid var(--line);padding:25px 0 40px;color:#747b73;font:800 8px/1.5 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}
 @media(max-width:800px){.grid,.split{grid-template-columns:1fr}.nav{display:none}.hero{padding-top:62px}}
 </style>
+{% include "analytics.njk" %}
 </head>
 <body>
 <header class="head"><div class="shell head-inner"><a class="brand" href="/">GWAP GANG</a><nav class="nav"><a href="/revenue-leak-score/">Free Score</a><a href="/revenue-rescue-sprint/">Revenue Rescue</a><a href="/brief/">Leverage Brief</a></nav></div></header>
@@ -103,6 +104,9 @@ h1{max-width:1000px;margin:18px 0 24px;font:950 clamp(4rem,9vw,8.6rem)/.82 Impac
   const target = backend + "/public/funnel/click/" + encodeURIComponent(token) + "/playbook_checkout?step=web";
   for (const button of buttons) {
     button.href = target;
+    button.dataset.gwapTrack = "gwap_checkout_click";
+    button.dataset.gwapOffer = "revenue_leak_playbook";
+    button.dataset.gwapPlacement = "playbook_sales_page";
     button.textContent = "Get The Playbook For $29";
   }
   status.textContent = "Your tracked checkout is ready. Stripe handles the payment securely.";
