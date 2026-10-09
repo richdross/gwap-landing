@@ -28,12 +28,12 @@ test("browser events preserve article origin without sending entered personal in
   const inline = bootstrap.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(inline);
   const store = new Map();
-  const sessionStorage = {getItem: key => store.get(key) || null, setItem: (key, value) => store.set(key, value)};
+  const sessionStorage = {getItem: key => store.get(key) || null, setItem: (key, value) => store.set(key, value), removeItem:key => store.delete(key)};
   function boot(path) {
     const handlers = {};
-    const window = {location: {pathname: path}, dataLayer: []};
+    const window = {location: {pathname: path, origin: "https://gwapgang.com"}, dataLayer: []};
     const document = {addEventListener: (name, handler) => {handlers[name] = handler;}};
-    const location = {href: "https://gwapgang.com" + path};
+    const location = {href: "https://gwapgang.com" + path, origin: "https://gwapgang.com"};
     vm.runInNewContext(inline, {window, document, sessionStorage, location, URL, Date});
     return {window, handlers};
   }
@@ -42,11 +42,20 @@ test("browser events preserve article origin without sending entered personal in
   const start = boot("/start/");
   const link = {href: "https://gwapgang.com/revenue-leak-score/?email=private@example.com", dataset: {gwapTrack:"gwap_route_selected", gwapOffer:"revenue_leak_score", route:"growth-diagnostic"}};
   start.handlers.click({target:{closest:() => link}});
-  const calls = start.window.dataLayer.map(args => Array.from(args));
-  assert.equal(calls.filter(args => args[0] === "config").length, 1);
-  const event = calls.find(args => args[0] === "event");
+  const startCalls = start.window.dataLayer.map(args => Array.from(args));
+  assert.equal(startCalls.filter(args => args[0] === "config").length, 1);
+  assert.equal(startCalls.filter(args => args[0] === "event").length, 0, "internal route should not emit before navigation");
+  assert.ok(store.has("gwap_pending_navigation_event_v1"), "pending click must survive unload");
+  const score = boot("/revenue-leak-score/");
+  const calls = score.window.dataLayer.map(args => Array.from(args));
+  const emitted = calls.filter(args => args[0] === "event");
+  assert.equal(emitted.length, 1);
+  const event = emitted[0];
   assert.equal(event[1], "gwap_route_selected");
   assert.equal(event[2].origin_article_path, "/blog/example-article/");
   assert.equal(event[2].destination_path, "/revenue-leak-score/");
   assert.ok(!JSON.stringify(event).includes("private@example.com"));
+  assert.equal(store.has("gwap_pending_navigation_event_v1"),false,"pending event consumed exactly once");
+  const reload = boot("/revenue-leak-score/");
+  assert.equal(reload.window.dataLayer.filter(args => args[0] === "event").length,0,"reloading must not replay click");
 });
