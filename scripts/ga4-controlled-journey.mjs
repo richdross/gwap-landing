@@ -48,7 +48,7 @@ page.on("request",request=>{
   }catch(e){errors.push("url_parse");}
 });
 page.on("response",response=>{
-  if(/google-analytics\\.com\\/g\\/collect/.test(response.url())) {
+  if(response.url().includes("google-analytics.com/g/collect")) {
     const u=new URL(response.url());
     googleResponses.push({status:response.status(),event:u.searchParams.get("en")||"unknown"});
   }
