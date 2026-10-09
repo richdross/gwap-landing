@@ -4,6 +4,7 @@ on:
     paths:
       - 'scripts/ga4-production-probe.mjs'
       - 'scripts/ga4-controlled-journey.mjs'
+      - 'scripts/cloudflare-production-probe.mjs'
       - '.github/workflows/ga4-production-probe.yml'
   workflow_dispatch:
 permissions:
