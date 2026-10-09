@@ -5,6 +5,7 @@ on:
       - 'scripts/ga4-production-probe.mjs'
       - 'scripts/ga4-controlled-journey.mjs'
       - 'scripts/cloudflare-production-probe.mjs'
+      - 'scripts/cloudflare-security-events-probe.mjs'
       - '.github/workflows/ga4-production-probe.yml'
   workflow_dispatch:
 permissions:
@@ -28,6 +29,8 @@ jobs:
         run: node scripts/ga4-production-probe.mjs
       - name: Query Cloudflare Pages deployment metadata (read-only)
         run: node scripts/cloudflare-production-probe.mjs
+      - name: Inspect Cloudflare Security Events (read-only)
+        run: node scripts/cloudflare-security-events-probe.mjs
       - name: Install headless browser driver
         run: npm install --no-save --no-audit --no-fund playwright-core@1.55.0
       - name: Simulate read-only article-to-diagnostic journey
