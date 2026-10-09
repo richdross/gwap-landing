@@ -14,6 +14,7 @@ jobs:
     env:
       GA4_PROPERTY_ID: '550617706'
       GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +24,8 @@ jobs:
         run: node --check scripts/ga4-production-probe.mjs
       - name: Inspect deployed HTML and GA4 report availability
         run: node scripts/ga4-production-probe.mjs
+      - name: Query Cloudflare Pages deployment metadata (read-only)
+        run: node scripts/cloudflare-production-probe.mjs
       - name: Install headless browser driver
         run: npm install --no-save --no-audit --no-fund playwright-core@1.55.0
       - name: Simulate read-only article-to-diagnostic journey
