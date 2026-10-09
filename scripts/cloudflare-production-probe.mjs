@@ -14,11 +14,17 @@ if(token){
     const accounts=await cf("/accounts?per_page=50");
     report.accountList={status:accounts.status,success:accounts.success,count:Array.isArray(accounts.result)?accounts.result.length:0};
     for(const a of (Array.isArray(accounts.result)?accounts.result:[]).slice(0,15)){
-      const p=await cf("/accounts/"+encodeURIComponent(a.id)+"/pages/projects/gwap-landing");
+      const discovered=await cf("/accounts/"+encodeURIComponent(a.id)+"/pages/projects?per_page=50");
+      const allProjects=Array.isArray(discovered.result)?discovered.result:[];
+      report.projectDiscovery={status:discovered.status,success:discovered.success,projectCount:allProjects.length,candidates:allProjects.filter(x=>/gwap/i.test(String(x.name||"")+String(x.subdomain||""))).map(x=>({name:x.name,subdomain:x.subdomain}))};
+      const target=allProjects.find(x=>x.subdomain==="gwap-landing.pages.dev")||allProjects.find(x=>x.name==="gwap-landing");
+      if(!target)continue;
+      const p=await cf("/accounts/"+encodeURIComponent(a.id)+"/pages/projects/"+encodeURIComponent(target.name));
+      report.projectGetStatus=p.status;
       if(!p.success)continue;
       report.projectFound=true;
       report.projectInfo={productionBranch:p.result?.production_branch,subdomain:p.result?.subdomain,created:p.result?.created_on,latestDeploymentId:p.result?.latest_deployment?.id||null,latestDeploymentHash:p.result?.latest_deployment?.deployment_trigger?.metadata?.commit_hash||null};
-      const deployments=await cf("/accounts/"+encodeURIComponent(a.id)+"/pages/projects/gwap-landing/deployments?per_page=5");
+      const deployments=await cf("/accounts/"+encodeURIComponent(a.id)+"/pages/projects/"+encodeURIComponent(target.name)+"/deployments?per_page=5");
       report.deployments={status:deployments.status,success:deployments.success,items:(Array.isArray(deployments.result)?deployments.result:[]).slice(0,5).map(d=>({
         id:d.id,environment:d.environment,created:d.created_on,
         stage:d.latest_stage?.status||null,
