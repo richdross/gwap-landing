@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'scripts/ga4-production-probe.mjs'
+      - 'scripts/ga4-controlled-journey.mjs'
       - '.github/workflows/ga4-production-probe.yml'
   workflow_dispatch:
 permissions:
