@@ -23,3 +23,7 @@ jobs:
         run: node --check scripts/ga4-production-probe.mjs
       - name: Inspect deployed HTML and GA4 report availability
         run: node scripts/ga4-production-probe.mjs
+      - name: Install headless browser driver
+        run: npm install --no-save --no-audit --no-fund playwright-core@1.55.0
+      - name: Simulate read-only article-to-diagnostic journey
+        run: node scripts/ga4-controlled-journey.mjs
