@@ -11,6 +11,8 @@ const googleResponses = [];
 const transportDiagnostics = [];
 const collectEvents = input => [...String(input||"").matchAll(/(?:^|[&\n])en=([^&\n]+)/g)].map(x => {try{return decodeURIComponent(x[1].replace(/\+/g," "));}catch{return "decode_error";}}).filter(x=>/^[a-z_]+$/.test(x)).slice(0,12);
 const errors = [];
+const tagRequests = [];
+const googleFailures = [];
 const findChrome = () => {
   for(const name of ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"]){
     try { return execFileSync("which",[name],{encoding:"utf8"}).trim(); }catch{}
@@ -25,6 +27,9 @@ await context.addInitScript(() => {
   window.dataLayer.push(["set", {debug_mode: true}]);
 });
 const page=await context.newPage();
+page.on("requestfailed",request=>{
+  if(/googletagmanager\.com|google-analytics\.com/.test(request.url())) googleFailures.push({category: request.url().includes("gtag/js")?"tag_script":"ga4_collect",failure:request.failure()?.errorText?.slice(0,90)||"unknown"});
+});
 page.on("request",request=>{
   const u=request.url();
   if(!u.includes("google-analytics.com/g/collect")&&!u.includes("analytics.google.com/g/collect"))return;
@@ -48,6 +53,7 @@ page.on("request",request=>{
   }catch(e){errors.push("url_parse");}
 });
 page.on("response",response=>{
+  if(response.url().includes("googletagmanager.com/gtag/js")) tagRequests.push({status:response.status(),ok:response.ok()});
   if(response.url().includes("google-analytics.com/g/collect")) {
     const u=new URL(response.url());
     googleResponses.push({status:response.status(),event:u.searchParams.get("en")||"unknown"});
@@ -94,11 +100,12 @@ if (selectorCount === 0) {
 }
 await page.locator('a[data-route="growth-diagnostic"]').first().click({timeout:12000});
 await page.waitForURL("**/revenue-leak-score/**",{timeout:25000});
-await page.waitForTimeout(4500);
+await page.waitForTimeout(10000);
 const scoreHasTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
 const startEventsQueued=await page.evaluate(()=>{try{return JSON.parse(sessionStorage.getItem("__gwap_audit_start_queued")||"[]");}catch{return [];}});
 const scoreEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
+const gaScriptState=await page.evaluate(()=>({hasGtagFunction:typeof window.gtag==="function",hasGoogleTagManager:typeof window.google_tag_manager!=="undefined",googleTagKeys:Object.keys(window.google_tag_manager||{}).filter(x=>x.startsWith("G-")).slice(0,5),eventQueue:(window.dataLayer||[]).map(x=>Array.from(x)).filter(x=>x[0]==="event").map(x=>x[1]).slice(0,8)}));
 const events=googleParams.filter(e=>e.tagMatch);
 const observedEvents=new Set(events.flatMap(e=>[e.event,...(e.bodyEvents||[])]));
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
@@ -107,7 +114,7 @@ console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   articleEventQueue,startEventQueue,scoreEventQueue,startEventsQueued,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
-  requests: events, googleResponses, transportDiagnostics,
+  requests: events, googleResponses, transportDiagnostics, tagRequests, googleFailures,gaScriptState,
   routeSelectedSent: observedEvents.has("gwap_route_selected"),
   clickTestOnly:true, formSubmitted:false, paymentAttempted:false,
   javascriptErrors:errors
