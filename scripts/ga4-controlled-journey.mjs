@@ -8,6 +8,8 @@ const first = "/blog/the-new-gatekeepers-of-ai-commerce-why-agent-access-is-beco
 const backup = "/brief/001-ai-is-getting-cheaper-leverage-is-getting-more-valuable/";
 const googleParams = [];
 const googleResponses = [];
+const transportDiagnostics = [];
+const collectEvents = input => [...String(input||"").matchAll(/(?:^|[&\n])en=([^&\n]+)/g)].map(x => {try{return decodeURIComponent(x[1].replace(/\+/g," "));}catch{return "decode_error";}}).filter(x=>/^[a-z_]+$/.test(x)).slice(0,12);
 const errors = [];
 const findChrome = () => {
   for(const name of ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"]){
@@ -29,7 +31,13 @@ page.on("request",request=>{
   try{
     const url=new URL(u);
     const params=url.searchParams;
+    const requestBody=request.postData()||"";
+    const payloadEvents=collectEvents(requestBody);
+    const urlEvents=collectEvents(url.search.slice(1));
+    transportDiagnostics.push({method:request.method(),payloadBytes:requestBody.length,events:[...new Set([...urlEvents,...payloadEvents])]});
     googleParams.push({
+      bodyEvents:payloadEvents,
+      method:request.method(),
       event:params.get("en")||"(unknown)",
       tagMatch:params.get("tid")==="G-MZF7SR86XK",
       debugFlag:params.get("_dbg")||null,
@@ -92,14 +100,15 @@ const startEventsQueued=await page.evaluate(()=>{try{return JSON.parse(sessionSt
 const scoreEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const events=googleParams.filter(e=>e.tagMatch);
+const observedEvents=new Set(events.flatMap(e=>[e.event,...(e.bodyEvents||[])]));
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   headlessChrome:true, hostTested:base, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
   articlePath, articleTag, startStatus, startHasTag, scoreHasTag,
   articleEventQueue,startEventQueue,scoreEventQueue,startEventsQueued,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
-  requests: events, googleResponses,
-  routeSelectedSent: events.some(e=>e.event==="gwap_route_selected"),
+  requests: events, googleResponses, transportDiagnostics,
+  routeSelectedSent: observedEvents.has("gwap_route_selected"),
   clickTestOnly:true, formSubmitted:false, paymentAttempted:false,
   javascriptErrors:errors
 }));
