@@ -55,14 +55,16 @@ if (articleResponse?.status() !== 200) {
     articlePath=backup;
   }
 }
-await page.waitForTimeout(1200);
+await page.waitForTimeout(4000);
 const articleTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
+const articleEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const articleOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const articleStatus=articleResponse?.status()||0;
 const startResponse = await page.goto(base+"/start/",{waitUntil:"domcontentloaded",timeout:25000});
 const startStatus = startResponse?.status()||0;
-await page.waitForTimeout(1000);
+await page.waitForTimeout(4000);
 const startHasTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
+const startEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const startOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const selectorCount = await page.locator('a[data-route="growth-diagnostic"]').count();
 const startTitle=await page.title();
@@ -73,13 +75,15 @@ if (selectorCount === 0) {
 }
 await page.locator('a[data-route="growth-diagnostic"]').first().click({timeout:12000});
 await page.waitForURL("**/revenue-leak-score/**",{timeout:25000});
-await page.waitForTimeout(1300);
+await page.waitForTimeout(4500);
 const scoreHasTag=await page.evaluate(()=>Boolean(document.querySelector('script[src*="googletagmanager.com/gtag"]')));
+const scoreEventQueue=await page.evaluate(()=>Array.from(window.dataLayer||[]).map(x=>Array.from(x)[0]).filter(x=>typeof x==="string"));
 const scoreOrigin=await page.evaluate(()=>{try{return sessionStorage.getItem("gwap_origin_article")||"";}catch{return "blocked";}});
 const events=googleParams.filter(e=>e.tagMatch);
 console.log("GWAP_CONTROLLED_JOURNEY "+JSON.stringify({
   headlessChrome:true, hostTested:base, firstArticleStatus:initialStatus, finalArticleStatus:articleStatus,
   articlePath, articleTag, startStatus, startHasTag, scoreHasTag,
+  articleEventQueue,startEventQueue,scoreEventQueue,
   articleOrigin, startOrigin, scoreOrigin,
   diagnosticNavigationSucceeded:page.url().includes("/revenue-leak-score/"),
   requests: events,
