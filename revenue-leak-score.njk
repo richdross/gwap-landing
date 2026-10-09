@@ -58,6 +58,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
 @media(max-width:900px){.hero-grid,.result-head{grid-template-columns:1fr}.checks{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){.nav{display:none}.hero{padding-top:54px}.form-grid,.flags,.checks{grid-template-columns:1fr}.field.full{grid-column:auto}.form-card{padding:20px}h1{font-size:clamp(3.6rem,18vw,6.1rem)}}
 </style>
+{% include "analytics.njk" %}
 </head>
 <body>
 <header class="head"><div class="shell head-inner"><a class="brand" href="/">GWAP GANG</a><nav class="nav"><a href="/intelligence/">Intelligence</a><a href="/capital/">Capital</a><a href="/revenue-rescue-sprint/">Revenue Rescue</a></nav></div></header>
@@ -189,6 +190,9 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       el.textContent = item.label || "Continue";
       if (item.url) {
         el.href = item.kind === "checkout" && checkoutUrl ? checkoutUrl : item.url;
+        el.dataset.gwapTrack = item.kind === "checkout" ? "gwap_checkout_click" : "gwap_offer_click";
+        el.dataset.gwapOffer = item.kind === "checkout" ? "recommended_checkout" : "diagnostic_next_action";
+        el.dataset.gwapPlacement = "diagnostic_result";
         return el;
       }
 
@@ -285,6 +289,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
     payload.landingPath = window.location.pathname + window.location.search;
     payload.funnelSessionId = funnelSessionId;
 
+    window.gwapTrack?.("gwap_diagnostic_started", { stage: "diagnostic_submit", offer_key: "revenue_leak_score" });
     try {
       const startResponse = await fetch(startEndpoint, {
         method: "POST",
@@ -302,6 +307,7 @@ button[disabled]{opacity:.55;cursor:wait}.consent{display:flex;gap:10px;align-it
       const body = await response.json().catch(() => ({}));
       if (!response.ok || !body.ok) throw new Error(body.error || "Score request failed");
       render(body);
+      window.gwapTrack?.("gwap_diagnostic_completed", { stage: "diagnostic_result", offer_key: "revenue_leak_score" });
       status.textContent = body.email_queued
         ? "Score complete. A copy is queued for your email."
         : "Score complete.";
