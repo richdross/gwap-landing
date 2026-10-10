@@ -338,7 +338,6 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     // Do not queue a broken synthesis call or emit misleading 'audio blocked'.
     // Generated audio remains a deliberate user-initiated fallback until verified.
     const useNativeSpeech = !isIOS;
-    liveSpeech = ctx;
     function next() {
       if (ctx.cancelled || ctx.playing || !sessionOK) return;
       if (!useNativeSpeech || muted || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
@@ -391,11 +390,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       catch { clearTimeout(watchdog); ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;
         speakerFeedback("Safari failed to start speech. Try Generate Audio."); controls(); }
     }
-    return {
+    const queueController = {
       push: (text) => { if (!ctx.cancelled && text.trim()) { ctx.queue.push(text.trim()); next(); } },
       done: () => { ctx.done = true; next(); },
       cancel: () => { ctx.cancelled = true; ctx.queue.length = 0; window.speechSynthesis?.cancel(); speaking = false; }
     };
+    liveSpeech = queueController;
+    return queueController;
   }
   async function send(message) {
     message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
