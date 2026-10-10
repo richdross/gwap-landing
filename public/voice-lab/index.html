@@ -148,7 +148,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
   });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
-  let sessionRefreshing = false;
+  let sessionRefreshing = false, sessionPromise = null;
   const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
   const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
   let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
@@ -914,12 +914,16 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   });
   window.addEventListener("pagehide", () => pauseForBackground(true));
   async function checkSession() {
-    if(sessionRefreshing)return sessionOK;
+    if(sessionRefreshing)return sessionPromise ?? Promise.resolve(sessionOK);
     sessionRefreshing=true;
     $("pairingState").textContent="Checking pairing on this preview…";
     $("pairingRetry").disabled=true;
+    sessionPromise = (async () => {
     try {
-      const response=await fetch("/voice/session",{credentials:"same-origin",cache:"no-store"});
+      const response=await fetch("/voice/session",{
+        credentials:"same-origin",cache:"no-store",
+        signal:AbortSignal.timeout(8000)
+      });
       const data=await response.json().catch(()=>({}));
       sessionOK=response.ok && data.paired===true;
       if(sessionOK) {
@@ -943,6 +947,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       $("pairingRetry").disabled=false;
       controls();
     }
+    })();
+    return sessionPromise;
   }
   $("pairingRetry").addEventListener("click",()=>{void checkSession();});
   window.addEventListener("pageshow",()=>{void checkSession();});
@@ -951,6 +957,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if(!document.hidden && !active)void checkSession();
   });
   qaShow();
+  controls(); // Start responds immediately, even when Render session checks are slow.
   void checkSession();
 })();
 </script>
