@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import vm from "node:vm";
 import { onRequest } from "../functions/voice/[[path]].js";
 
 const html = readFileSync(new URL("../public/voice-lab/index.html", import.meta.url), "utf8");
@@ -283,4 +284,44 @@ test("iOS microphone permission prompt cannot cancel an in-flight recording star
   assert.doesNotMatch(html, /if \(document\.hidden\) stop\(\)/);
   assert.match(html, /Conversation ended by End/);
   assert.match(html, /Conversation paused when Safari left the screen/);
+});
+
+test("mocked Safari permission visibility transition preserves recording",async()=>{
+  const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+  const nodes=new Map(),de={},we={};
+  function node(id){if(!nodes.has(id))nodes.set(id,{id,value:"",textContent:"",disabled:false,
+    classList:{toggle(){}},events:{},addEventListener(k,cb){this.events[k]=cb;},
+    append(){},remove(){},blur(){},scrollTop:0,scrollHeight:0});return nodes.get(id);}
+  let allowMic;
+  const permission=new Promise(r=>allowMic=r);
+  let starts=0,stops=0;
+  class Recorder{
+    static isTypeSupported(){return true;}
+    constructor(){this.state="inactive";this.mimeType="audio/mp4";this.events={};}
+    addEventListener(k,cb){this.events[k]=cb;}
+    start(){this.state="recording";starts++;}
+    stop(){this.state="inactive";stops++;this.events.stop?.();}
+  }
+  const document={hidden:false,getElementById:node,addEventListener(k,cb){de[k]=cb;}};
+  const window={MediaRecorder:Recorder,SpeechRecognition:undefined,webkitSpeechRecognition:undefined,
+    speechSynthesis:{cancel(){},getVoices(){return[];},speak(){}},
+    addEventListener(k,cb){we[k]=cb;}};
+  const navigator={userAgent:"iPhone Safari",mediaDevices:{getUserMedia:()=>permission}};
+  vm.runInNewContext(script,{document,window,navigator,MediaRecorder:Recorder,
+    location:{search:""},URLSearchParams,URL,Response,AbortController,Blob,TextDecoder,Uint8Array,
+    performance,setInterval,clearInterval,setTimeout,clearTimeout,fetch:async()=>Response.json({paired:true})},
+    {timeout:1200});
+  await new Promise(r=>setImmediate(r));
+  assert.equal(node("listen").disabled,false);
+  node("listen").events.click();
+  assert.match(node("status").textContent,/Requesting microphone/);
+  document.hidden=true;de.visibilitychange();
+  assert.doesNotMatch(node("status").textContent,/Conversation ended/);
+  allowMic({getTracks:()=>[{stop(){}}]});
+  await new Promise(r=>setImmediate(r));
+  assert.equal(starts,1);
+  assert.match(node("status").textContent,/Listening/);
+  we.pagehide();
+  assert.equal(stops,1);
+  assert.match(node("status").textContent,/paused/);
 });
