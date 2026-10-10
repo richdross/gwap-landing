@@ -337,7 +337,10 @@ test("scoped MP3 preview route requires pairing, same origin, and bounded text",
     assert.equal(path,"/api/voice/speak");
     assert.equal(options.headers.Authorization,"Bearer "+env.GWAP_VOICE_FAST_CHAT_TOKEN);
     assert.deepEqual(JSON.parse(options.body),{text:"Gwap says hello."});
-    return new Response(new Uint8Array(250).fill(41),{headers:{"Content-Type":"audio/mpeg"}});
+    const wav=new Uint8Array(250).fill(0);
+    wav.set(new TextEncoder().encode("RIFF"),0);
+    wav.set(new TextEncoder().encode("WAVE"),8);
+    return new Response(wav,{headers:{"Content-Type":"audio/wav"}});
   };
   try {
     let request=new Request(host+"/voice/speak",{method:"POST",headers:{
@@ -345,7 +348,7 @@ test("scoped MP3 preview route requires pairing, same origin, and bounded text",
     },body:JSON.stringify({text:"Gwap says hello."})});
     const ok=await onRequest({request,env});
     assert.equal(ok.status,200);
-    assert.equal(ok.headers.get("Content-Type"),"audio/mpeg");
+    assert.equal(ok.headers.get("Content-Type"),"audio/wav");
     assert.equal(ok.headers.get("Cache-Control"),"no-store");
     assert.equal((await ok.arrayBuffer()).byteLength,250);
     assert.equal(calls,2);
@@ -373,6 +376,6 @@ test("Safari speaker UI separates synthesis intent from actual user-confirmed au
   assert.match(html,/Waiting for Safari speech to start/);
   assert.match(html,/Safari reports synthesis started/);
   assert.match(html,/speakerPlayer.hidden=false/);
-  assert.match(html,/MP3 ready. Tap Play/);
+  assert.match(html,/Audio ready. Tap Play/);
   assert.doesNotMatch(html,/ctx.playing = true; speaking = true; status\("Gwap is speaking/);
 });
