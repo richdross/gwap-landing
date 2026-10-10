@@ -134,7 +134,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
   let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
   let microphonePreferred = isIOS && hasCapture;
-  let micAnalyser = null, micContext = null, micFrame = 0, micStopTimer = null;
+  let micAnalyser = null, micContext = null, micStopTimer = null, speechPending = false, mediaStarting = false;
   let restartTimer = null;
   function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
   function render(role, content) {
@@ -166,7 +166,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     heard.textContent = ""; status("Conversation ended. Tap Start to talk again."); controls();
   }
   function nextListen() {
-    if (!active || busy || speaking || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
+    if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
@@ -312,6 +312,124 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       clearTimeout(timeout); if (pendingController === controller) pendingController = null;
       busy = false; controls(); if (!speaking) nextListen();
     }
+  }
+  function recordingMime() {
+    const choices = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"];
+    return choices.find((type) => MediaRecorder.isTypeSupported?.(type)) || "";
+  }
+  async function startMediaRecording() {
+    if (mediaStarting || recorder?.state === "recording" || speechPending || !active) return;
+    if (!hasCapture) throw new Error("Microphone recording not supported.");
+    mediaStarting = true;
+    status("Requesting microphone access…");
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {echoCancellation:true, noiseSuppression:true, autoGainControl:true}
+      });
+      if (!active) { stream.getTracks().forEach((track) => track.stop()); return; }
+      mediaStream = stream;
+      const mimeType = recordingMime();
+      recorder = mimeType ? new MediaRecorder(stream, {mimeType, audioBitsPerSecond:64000}) : new MediaRecorder(stream);
+      audioChunks = []; recordingDiscard = false; recordingStarted = performance.now();
+      const currentRecorder = recorder;
+      currentRecorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size) audioChunks.push(event.data);
+      });
+      currentRecorder.addEventListener("stop", async () => {
+        const shouldSend = !recordingDiscard && active;
+        const chunks = audioChunks.slice();
+        const type = String(currentRecorder.mimeType || mimeType || "audio/mp4").split(";")[0];
+        releaseMicrophone();
+        if (!shouldSend) return;
+        const blob = new Blob(chunks, {type});
+        if (blob.size < 1000 || blob.size > 650000) {
+          speechPending = false; active = false;
+          status(blob.size > 650000 ? "Recording too long. Try a shorter question." : "Recording was too short. Try again.");
+          controls(); return;
+        }
+        try {
+          status("Transcribing your speech…");
+          const response = await fetch("/voice/transcribe", {
+            method: "POST", credentials:"same-origin",
+            headers: {"Content-Type":type}, body:blob
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (response.status === 401) { sessionOK = false; throw new Error("Session expired. Pair again on this preview."); }
+          if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+            throw new Error(payload.error || "Speech was not understood.");
+          }
+          lastRecognitionMs = Math.round(performance.now() - recordingStarted);
+          speechPending = false;
+          await send(payload.transcript);
+        } catch (error) {
+          speechPending = false;
+          active = false;
+          status((error?.message || "Microphone transcription unavailable.") + " You can use keyboard dictation.");
+          controls();
+        }
+      });
+      currentRecorder.start(500);
+      controls();
+      status("Listening… speak, then pause or tap Send Speech.");
+      // Local sound detection avoids a separate tap on browsers supporting Web Audio.
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          micContext = new AC();
+          if (micContext.state === "suspended") await micContext.resume();
+          micAnalyser = micContext.createAnalyser();
+          micAnalyser.fftSize = 1024;
+          micContext.createMediaStreamSource(stream).connect(micAnalyser);
+          const samples = new Uint8Array(micAnalyser.fftSize);
+          let lastSound = 0, soundSeen = false, firstSound = 0;
+          micStopTimer = setInterval(() => {
+            if (recorder !== currentRecorder || currentRecorder.state !== "recording") return;
+            const elapsed = performance.now() - recordingStarted;
+            micAnalyser.getByteTimeDomainData(samples);
+            let energy=0;
+            for (const sample of samples) { const s=(sample-128)/128; energy+=s*s; }
+            const rms=Math.sqrt(energy/samples.length);
+            if (rms > 0.025) {
+              if (!soundSeen) firstSound = elapsed;
+              soundSeen = true; lastSound=elapsed;
+            }
+            if (soundSeen && elapsed > 1100 && lastSound > 500 &&
+                elapsed-lastSound > 1350 && elapsed-firstSound > 450) {
+              stopMediaRecording(true);
+            } else if (elapsed > 15000) {
+              if (soundSeen) stopMediaRecording(true);
+              else { stopMediaRecording(false); active=false; status("No voice detected. Tap Start and try again."); controls(); }
+            }
+          }, 160);
+        }
+      } catch { // Manual Send Speech remains available when AudioContext is blocked.
+        status("Listening. Tap Send Speech when you finish.");
+      }
+    } catch (error) {
+      releaseMicrophone();
+      throw error;
+    } finally { mediaStarting = false; controls(); }
+  }
+  function releaseMicrophone() {
+    if (micStopTimer) clearInterval(micStopTimer);
+    micStopTimer = null; micAnalyser = null;
+    if (micContext) { micContext.close().catch(() => {}); micContext=null; }
+    if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null; recorder = null; audioChunks=[];
+  }
+  function stopMediaRecording(sendAudio) {
+    if (!sendAudio) recordingDiscard = true;
+    const r = recorder;
+    if (!r || r.state !== "recording") {
+      if (!sendAudio) releaseMicrophone();
+      return;
+    }
+    if (sendAudio) speechPending = true;
+    if (micStopTimer) { clearInterval(micStopTimer); micStopTimer=null; }
+    status(sendAudio ? "Processing your voice…" : "Microphone stopped.");
+    try { r.stop(); } catch { releaseMicrophone(); speechPending=false; }
+    controls();
   }
   function startListening() {
     restartTimer = null;
