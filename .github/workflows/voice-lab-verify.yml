@@ -21,3 +21,6 @@ jobs:
         with:
           node-version: '22'
       - run: node --test scripts/verify-voice-lab.mjs
+      - run: npm ci
+      - run: npm run build
+      - run: test -f _site/voice-lab/index.html
