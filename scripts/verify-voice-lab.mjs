@@ -84,3 +84,49 @@ test("rejects oversized JSON before reaching provider", async () => {
     assert.equal(res.status, 413);
   } finally { globalThis.fetch = previousFetch; }
 });
+
+
+test("ten guided iPhone acceptance prompts include latency, speech, interruption, and export evidence", () => {
+  const prompts = [...html.matchAll(/^    \["[^"]+", "[^"]+", "[^"]+"\]/gm)];
+  assert.equal(prompts.length, 10);
+  assert.match(html, /audible_ms/);
+  assert.match(html, /mic_ms/);
+  assert.match(html, /api_ms/);
+  assert.match(html, /interrupted/);
+  assert.match(html, /qaGrade/);
+  assert.match(html, /gwap-voice-iphone-evidence\.json/);
+  assert.match(html, /recognition.*onresult|r\.onresult/);
+});
+
+test("ten mock paired conversations cross edge with bounded context, no client-side secrets", async () => {
+  const previousFetch = globalThis.fetch;
+  let callCount = 0;
+  let providerCalls = 0;
+  const history = [];
+  globalThis.fetch = async (target, options) => {
+    callCount++;
+    const url = new URL(typeof target === "string" ? target : target.toString());
+    if (url.pathname === "/voice/session") return Response.json({ paired: true });
+    providerCalls++;
+    assert.equal(url.pathname, "/api/voice/chat");
+    assert.equal(options.headers.Authorization, "Bearer " + env.GWAP_VOICE_FAST_CHAT_TOKEN);
+    const input = JSON.parse(new TextDecoder().decode(options.body));
+    assert.ok(input.history.length <= 8);
+    return Response.json({ spoken_response: "Response number " + providerCalls + " with natural follow-up." });
+  };
+  try {
+    for (let turn = 1; turn <= 10; turn++) {
+      const message = "Scenario " + turn;
+      const response = await onRequest({
+        request: chatRequest({message, history:[...history]}), env
+      });
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.spoken_response, "Response number " + turn + " with natural follow-up.");
+      history.push({role:"user",content:message},{role:"assistant",content:body.spoken_response});
+      while(history.length > 8) history.shift();
+    }
+    assert.equal(providerCalls, 10);
+    assert.equal(callCount, 20);
+  } finally { globalThis.fetch = previousFetch; }
+});
