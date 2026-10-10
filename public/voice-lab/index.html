@@ -161,6 +161,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     restartTimer = setTimeout(startListening, 350);
   }
   // Streamed text is displayed immediately and spoken in sentence-sized increments.
+  const streamingExperiment = new URLSearchParams(location.search).get("stream") === "1";
   let pendingController = null;
   let liveSpeech = null;
   let interruptedByUser = false;
@@ -223,7 +224,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const timeout = setTimeout(() => controller.abort(), 30000);
     let accumulated = "", pendingSentence = "", streamBody = null;
     const audio = beginSpeechQueue(record, started);
-    function consume(part) {
+    function consume(part, sentenceChunks = true) {
       if (!part || interruptedByUser) return;
       if (record && record.first_delta_ms == null) record.first_delta_ms = Math.round(performance.now() - started);
       accumulated += String(part);
@@ -231,6 +232,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       if (!streamBody) streamBody = render("assistant", "");
       streamBody.textContent = accumulated;
       list.scrollTop = list.scrollHeight;
+      if (!sentenceChunks) { audio.push(String(part)); return; }
       pendingSentence += String(part);
       while (pendingSentence.length) {
         const punctuation = /[.!?](?=\s|$)/.exec(pendingSentence);
@@ -248,7 +250,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     try {
       const res = await fetch("/voice/chat", {
         method: "POST", credentials: "same-origin", signal: controller.signal,
-        headers: {"Content-Type": "application/json", Accept: "text/event-stream"},
+        headers: {"Content-Type": "application/json", Accept: streamingExperiment ? "text/event-stream" : "application/json"},
         body: JSON.stringify({ message, history: context })
       });
       if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Pair this device from Command Mode."); }
@@ -278,7 +280,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       } else {
         const data = await res.json().catch(() => ({}));
         if (typeof data.spoken_response !== "string") throw new Error("No reply was returned.");
-        consume(data.spoken_response);
+        consume(data.spoken_response, false);
       }
       if (!accumulated.trim()) throw new Error("The AI returned an empty reply.");
       if (pendingSentence.trim()) audio.push(pendingSentence);
