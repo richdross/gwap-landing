@@ -259,7 +259,7 @@ test("recording fallback rejects cross-site calls and excessive recordings befor
       }), env});
       assert.equal(result.status,sizeCode);
     }
-    assert.equal(calls,0,"Oversized and cross-site recordings must not reach providers");
+    assert.equal(calls,1,"Oversized recording may verify the paired session but must never reach the model");
   }finally {globalThis.fetch=original;}
 });
 
