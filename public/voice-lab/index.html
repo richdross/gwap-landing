@@ -167,7 +167,22 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
     active = false; stopRecognition(); stopMediaRecording(false);
     window.speechSynthesis?.cancel(); speaking = false;
-    heard.textContent = ""; status("Conversation ended. Tap Start to talk again."); controls();
+    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
+  }
+  function pauseForBackground() {
+    // iOS may briefly report hidden while presenting the microphone permission prompt.
+    // Cancelling getUserMedia then would discard an authorized recording before it starts.
+    if (mediaStarting) return;
+    if (!active && !recorder) return;
+    interruptedByUser = true;
+    pendingController?.abort();
+    liveSpeech?.cancel();
+    active = false;
+    stopRecognition();
+    stopMediaRecording(false);
+    window.speechSynthesis?.cancel(); speaking = false;
+    status("Conversation paused when Safari left the screen. Tap Start to resume.");
+    controls();
   }
   function nextListen() {
     if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
@@ -503,7 +518,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
   });
-  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseForBackground();
+  });
+  window.addEventListener("pagehide", () => pauseForBackground());
   qaShow();
   fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
     const data = await res.json().catch(() => ({}));
