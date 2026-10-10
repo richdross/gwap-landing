@@ -437,7 +437,9 @@ test("iOS conversation does not auto-start blocked Web Speech and enables native
   assert.equal(node("speakerMp3").disabled,false,"Generate Audio must enable once response exists");
   assert.equal(node("speakerMp3").textContent,"");
   assert.match(node("status").textContent,/Ready for follow-up/);
-  assert.equal(node("listen").disabled,true,"Mock has no microphone API; typed answers still work");
+  assert.equal(node("listen").disabled,false,"Start remains tappable and explains missing microphone capabilities");
+  node("listen").handlers.click();
+  assert.match(node("status").textContent,/No microphone API/);
   await node("speakerMp3").handlers.click();
   assert.equal(audioCalls,1);
   assert.equal(node("speakerPlayer").src,"blob:gwap-test-audio");
