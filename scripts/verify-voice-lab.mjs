@@ -175,3 +175,40 @@ test("mobile lab measures incremental audio-start latency, and supports interrup
   assert.match(html, /pendingController\?\.abort\(\)/);
   assert.match(html, /SpeechSynthesisUtterance\(piece\)/);
 });
+
+
+test("preview pairing proxy validates browser origin, removes Origin for Render, and keeps credentials", async () => {
+  const browser = "https://preview-id.gwap-landing.pages.dev";
+  const originalFetch = globalThis.fetch;
+  let intercepted = 0;
+  globalThis.fetch = async (upstream) => {
+    intercepted++;
+    assert.equal(new URL(upstream.url).origin, "https://gwap-backend.onrender.com");
+    assert.equal(new URL(upstream.url).pathname, "/voice/pair");
+    assert.equal(upstream.headers.get("origin"), null);
+    assert.equal(upstream.headers.get("authorization"), "Bearer operator-token-test");
+    assert.equal(upstream.headers.get("x-forwarded-host"), "preview-id.gwap-landing.pages.dev");
+    assert.equal(upstream.method, "POST");
+    return Response.json({ok:false,error:"Valid operator token required for pairing"},{status:401});
+  };
+  try {
+    const request = new Request(browser + "/voice/pair", {
+      method:"POST",
+      headers:{ Origin: browser, Authorization:"Bearer operator-token-test" }
+    });
+    const accepted = await onRequest({request, env});
+    assert.equal(accepted.status,401);
+    assert.match((await accepted.json()).error,/operator token/);
+    assert.equal(intercepted,1);
+
+    const malicious = new Request(browser+"/voice/pair",{
+      method:"POST",headers:{Origin:"https://attacker.example",Authorization:"Bearer operator-token-test"}
+    });
+    assert.equal((await onRequest({request:malicious,env})).status,403);
+    const missing = new Request(browser+"/voice/pair",{
+      method:"POST",headers:{Authorization:"Bearer operator-token-test"}
+    });
+    assert.equal((await onRequest({request:missing,env})).status,403);
+    assert.equal(intercepted,1,"rejected origins must never reach Render");
+  } finally {globalThis.fetch=originalFetch;}
+});
