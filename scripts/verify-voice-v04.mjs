@@ -169,7 +169,8 @@ test("when autoplay cannot unlock, native player remains visible for a deliberat
     await phone.settle();
     phone.node("listen").handlers.click();
     await phone.settle();
-    for(const t of [650,900,1400,2800])phone.tick(t);
+    // Suspended Web Audio also disables silence detection, so use Send Speech fallback.
+    phone.node("listen").handlers.click();
     await phone.settle();
     // Fallback HTML audio can autoplay in this mock, which is acceptable.
     assert.equal(phone.node("speakerPlayer").hidden,false);
