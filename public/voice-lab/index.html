@@ -173,7 +173,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function stop() {
     interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-    active = false; stopRecognition(); stopMediaRecording(false);
+    interruptGeneratedSpeech(true);
+    active = false; busy=false; stopRecognition(); stopMediaRecording(false);
     window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
   }
@@ -185,6 +186,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     interruptedByUser = true;
     pendingController?.abort();
     liveSpeech?.cancel();
+    interruptGeneratedSpeech(navigating);
+    busy=false;
     active = false;
     stopRecognition();
     stopMediaRecording(false);
@@ -536,6 +539,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   async function send(message) {
     message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
+    const version=++turnVersion;
     busy = true; interruptedByUser = false; stopRecognition();
     liveSpeech?.cancel(); window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; controls();
@@ -619,21 +623,34 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       lastReply=accumulated;
       $("speakerReplay").disabled=false;
       $("speakerMp3").disabled=audioGenerating;
-      audio.done();
       turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
       while(turns.length > 8) turns.shift();
       metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
-      if (!speaking && !(isIOS && !muted)) status("Ready for follow-up");
+      if (isIOS && active && !muted && version===turnVersion) {
+        audio.cancel();
+        await speakGeneratedAnswer(accumulated, record, version);
+      } else {
+        audio.done();
+        if(!speaking)status("Ready for follow-up");
+      }
     } catch (e) {
       audio.cancel();
+      if(version!==turnVersion)return;
       const msg = e.name === "AbortError"
         ? (interruptedByUser ? "Interrupted. Listening for your next question." : "Response timed out. Try again.")
         : (e.message || "Unable to connect.");
       if (record) record.voice_error = msg;
-      status(msg);
+      if(accumulated && isIOS && active && !muted) {
+        active=false;
+        status("Voice generation unavailable. Tap Generate Audio to retry.");
+        speakerFeedback("Audio generation failed: "+msg+". Your answer is available in text.");
+      } else status(msg);
     } finally {
       clearTimeout(timeout); if (pendingController === controller) pendingController = null;
-      busy = false; controls(); if (!speaking) nextListen();
+      if(version===turnVersion) {
+        busy = false; controls();
+        if (!speaking && !waitingForPlayTap) nextListen();
+      }
     }
   }
   function recordingMime() {
@@ -801,23 +818,33 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
     if (!sessionOK) { status("Pair this device first."); return; }
     if (recorder?.state === "recording") { stopMediaRecording(true); return; }
-    if (active && speaking) {
+    if (active && (speaking || busy || waitingForPlayTap)) {
       if (qaCurrent) qaCurrent.interrupted = true;
       interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-      speaking = false; busy = false; startListening(); controls(); return;
+      interruptGeneratedSpeech();
+      speaking = false; busy = false;
+      status("Interrupted. Listening for your next question…");
+      startListening(); controls(); return;
     }
     if (active && recognition) { status("Already listening. Speak your question."); return; }
+    armAudioOnStart(); // This must run inside the original user tap for Safari.
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
   $("endCall").addEventListener("click", () => stop());
   sound.addEventListener("click", () => {
-    muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
+    muted = !muted;
+    if (muted) {
+      interruptGeneratedSpeech();
+      window.speechSynthesis?.cancel(); speaking=false;
+      if(active)nextListen();
+    } else if(active)armAudioOnStart();
     controls();
   });
   $("composer").addEventListener("submit", (event) => {
     event.preventDefault(); const text = input.value.trim(); input.value = ""; input.blur(); send(text);
   });
   $("reset").addEventListener("click", () => {
+    interruptGeneratedSpeech();
     turns.splice(0); list.textContent = "";
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
