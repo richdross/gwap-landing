@@ -272,3 +272,15 @@ test("mobile UI supports both Web Speech and recording fallback with visible con
   assert.match(html, /recorder\?\.state === "recording"/);
   assert.ok(html.indexOf('id="listen"')<html.indexOf('id="transcript"'), "Start control must precede large transcript");
 });
+
+
+test("iOS microphone permission prompt cannot cancel an in-flight recording start", () => {
+  const fragment = html.match(/function pauseForBackground\(\)\s*\{[\s\S]*?\n  \}/)?.[0];
+  assert.ok(fragment, "background pause handler must be implemented");
+  assert.match(fragment, /if \(mediaStarting\) return;/, "permission prompt must not call stop while getUserMedia awaits");
+  assert.match(html, /window\.addEventListener\("pagehide", \(\) => pauseForBackground\(\)\)/);
+  assert.match(html, /document\.addEventListener\("visibilitychange",/);
+  assert.doesNotMatch(html, /if \(document\.hidden\) stop\(\)/);
+  assert.match(html, /Conversation ended by End/);
+  assert.match(html, /Conversation paused when Safari left the screen/);
+});
