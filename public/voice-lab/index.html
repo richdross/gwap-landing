@@ -57,7 +57,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <div class="speaker-tools" aria-label="Audio troubleshooting">
   <button type="button" id="speakerTest">Test Speaker</button>
   <button type="button" id="speakerReplay" disabled>Replay Reply</button>
-  <button type="button" id="speakerMp3" disabled>Generate MP3</button>
+  <button type="button" id="speakerMp3" disabled>Generate Audio</button>
 </div>
 <div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
 <audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
@@ -216,7 +216,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function playOnTap(text) {
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
-      speakerFeedback("Safari speech synthesis is unavailable. Use Generate MP3.");
+      speakerFeedback("Safari speech synthesis is unavailable. Use Generate Audio.");
       return;
     }
     liveSpeech?.cancel();
@@ -227,20 +227,20 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const timer=setTimeout(() => {
       if (!started) {
         window.speechSynthesis.cancel();
-        speakerFeedback("Safari did not start speaking. Use Generate MP3 for native audio.");
+        speakerFeedback("Safari did not start speaking. Use Generate Audio for native audio.");
       }
     },4000);
     utterance.onstart=()=>{
       started=true;clearTimeout(timer);
-      speakerFeedback("Safari reports speech started. If you hear nothing, try Generate MP3.");
+      speakerFeedback("Safari reports speech started. If you hear nothing, try Generate Audio.");
     };
-    utterance.onend=()=>{clearTimeout(timer); speakerFeedback("Speech finished. If it was silent, try Generate MP3.");};
+    utterance.onend=()=>{clearTimeout(timer); speakerFeedback("Speech finished. If it was silent, try Generate Audio.");};
     utterance.onerror=(event)=>{
       clearTimeout(timer);
-      speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate MP3.");
+      speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate Audio.");
     };
     try { window.speechSynthesis.speak(utterance); }
-    catch { clearTimeout(timer); speakerFeedback("Safari could not play speech. Try Generate MP3."); }
+    catch { clearTimeout(timer); speakerFeedback("Safari could not play speech. Try Generate Audio."); }
   }
   $("speakerTest").addEventListener("click", () => {
     input.blur();
@@ -285,7 +285,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     button.disabled=true;
     window.speechSynthesis?.cancel();
     liveSpeech?.cancel();
-    speakerFeedback("Generating MP3 through GWAP Cloud Agent. This uses Workers AI quota.");
+    speakerFeedback("Generating playable audio through GWAP Cloud Agent. This uses Workers AI quota.");
     try {
       const response=await fetch("/voice/speak",{
         method:"POST",credentials:"same-origin",
@@ -296,18 +296,21 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         const payload=await response.json().catch(()=>({}));
         throw new Error(payload.error || "Audio generation unavailable");
       }
-      if (!response.headers.get("content-type")?.includes("audio/mpeg")) throw new Error("Invalid audio format");
+      const contentType=String(response.headers.get("content-type") || "");
+      if (!contentType.includes("audio/wav") && !contentType.includes("audio/mpeg")) {
+        throw new Error("Invalid audio format");
+      }
       const audio=await response.blob();
-      if (!audio.size || audio.size>1500000) throw new Error("Audio is empty or oversized");
+      if (!audio.size || audio.size>8000000) throw new Error("Audio is empty or oversized");
       if (mp3ObjectUrl) URL.revokeObjectURL(mp3ObjectUrl);
       mp3ObjectUrl=URL.createObjectURL(audio);
       speakerPlayer.pause();
       speakerPlayer.src=mp3ObjectUrl;
       speakerPlayer.hidden=false;
-      speakerFeedback("MP3 ready. Tap Play in the audio control below.");
+      speakerFeedback("Audio ready. Tap Play in the player below.");
       // Do not claim autoplay; mobile Safari may require explicit user action.
     } catch(error) {
-      speakerFeedback("MP3 generation failed: "+(error?.message || "unknown error")+". You can still read the reply.");
+      speakerFeedback("Audio generation failed: "+(error?.message || "unknown error")+". You can still read the reply.");
     } finally {button.disabled=!lastReply;}
   });
   function selectedVoice() {
@@ -338,7 +341,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         if (!didStart && !ctx.cancelled) {
           ctx.cancelled=true;ctx.queue.length=0;ctx.playing=false;
           window.speechSynthesis.cancel();speaking=false;active=false;
-          speakerFeedback("Safari never started speech. Tap Replay Reply or Generate MP3.");
+          speakerFeedback("Safari never started speech. Tap Replay Reply or Generate Audio.");
           status("Audio blocked by Safari. Reply text remains available.");
           controls();
         }
@@ -346,19 +349,19 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       u.onstart = () => {
         didStart=true;clearTimeout(watchdog);
         if (record) record.synthesis_started_ms = Math.round(performance.now() - startedAt);
-        speakerFeedback("Safari reports synthesis started. If silent, try Replay or Generate MP3.");
+        speakerFeedback("Safari reports synthesis started. If silent, try Replay or Generate Audio.");
         status("Safari reports speech started…");
       };
       u.onend = () => { clearTimeout(watchdog);ctx.playing = false; if (!ctx.cancelled) next(); };
       u.onerror = (event) => {
         clearTimeout(watchdog);
         if (record) record.voice_error = String(event.error || "speech synthesis error");
-        speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate MP3.");
+        speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate Audio.");
         ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;controls();
       };
       try { window.speechSynthesis.speak(u); }
       catch { clearTimeout(watchdog); ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;
-        speakerFeedback("Safari failed to start speech. Try Generate MP3."); controls(); }
+        speakerFeedback("Safari failed to start speech. Try Generate Audio."); controls(); }
     }
     return {
       push: (text) => { if (!ctx.cancelled && text.trim()) { ctx.queue.push(text.trim()); next(); } },
