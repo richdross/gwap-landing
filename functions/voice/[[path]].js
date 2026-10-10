@@ -111,7 +111,22 @@ export async function onRequest({ request, env }) {
   if (incoming.pathname === "/voice/chat") return fastChat({ request, env, incoming });
   const upstream = new URL(incoming.pathname + incoming.search, VOICE_ORIGIN);
 
+  // Browser requests to a Pages preview carry its unique Origin header.
+  // The live Render backend intentionally does not allow preview domains via CORS.
+  // This is a server-to-server proxy: validate the *incoming* browser origin
+  // against this exact Pages deployment, then omit Origin when calling Render.
+  // No Render CORS allowlist or production configuration changes are required.
+  const browserOrigin = request.headers.get("origin");
+  if (browserOrigin && browserOrigin !== incoming.origin) {
+    return jsonError(403, "Cross-origin voice request rejected.");
+  }
+  // Mutating requests must originate from this deployment's UI. Do not allow
+  // form posts or cross-site forged requests that omit Origin.
+  if (!["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase()) && !browserOrigin) {
+    return jsonError(403, "A same-origin voice request is required.");
+  }
   const headers = new Headers(request.headers);
+  headers.delete("origin");
   headers.set("X-Forwarded-Host", incoming.host);
   headers.set("X-Forwarded-Proto", incoming.protocol.replace(":", ""));
 
