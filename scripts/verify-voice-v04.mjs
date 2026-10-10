@@ -9,7 +9,7 @@ assert.ok(script);
 
 function createPhone({holdPlayback=false,blockAudioContext=false}={}){
   const elements=new Map(),windowEvents={},documentEvents={};
-  let now=0, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
+  let now=0, recordingStart=0, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
   let intervalFn=null, timeouts=new Set(), activeRecording=null;
   function node(id){
     if(!elements.has(id)){
@@ -27,7 +27,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false}={}){
     static isTypeSupported(type){return type==="audio/mp4";}
     constructor(){this.state="inactive";this.mimeType="audio/mp4";this.handlers={};}
     addEventListener(k,f){this.handlers[k]=f;}
-    start(){this.state="recording";activeRecording=this;players.push(this);}
+    start(){this.state="recording";recordingStart=now;activeRecording=this;players.push(this);}
     stop(){
       if(this.state!=="recording")return;
       this.state="inactive";micStopCount++;
@@ -44,7 +44,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false}={}){
     createGain(){return {gain:{value:1,setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}};}
     createOscillator(){return {connect(){},start(){},stop(){},frequency:{value:440},type:"sine"};}
     createMediaStreamSource(){return {connect(){}};}
-    createAnalyser(){return {fftSize:1024,getByteTimeDomainData(bytes){bytes.fill(now<1500?165:128);}};}
+    createAnalyser(){return {fftSize:1024,getByteTimeDomainData(bytes){bytes.fill(now-recordingStart<1500?165:128);}};}
     decodeAudioData(bytes){assert.ok(bytes.byteLength>=44);return Promise.resolve({duration:1});}
     createBufferSource(){
       const source={buffer:null,onended:null,connect(){},start(){
@@ -136,6 +136,13 @@ test("one tap: start -> auto silence-stop -> transcribe -> AI -> generated WAV -
     assert.equal(phone.node("speakerPlayer").src,"blob:gwap-audio");
     assert.ok(phone.players.length>=2,"new microphone recording should start after spoken reply");
     assert.match(phone.node("status").textContent,/Listening/);
+    // No additional click: a second spoken question should also go end-to-end.
+    for(const t of [3450,3700,4200,5600])phone.tick(t);
+    await phone.settle();
+    assert.equal(phone.apiCalls.filter(x=>x.path==="/voice/chat").length,2,"second question must reach AI");
+    assert.equal(phone.apiCalls.filter(x=>x.path==="/voice/speak").length,2,"second reply must generate audio");
+    assert.equal(phone.playbackCount,2,"second reply must play automatically");
+    assert.ok(phone.players.length>=3,"third listening session should start after second reply");
     assert.equal(phone.node("endCall").disabled,false);
   }finally{await phone.cleanup();}
 });
