@@ -65,7 +65,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
   }
   function controls() {
-    listen.textContent = active ? "Stop Conversation" : "Start Conversation";
+    listen.textContent = speaking ? "Interrupt Gwap" : (active ? "Stop Conversation" : "Start Conversation");
     listen.disabled = !sessionOK || !Recognition;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
@@ -85,7 +85,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     restartTimer = setTimeout(startListening, 350);
   }
   function talk(text) {
-    if (!active || muted || !("speechSynthesis" in window)) { nextListen(); return; }
+    if (muted || !("speechSynthesis" in window)) { nextListen(); return; }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US"; utterance.rate = 1.03; utterance.pitch = 1;
     const voices = speechSynthesis.getVoices();
@@ -155,6 +155,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
   }
   listen.addEventListener("click", () => {
+    if (active && speaking) { window.speechSynthesis?.cancel(); speaking = false; startListening(); controls(); return; }
     if (active) { stop(); return; }
     if (!sessionOK) return;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
