@@ -279,7 +279,7 @@ test("iOS microphone permission prompt cannot cancel an in-flight recording star
   const fragment = html.match(/function pauseForBackground\(\)\s*\{[\s\S]*?\n  \}/)?.[0];
   assert.ok(fragment, "background pause handler must be implemented");
   assert.match(fragment, /if \(mediaStarting\) return;/, "permission prompt must not call stop while getUserMedia awaits");
-  assert.match(html, /window\.addEventListener\("pagehide", \(\) => pauseForBackground\(\)\)/);
+  assert.match(html, /window\.addEventListener\("pagehide", \(\) => pauseForBackground\(true\)\)/);
   assert.match(html, /document\.addEventListener\("visibilitychange",/);
   assert.doesNotMatch(html, /if \(document\.hidden\) stop\(\)/);
   assert.match(html, /Conversation ended by End/);
