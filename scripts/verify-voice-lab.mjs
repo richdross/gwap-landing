@@ -363,6 +363,9 @@ test("scoped MP3 preview route requires pairing, same origin, and bounded text",
 
 test("Safari speaker UI separates synthesis intent from actual user-confirmed audio",()=>{
   assert.match(html,/id="speakerTest"/);
+  assert.match(html,/context.createOscillator\(\)/);
+  assert.match(html,/oscillator.start\(onset\)/);
+  assert.match(html,/Two test tones requested/);
   assert.match(html,/id="speakerReplay"/);
   assert.match(html,/id="speakerMp3"/);
   assert.match(html,/id="speakerPlayer" controls/);
