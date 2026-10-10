@@ -383,7 +383,7 @@ test("Safari speaker UI separates synthesis intent from actual user-confirmed au
 
 
 test("iOS conversation does not auto-start blocked Web Speech and enables native reply audio",async()=>{
-  const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+  const script=html.split("<script>")[1]?.split("</script>")[0];
   assert.ok(script);
   const els=new Map();
   function node(id){
