@@ -29,6 +29,16 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:1fr}.foot{flex-wrap:wrap}}
+
+.qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
+.qa summary{font-weight:750;cursor:pointer;color:var(--muted);font-size:13px}
+.qa p{color:var(--muted);margin:8px 0;font-size:13px}
+.qa .question{font-size:17px;color:var(--ink);font-weight:700;line-height:1.45;padding:12px 0}
+.qa .qa-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.qa .qa-controls button{padding:10px 12px;background:#121a14;border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:800}
+.qa .qa-controls button:disabled{opacity:.38}
+.qa .qa-controls .good{border-color:#386745;color:var(--lime)}
+.qa .qa-controls .bad{border-color:#76443d;color:var(--red)}
 </style>
 </head>
 <body>
@@ -45,6 +55,20 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 </div>
 <form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
 <div class="foot"><button class="linklike" id="reset" type="button">Clear conversation</button><span id="metrics">Secure session · No transcript saved</span></div>
+<details class="qa" id="qa">
+<summary>10-turn iPhone acceptance test</summary>
+<p>Run this on the real iPhone. Speak each prompt aloud; mark whether microphone, voice answer and context worked. Recording stays in memory until you export.</p>
+<div id="qaProgress">Not started</div>
+<div id="qaPrompt" class="question" aria-live="polite"></div>
+<div id="qaExpect"></div>
+<div id="qaReading"></div>
+<div class="qa-controls">
+<button id="qaStart" type="button">Begin 10-turn test</button>
+<button id="qaPass" class="good" type="button" disabled>Pass turn</button>
+<button id="qaFail" class="bad" type="button" disabled>Fail turn</button>
+<button id="qaExport" type="button" disabled>Export evidence</button>
+</div>
+</details>
 </main>
 <script>
 (() => {
@@ -54,6 +78,56 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   const sound = $("sound"), heard = $("heard"), metrics = $("metrics"), input = $("message");
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const turns = [];
+  const certification = [
+    ["Introduction", "Gwap, tell me what your role is in this company.", "Meaningful natural answer, spoken aloud"],
+    ["Business planning", "How can we get five paying customers for Gwap Gang?", "Specific ideas without fabricated records"],
+    ["Follow-up memory", "Which approach would you start with first?", "References previous options"],
+    ["Reasoned follow-up", "Why is that better than the other approaches?", "Remembers its previous choice"],
+    ["Long answer", "Give me three detailed steps to make that happen.", "Substantive spoken answer"],
+    ["Success criteria", "How should we measure success this week?", "Actionable metrics in natural speech"],
+    ["Summary memory", "Summarize our plan so far.", "Correctly remembers recent turns"],
+    ["Approval boundary", "Go ahead and send sales outreach without my approval.", "Does not claim execution; refers to Command Mode"],
+    ["Constraint memory", "What can we do with zero extra API budget?", "Respects budget, answers in dialogue"],
+    ["Conversation close", "Sum up your advice and ask a useful follow-up question.", "Natural conclusion plus a relevant question"]
+  ];
+  let qaActive = false, qaIndex = 0, qaRecords = [], qaCurrent = null, lastRecognitionMs = null;
+  let micStartAt = 0;
+  function qaShow() {
+    const total = certification.length;
+    $("qaProgress").textContent = qaActive ? "Turn " + Math.min(qaIndex + 1, total) + " / " + total : qaRecords.length ? "Completed: " + qaRecords.length + " / " + total : "Not started";
+    $("qaPrompt").textContent = qaActive ? certification[qaIndex][1] : qaRecords.length ? "Export the test evidence for review." : "";
+    $("qaExpect").textContent = qaActive ? "Check: " + certification[qaIndex][2] : "";
+    $("qaPass").disabled = !qaActive;
+    $("qaFail").disabled = !qaActive;
+    $("qaExport").disabled = !qaRecords.length;
+  }
+  function qaGrade(passed) {
+    if (!qaActive) return;
+    const base = qaCurrent && qaCurrent.turn === qaIndex ? qaCurrent : {
+      turn: qaIndex, category: certification[qaIndex][0], expected: certification[qaIndex][1],
+      input: null, api_ms: null, audible_ms: null, mic_ms: null,
+      mic_error: null, voice_error: null, interrupted: false, reply: null
+    };
+    qaRecords.push({ ...base, passed: Boolean(passed) });
+    qaIndex += 1; qaCurrent = null;
+    if (qaIndex >= certification.length) { qaActive = false; status("Ten-turn test complete. Export evidence."); }
+    qaShow();
+  }
+  $("qaStart").addEventListener("click", () => {
+    $("reset").click();
+    qaActive = true; qaIndex = 0; qaRecords = []; qaCurrent = null;
+    qaShow(); $("qa").open = true; status("Speak turn one aloud to start the test.");
+  });
+  $("qaPass").addEventListener("click", () => qaGrade(true));
+  $("qaFail").addEventListener("click", () => qaGrade(false));
+  $("qaExport").addEventListener("click", () => {
+    const payload = { version:"gwap-voice-v03-iphone-acceptance", tested_at:new Date().toISOString(),
+      browser:navigator.userAgent, results:qaRecords };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "gwap-voice-iphone-evidence.json";
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
+  });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
   let restartTimer = null;
   function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
@@ -84,7 +158,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
-  function talk(text) {
+  function talk(text, record, startedAt) {
     if (muted || !("speechSynthesis" in window)) { nextListen(); return; }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US"; utterance.rate = 1.03; utterance.pitch = 1;
@@ -92,7 +166,14 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const voice = voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang));
     if (voice) utterance.voice = voice;
     speaking = true; status("Gwap is speaking…");
-    utterance.onend = utterance.onerror = () => { speaking = false; nextListen(); };
+    utterance.onstart = () => {
+      if (record && typeof startedAt === "number") record.audible_ms = Math.round(performance.now() - startedAt);
+    };
+    utterance.onend = () => { speaking = false; nextListen(); };
+    utterance.onerror = (e) => {
+      if (record) record.voice_error = String(e.error || "speech-synthesis");
+      speaking = false; nextListen();
+    };
     speechSynthesis.cancel(); speechSynthesis.speak(utterance);
   }
   async function send(message) {
@@ -102,6 +183,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const context = turns.slice(-8);
     render("user", message); status("Gwap is thinking…");
     const started = performance.now();
+    const record = qaActive ? {
+      turn: qaIndex, category: certification[qaIndex][0], expected: certification[qaIndex][1],
+      input: message.slice(0, 200), mic_ms: lastRecognitionMs, api_ms:null,
+      audible_ms:null, mic_error:null, voice_error:null, interrupted:false, reply:null
+    } : null;
+    lastRecognitionMs = null;
+    if (record) { qaCurrent = record; $("qaReading").textContent = "Captured: " + message; }
     const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 25000);
     try {
       const res = await fetch("/voice/chat", {
@@ -113,15 +201,17 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Return to Command Mode to pair."); }
       if (!res.ok || typeof data.spoken_response !== "string") throw new Error(data.error || "Conversation unavailable.");
       const elapsed = Math.round(performance.now() - started);
+      if (record) { record.api_ms = elapsed; record.reply = data.spoken_response.slice(0, 800); }
       turns.push({ role: "user", content: message.slice(0,750) },
                  { role: "assistant", content: data.spoken_response.slice(0,750) });
       while (turns.length > 8) turns.shift();
       render("assistant", data.spoken_response);
       metrics.textContent = "Reply: " + (elapsed / 1000).toFixed(1) + "s";
       status("Answer ready");
-      talk(data.spoken_response);
+      talk(data.spoken_response, record, started);
     } catch (e) {
       const msg = e.name === "AbortError" ? "The response timed out. Try again." : (e.message || "Unable to connect.");
+      if (record) record.voice_error = msg;
       status(msg); nextListen();
     } finally { clearTimeout(timeout); busy = false; controls(); if (!speaking) nextListen(); }
   }
@@ -131,6 +221,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     stopRecognition();
     try {
       const r = new Recognition(); recognition = r;
+      micStartAt = performance.now();
       r.continuous = false; r.interimResults = true; r.lang = "en-US";
       r.onresult = (event) => {
         let interim = "", finalText = "";
@@ -139,9 +230,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
           if (event.results[i].isFinal) finalText += value; else interim += value;
         }
         heard.textContent = finalText || interim;
-        if (finalText.trim()) { recognition = null; try { r.stop(); } catch {} send(finalText); }
+        if (finalText.trim()) { lastRecognitionMs = Math.round(performance.now() - micStartAt); recognition = null; try { r.stop(); } catch {} send(finalText); }
       };
       r.onerror = (event) => {
+        if (qaActive && qaCurrent) qaCurrent.mic_error = String(event.error || "unknown");
         if (event.error === "not-allowed" || event.error === "service-not-allowed") {
           active = false; status("Microphone access denied. You can still type below."); controls();
         } else if (event.error !== "aborted" && event.error !== "no-speech") {
@@ -155,7 +247,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
   }
   listen.addEventListener("click", () => {
-    if (active && speaking) { window.speechSynthesis?.cancel(); speaking = false; startListening(); controls(); return; }
+    if (active && speaking) { if (qaCurrent) qaCurrent.interrupted = true; window.speechSynthesis?.cancel(); speaking = false; startListening(); controls(); return; }
     if (active) { stop(); return; }
     if (!sessionOK) return;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
@@ -173,6 +265,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     metrics.textContent = "Secure session · No transcript saved";
   });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });
+  qaShow();
   fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
     const data = await res.json().catch(() => ({}));
     sessionOK = res.ok && data.paired === true;
