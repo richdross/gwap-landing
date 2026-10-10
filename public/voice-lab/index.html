@@ -45,9 +45,9 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 </head>
 <body>
 <main>
-<header><div class="brand">GWAP VOICE / V0.3 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
+<header><div class="brand">GWAP VOICE / V0.4 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
 <h1>Conversation</h1>
-<p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
+<p class="sub">One tap to start. Speak, hear GWAP, then continue naturally.</p>
 <div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
 <div class="actions">
 <button class="primary" id="listen" type="button" disabled>Start Conversation</button>
@@ -59,8 +59,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   <button type="button" id="speakerReplay" disabled>Replay Reply</button>
   <button type="button" id="speakerMp3" disabled>Generate Audio</button>
 </div>
-<div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
-<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
+<div id="speakerNote" role="status" aria-live="polite">Automatic generated speech is enabled when a conversation starts. If Safari blocks playback, use the visible audio player.</div>
+<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP spoken reply"></audio>
 <div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
 <div id="heard" aria-live="polite"></div>
 <section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
@@ -160,8 +160,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   function controls() {
     const hasMic = Boolean(Recognition || hasCapture);
     listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
-      : speechPending ? "Transcribing…" : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
-    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !speaking);
+      : speechPending ? "Transcribing…" : active && (busy || speaking) ? "Interrupt Gwap" : (active ? "Listening / Resume" : "Start Conversation");
+    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !active && !speaking);
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
@@ -193,7 +193,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     controls();
   }
   function nextListen() {
-    if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
+    if (!active || busy || speaking || waitingForPlayTap || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
@@ -204,6 +204,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let interruptedByUser = false;
   let lastReply = "";
   let audioGenerating = false;
+  let autoAudioContext = null, autoAudioSource = null, autoTtsController = null;
+  let turnVersion = 0, waitingForPlayTap = false, autoAudioActive = false;
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
   const speakerPlayer = $("speakerPlayer");
@@ -326,6 +328,140 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       button.textContent="Generate Audio";
       button.disabled=!lastReply;
       controls();
+    }
+  });
+
+  // V0.4: audio is unlocked synchronously during the original Start tap.
+  // Later TTS generation uses the same Web Audio context, avoiding Safari's
+  // blocked async speechSynthesis path.
+  function armAudioOnStart() {
+    if (!isIOS || muted || !window.AudioContext && !window.webkitAudioContext) return;
+    if (autoAudioContext) {
+      void autoAudioContext.resume().catch(() => {});
+      return;
+    }
+    try {
+      const AC=window.AudioContext || window.webkitAudioContext;
+      autoAudioContext=new AC();
+      const zero=autoAudioContext.createGain();
+      zero.gain.value=0;
+      const oscillator=autoAudioContext.createOscillator();
+      oscillator.connect(zero);zero.connect(autoAudioContext.destination);
+      oscillator.start();oscillator.stop(autoAudioContext.currentTime+0.015);
+      void autoAudioContext.resume().catch(()=>{});
+      autoAudioActive=true;
+    } catch {
+      autoAudioActive=false;
+      speakerFeedback("Safari audio unlock unavailable; native Play remains available.");
+    }
+  }
+  function interruptGeneratedSpeech(closeContext=false) {
+    turnVersion++;
+    autoTtsController?.abort();
+    autoTtsController=null;
+    try {autoAudioSource?.stop();} catch {}
+    autoAudioSource=null;
+    speakerPlayer.pause();
+    waitingForPlayTap=false;
+    speaking=false;
+    if(closeContext && autoAudioContext) {
+      void autoAudioContext.close().catch(()=>{});
+      autoAudioContext=null;autoAudioActive=false;
+    }
+  }
+  // Exactly one generated audio request per ordinary turn. This bounds quota.
+  // The AI prompt targets brief spoken replies; longer answers remain in text.
+  async function speakGeneratedAnswer(text, record, version) {
+    if (!active || muted || !isIOS || version !== turnVersion) return false;
+    const ttsStart=performance.now();
+    status("GWAP is preparing spoken audio…");
+    speakerFeedback("Generating spoken reply. You can press Interrupt Gwap or End.");
+    const controller=new AbortController();
+    autoTtsController=controller;
+    const timeout=setTimeout(()=>controller.abort(),30000);
+    let bytes, mime;
+    try {
+      const response=await fetch("/voice/speak",{
+        method:"POST",credentials:"same-origin",signal:controller.signal,
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:text.slice(0,650)})
+      });
+      if(version!==turnVersion || controller.signal.aborted) return false;
+      if (!response.ok) {
+        const error=await response.json().catch(()=>({}));
+        throw new Error(error.error || "Audio generation unavailable");
+      }
+      mime=(response.headers.get("content-type") || "").split(";")[0].toLowerCase();
+      if(!["audio/wav","audio/mpeg"].includes(mime)) throw new Error("Unsupported generated audio");
+      bytes=await response.arrayBuffer();
+      if(bytes.byteLength<44 || bytes.byteLength>8000000) throw new Error("Invalid audio size");
+      if(record)record.audio_generation_ms=Math.round(performance.now()-ttsStart);
+    } finally {
+      clearTimeout(timeout);
+      if(autoTtsController===controller)autoTtsController=null;
+    }
+    if(version!==turnVersion || !active) return false;
+    if(mp3ObjectUrl)URL.revokeObjectURL(mp3ObjectUrl);
+    mp3ObjectUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    speakerPlayer.pause();speakerPlayer.src=mp3ObjectUrl;
+    speakerPlayer.hidden=false;speakerPlayer.load();
+    // Web Audio: no new user activation needed when this context was started on Start.
+    if(autoAudioContext && autoAudioActive) {
+      try {
+        if(autoAudioContext.state!=="running")await autoAudioContext.resume();
+        if(version!==turnVersion || !active)return false;
+        if(autoAudioContext.state==="running"){
+          const decoded=await autoAudioContext.decodeAudioData(bytes.slice(0));
+          if(version!==turnVersion || !active)return false;
+          await new Promise((resolve,reject)=>{
+            try {
+              const source=autoAudioContext.createBufferSource();
+              source.buffer=decoded;source.connect(autoAudioContext.destination);
+              autoAudioSource=source;
+              source.onended=()=>{if(autoAudioSource===source)autoAudioSource=null;resolve();};
+              speaking=true;status("Playing GWAP generated voice…");controls();
+              if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+              source.start(0);
+            } catch(error){reject(error);}
+          });
+          if(version===turnVersion){
+            speaking=false;
+            status("GWAP finished speaking. Listening for your reply…");
+            controls();
+          }
+          return true;
+        }
+      } catch(error) {
+        speakerFeedback("Web Audio playback unavailable: "+(error?.message || "blocked")+". Trying native player.");
+      }
+    }
+    if(version!==turnVersion || !active)return false;
+    // Fallback uses an HTMLAudioElement. Safari may require an additional Play tap.
+    try {
+      speaking=true;status("Starting native audio playback…");controls();
+      await speakerPlayer.play();
+      if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+      return await new Promise((resolve)=>{
+        const finish=()=>{speakerPlayer.removeEventListener("ended",finish);speakerPlayer.removeEventListener("error",finish);resolve(true);};
+        speakerPlayer.addEventListener("ended",finish);
+        speakerPlayer.addEventListener("error",finish);
+      });
+    } catch {
+      speaking=false;waitingForPlayTap=true;
+      status("Safari requires one Play tap. The audio is ready below.");
+      speakerFeedback("Tap Play on the native audio player. Once it finishes, GWAP can listen again.");
+      controls();
+      return false;
+    }
+  }
+  speakerPlayer.addEventListener("ended",()=>{
+    if(!active || !waitingForPlayTap)return;
+    waitingForPlayTap=false;speaking=false;
+    status("Audio finished. Listening again…");controls();nextListen();
+  });
+  speakerPlayer.addEventListener("play",()=>{
+    if(waitingForPlayTap && active){
+      speaking=true;status("Playing generated audio…");controls();
     }
   });
   function selectedVoice() {
