@@ -285,12 +285,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     button.disabled=true;
     window.speechSynthesis?.cancel();
     liveSpeech?.cancel();
-    speakerFeedback("Generating playable audio through GWAP Cloud Agent. This uses Workers AI quota.");
+    speakerFeedback("Generating a short audio sample through GWAP Cloud Agent. This uses Workers AI quota.");
     try {
       const response=await fetch("/voice/speak",{
         method:"POST",credentials:"same-origin",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({text:lastReply.slice(0,650)})
+        body:JSON.stringify({text:lastReply.slice(0,260)})
       });
       if (!response.ok) {
         const payload=await response.json().catch(()=>({}));
@@ -307,7 +307,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       speakerPlayer.pause();
       speakerPlayer.src=mp3ObjectUrl;
       speakerPlayer.hidden=false;
-      speakerFeedback("Audio ready. Tap Play in the player below.");
+      speakerFeedback("Audio sample ready. Tap Play below. This reads only the first part of the reply.");
       // Do not claim autoplay; mobile Safari may require explicit user action.
     } catch(error) {
       speakerFeedback("Audio generation failed: "+(error?.message || "unknown error")+". You can still read the reply.");
