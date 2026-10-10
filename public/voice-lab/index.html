@@ -452,6 +452,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
           return true;
         }
       } catch(error) {
+        try { autoAudioSource?.stop(); } catch {}
+        autoAudioSource=null;speaking=false;
         speakerFeedback("Web Audio playback unavailable: "+(error?.message || "blocked")+". Trying native player.");
       }
     }
