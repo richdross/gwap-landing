@@ -7,9 +7,9 @@ const html=readFileSync(new URL("../public/voice-lab/index.html",import.meta.url
 const script=html.split("<script>")[1]?.split("</script>")[0];
 assert.ok(script);
 
-function createPhone({holdPlayback=false,blockAudioContext=false}={}){
+function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired=true}={}){
   const elements=new Map(),windowEvents={},documentEvents={};
-  let now=0, recordingStart=0, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
+  let now=0, recordingStart=0, paired=initiallyPaired, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
   let intervalFn=null, timeouts=new Set(), activeRecording=null;
   function node(id){
     if(!elements.has(id)){
@@ -73,7 +73,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false}={}){
   };
   const fetch=async(path,init={})=>{
     apiCalls.push({path,init});
-    if(path==="/voice/session")return Response.json({paired:true});
+    if(path==="/voice/session")return Response.json({paired},{status:paired?200:401});
     if(path==="/voice/transcribe")return Response.json({transcript:"How can GWAP find more customers?"});
     if(path==="/voice/chat")return Response.json({spoken_response:"Contact qualified businesses, verify their needs, and offer a clear paid solution."});
     if(path==="/voice/speak") {
@@ -105,6 +105,8 @@ function createPhone({holdPlayback=false,blockAudioContext=false}={}){
     get browserSpeechCalls(){return browserTts;},
     get micStops(){return micStopCount;},
     get activeInterval(){return intervalFn;},
+    pair(){paired=true;windowEvents.pageshow?.();},
+    get paired(){return paired;},
     tick:(ms)=>{now=ms;intervalFn?.();},
     async cleanup(){
       node("endCall").handlers.click?.();
@@ -184,4 +186,32 @@ test("when autoplay cannot unlock, native player remains visible for a deliberat
     assert.equal(phone.node("speakerPlayer").src,"blob:gwap-audio");
     assert.equal(phone.browserSpeechCalls,0);
   }finally{await phone.cleanup();}
+});
+
+test("stale unpaired iPhone tab rechecks session and enables Start after pairing", async()=>{
+  const phone=createPhone({initiallyPaired:false});
+  try {
+    await phone.settle();
+    assert.equal(phone.node("listen").disabled,false, "Start should always be tappable");
+    assert.match(phone.node("pairingState").textContent,/Not paired/);
+    assert.equal(phone.node("pairingLink").hidden,false, "Give same-preview pairing link");
+    phone.node("listen").handlers.click();
+    await phone.settle();
+    assert.equal(phone.players.length,0, "Must not record without verified pairing");
+    phone.pair();
+    await phone.settle();
+    assert.match(phone.node("pairingState").textContent,/Paired/);
+    assert.equal(phone.node("pairingLink").hidden,true);
+    phone.node("listen").handlers.click();
+    await phone.settle();
+    assert.equal(phone.players.length,1, "Start must capture microphone after pairing");
+    assert.match(phone.node("status").textContent,/Listening/);
+  } finally { await phone.cleanup(); }
+});
+
+test("a paired browser without microphone APIs shows actionable status instead of disabling Start",()=>{
+  assert.match(html,/No microphone API available/);
+  assert.match(html,/listen.disabled = speechPending/);
+  assert.match(html,/window.addEventListener\("pageshow"/);
+  assert.match(html,/cache:"no-store"/);
 });
