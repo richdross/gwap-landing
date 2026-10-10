@@ -207,15 +207,26 @@ async function previewSpeechAudio({request,env,incoming}) {
       body:JSON.stringify({text:payload.text}),
       signal:AbortSignal.timeout(25000)
     });
-    if (!upstream.ok || !upstream.headers.get("content-type")?.includes("audio/mpeg")) {
+    if (!upstream.ok) {
       return jsonError(503,"Audio generation unavailable. Use Test Speaker instead.");
     }
+    const mime=String(upstream.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+    if (mime !== "audio/mpeg" && mime !== "audio/wav") {
+      return jsonError(502,"Audio model returned unsupported audio format.");
+    }
     const data=await upstream.arrayBuffer();
-    if (data.byteLength < 40 || data.byteLength > 1500000) {
+    if (data.byteLength < 40 || data.byteLength > 8000000) {
       return jsonError(502,"Invalid audio response.");
     }
+    const head=new Uint8Array(data.slice(0,12));
+    const str=(offset,len)=>String.fromCharCode(...head.slice(offset,offset+len));
+    const actualWav=str(0,4)==="RIFF" && str(8,4)==="WAVE";
+    const actualMp3=str(0,3)==="ID3" || (head[0]===0xff && (head[1]&0xe0)===0xe0);
+    if ((mime==="audio/wav" && !actualWav) || (mime==="audio/mpeg" && !actualMp3)) {
+      return jsonError(502,"Audio format mismatch.");
+    }
     return new Response(data,{
-      headers:{"Content-Type":"audio/mpeg","Cache-Control":"no-store","Content-Disposition":"inline"}
+      headers:{"Content-Type":mime,"Cache-Control":"no-store","Content-Disposition":"inline"}
     });
   } catch { return jsonError(503,"Audio request failed. Try again."); }
 }
