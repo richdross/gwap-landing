@@ -244,7 +244,35 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   $("speakerTest").addEventListener("click", () => {
     input.blur();
-    playOnTap("Gwap speaker test. If you hear this, your iPhone can play my voice.");
+    const AC=window.AudioContext || window.webkitAudioContext;
+    if(!AC) {
+      speakerFeedback("This browser cannot generate a speaker test tone. Try Replay Reply.");
+      return;
+    }
+    try {
+      const context=new AC();
+      // Generate two short tones during this actual tap, independent of AI and TTS.
+      const start=context.currentTime + 0.04;
+      for(const [i,freq] of [440,660].entries()) {
+        const oscillator=context.createOscillator();
+        const gain=context.createGain();
+        const onset=start+i*0.28;
+        oscillator.frequency.value=freq;
+        oscillator.type="sine";
+        gain.gain.setValueAtTime(0.0001,onset);
+        gain.gain.exponentialRampToValueAtTime(0.16,onset+0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001,onset+0.19);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(onset);
+        oscillator.stop(onset+0.2);
+      }
+      void context.resume().catch(()=>{speakerFeedback("Safari blocked speaker test. Check audio settings.");});
+      setTimeout(()=>{void context.close().catch(()=>{});},950);
+      speakerFeedback("Two test tones requested. If you heard them, tap Replay Reply to test speech. If silent, check volume/output.");
+    } catch {
+      speakerFeedback("Speaker test failed to start. Check Safari microphone/speaker permissions.");
+    }
   });
   $("speakerReplay").addEventListener("click", () => {
     input.blur();
