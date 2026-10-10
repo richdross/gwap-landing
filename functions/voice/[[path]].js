@@ -138,6 +138,7 @@ export async function onRequest({ request, env }) {
 
   if (!["GET", "HEAD"].includes(request.method.toUpperCase())) {
     init.body = request.body;
+    if (request.body) init.duplex = "half";
   }
 
   const upstreamResponse = await fetch(new Request(upstream.toString(), init));
