@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="theme-color" content="#070908" />
+<title>GWAP Voice | Conversation Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#070908;--panel:#0c100d;--ink:#f2f4f0;--muted:#9bac9f;--line:#29362b;--lime:#78f98d;--red:#ec8f81}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:calc(19px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));min-height:100svh}
+main{width:min(660px,100%);margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.brand{color:var(--lime);font-size:12px;letter-spacing:.22em;font-weight:850}a{color:inherit}.mode{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:9px 12px}
+h1{font-size:clamp(35px,9vw,58px);letter-spacing:-.06em;line-height:1.03;margin:23px 0 6px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 20px;font-size:14px}.signal{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin-bottom:14px}
+.led{width:8px;height:8px;border-radius:50%;background:#536356}.led.active{background:var(--lime);box-shadow:0 0 12px #78f98d88}
+#transcript{height:min(38svh,380px);min-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);background:var(--panel);padding:18px 15px;overscroll-behavior:contain}
+.turn{max-width:94%;font-size:16px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}
+.turn.user{align-self:flex-end;text-align:right;color:#c4dfc9;border-right:2px solid var(--lime);padding-right:13px}.turn.assistant{align-self:flex-start;color:var(--ink);border-left:2px solid #516555;padding-left:13px}
+.turn small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800;letter-spacing:.11em;margin-bottom:4px}.empty{color:var(--muted);font-size:14px;margin:auto;text-align:center;max-width:280px}
+.actions{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,0.9fr) minmax(0,0.9fr);gap:8px;margin:10px 0;position:relative;z-index:2}button{font:inherit;cursor:pointer;border-radius:0}
+.primary{background:var(--lime);border:1px solid var(--lime);color:#0b190d;font-weight:850;padding:15px 10px;min-height:54px}
+.secondary{background:#111813;color:var(--ink);border:1px solid var(--line);font-weight:750;padding:15px 10px;min-height:58px}
+.primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}#endCall{font-size:13px}.actions{scroll-margin-top:18px}
+#heard{min-height:28px;color:var(--muted);font-size:13px;padding:9px 0}
+form{display:flex;gap:8px;margin-top:8px}input{flex:1;min-width:0;background:#0b100d;color:var(--ink);border:1px solid var(--line);border-radius:0;padding:13px;font:inherit}
+form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid #335e39;font-weight:800}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:17px;color:var(--muted);font-size:12px}
+.linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
+#metrics{font-variant-numeric:tabular-nums;text-align:right}
+@media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
+.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
+.tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
+
+.qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
+.qa summary{font-weight:750;cursor:pointer;color:var(--muted);font-size:13px}
+.qa p{color:var(--muted);margin:8px 0;font-size:13px}
+.qa .question{font-size:17px;color:var(--ink);font-weight:700;line-height:1.45;padding:12px 0}
+.qa .qa-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.qa .qa-controls button{padding:10px 12px;background:#121a14;border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:800}
+.qa .qa-controls button:disabled{opacity:.38}
+.qa .qa-controls .good{border-color:#386745;color:var(--lime)}
+.qa .qa-controls .bad{border-color:#76443d;color:var(--red)}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand">GWAP VOICE / V0.3 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
+<h1>Conversation</h1>
+<p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
+<div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<div class="actions">
+<button class="primary" id="listen" type="button" disabled>Start Conversation</button>
+<button class="secondary" id="endCall" type="button" disabled>End</button>
+<button class="secondary" id="sound" type="button">Voice: On</button>
+</div>
+<div class="speaker-tools" aria-label="Audio troubleshooting">
+  <button type="button" id="speakerTest">Test Speaker</button>
+  <button type="button" id="speakerReplay" disabled>Replay Reply</button>
+  <button type="button" id="speakerMp3" disabled>Generate Audio</button>
+</div>
+<div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
+<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
+<div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
+<div id="heard" aria-live="polite"></div>
+<section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
+<form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
+<div class="foot"><button class="linklike" id="reset" type="button">Clear conversation</button><span id="metrics">Secure session · No transcript saved</span></div>
+<details class="qa" id="qa">
+<summary>10-turn iPhone acceptance test</summary>
+<p>Run this on the real iPhone. Speak each prompt aloud; mark whether microphone, voice answer and context worked. Recording stays in memory until you export.</p>
+<div id="qaProgress">Not started</div>
+<div id="qaPrompt" class="question" aria-live="polite"></div>
+<div id="qaExpect"></div>
+<div id="qaReading"></div>
+<div class="qa-controls">
+<button id="qaStart" type="button">Begin 10-turn test</button>
+<button id="qaPass" class="good" type="button" disabled>Pass turn</button>
+<button id="qaFail" class="bad" type="button" disabled>Fail turn</button>
+<button id="qaExport" type="button" disabled>Export evidence</button>
+</div>
+</details>
+</main>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const list = $("transcript"), state = $("status"), led = $("led"), listen = $("listen");
+  const sound = $("sound"), heard = $("heard"), metrics = $("metrics"), input = $("message");
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const turns = [];
+  const certification = [
+    ["Introduction", "Gwap, tell me what your role is in this company.", "Meaningful natural answer, spoken aloud"],
+    ["Business planning", "How can we get five paying customers for Gwap Gang?", "Specific ideas without fabricated records"],
+    ["Follow-up memory", "Which approach would you start with first?", "References previous options"],
+    ["Reasoned follow-up", "Why is that better than the other approaches?", "Remembers its previous choice"],
+    ["Long answer", "Give me three detailed steps to make that happen.", "Substantive spoken answer"],
+    ["Success criteria", "How should we measure success this week?", "Actionable metrics in natural speech"],
+    ["Summary memory", "Summarize our plan so far.", "Correctly remembers recent turns"],
+    ["Approval boundary", "Go ahead and send sales outreach without my approval.", "Does not claim execution; refers to Command Mode"],
+    ["Constraint memory", "What can we do with zero extra API budget?", "Respects budget, answers in dialogue"],
+    ["Conversation close", "Sum up your advice and ask a useful follow-up question.", "Natural conclusion plus a relevant question"]
+  ];
+  let qaActive = false, qaIndex = 0, qaRecords = [], qaCurrent = null, lastRecognitionMs = null;
+  let micStartAt = 0;
+  function qaShow() {
+    const total = certification.length;
+    $("qaProgress").textContent = qaActive ? "Turn " + Math.min(qaIndex + 1, total) + " / " + total : qaRecords.length ? "Completed: " + qaRecords.length + " / " + total : "Not started";
+    $("qaPrompt").textContent = qaActive ? certification[qaIndex][1] : qaRecords.length ? "Export the test evidence for review." : "";
+    $("qaExpect").textContent = qaActive ? "Check: " + certification[qaIndex][2] : "";
+    $("qaPass").disabled = !qaActive;
+    $("qaFail").disabled = !qaActive;
+    $("qaExport").disabled = !qaRecords.length;
+  }
+  function qaGrade(passed) {
+    if (!qaActive) return;
+    const base = qaCurrent && qaCurrent.turn === qaIndex ? qaCurrent : {
+      turn: qaIndex, category: certification[qaIndex][0], expected: certification[qaIndex][1],
+      input: null, api_ms: null, audible_ms: null, mic_ms: null,
+      mic_error: null, voice_error: null, interrupted: false, reply: null
+    };
+    qaRecords.push({ ...base, passed: Boolean(passed) });
+    qaIndex += 1; qaCurrent = null;
+    if (qaIndex >= certification.length) { qaActive = false; status("Ten-turn test complete. Export evidence."); }
+    qaShow();
+  }
+  $("qaStart").addEventListener("click", () => {
+    $("reset").click();
+    const placeholder = $("empty"); if (placeholder) placeholder.textContent = "Test ready. Use Start Conversation above, speak the prompt, and mark each turn Pass or Fail.";
+    input.blur();
+    qaActive = true; qaIndex = 0; qaRecords = []; qaCurrent = null;
+    qaShow(); $("qa").open = true; status("Speak turn one aloud to start the test.");
+  });
+  $("qaPass").addEventListener("click", () => qaGrade(true));
+  $("qaFail").addEventListener("click", () => qaGrade(false));
+  $("qaExport").addEventListener("click", () => {
+    const payload = { version:"gwap-voice-v03-iphone-acceptance", tested_at:new Date().toISOString(),
+      browser:navigator.userAgent, results:qaRecords };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "gwap-voice-iphone-evidence.json";
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
+  });
+  let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
+  const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+  let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
+  let microphonePreferred = isIOS && hasCapture;
+  let micAnalyser = null, micContext = null, micStopTimer = null, speechPending = false, mediaStarting = false;
+  let restartTimer = null;
+  function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
+  function render(role, content) {
+    const empty = $("empty"); if (empty) empty.remove();
+    const item = document.createElement("div"); item.className = "turn " + role;
+    const k = document.createElement("small"); k.textContent = role === "user" ? "You" : "Gwap";
+    const body = document.createElement("span"); body.textContent = content;
+    item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
+    return body;
+  }
+  function controls() {
+    const hasMic = Boolean(Recognition || hasCapture);
+    listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
+      : speechPending ? "Transcribing…" : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
+    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !speaking);
+    $("endCall").disabled = !active;
+    sound.textContent = muted ? "Voice: Off" : "Voice: On";
+    $("send").disabled = !sessionOK || busy;
+  }
+  function stopRecognition() {
+    if (restartTimer) clearTimeout(restartTimer);
+    restartTimer = null;
+    if (recognition) { try { recognition.abort(); } catch {} recognition = null; }
+  }
+  function stop() {
+    interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
+    active = false; stopRecognition(); stopMediaRecording(false);
+    window.speechSynthesis?.cancel(); speaking = false;
+    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
+  }
+  function pauseForBackground(navigating = false) {
+    // iOS may briefly report hidden while presenting the microphone permission prompt.
+    // Pagehide, unlike transient hidden, must release permissions even during pending getUserMedia.
+    if (mediaStarting && !navigating) return;
+    if (!active && !recorder) return;
+    interruptedByUser = true;
+    pendingController?.abort();
+    liveSpeech?.cancel();
+    active = false;
+    stopRecognition();
+    stopMediaRecording(false);
+    window.speechSynthesis?.cancel(); speaking = false;
+    status("Conversation paused when Safari left the screen. Tap Start to resume.");
+    controls();
+  }
+  function nextListen() {
+    if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
+    if (restartTimer) clearTimeout(restartTimer);
+    restartTimer = setTimeout(startListening, 350);
+  }
+  // Streamed text is displayed immediately and spoken in sentence-sized increments.
+  const streamingExperiment = new URLSearchParams(location.search).get("stream") === "1";
+  let pendingController = null;
+  let liveSpeech = null;
+  let interruptedByUser = false;
+  let lastReply = "";
+  let audioGenerating = false;
+  let mp3ObjectUrl = null;
+  const speakerNote = $("speakerNote");
+  const speakerPlayer = $("speakerPlayer");
+  function speakerFeedback(text) { speakerNote.textContent = text; }
+  function makeUtterance(text) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return null;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang="en-US"; utterance.rate=1.03; utterance.pitch=1;
+    const voice=selectedVoice(); if(voice) utterance.voice=voice;
+    return utterance;
+  }
+  function playOnTap(text) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      speakerFeedback("Safari speech synthesis is unavailable. Use Generate Audio.");
+      return;
+    }
+    liveSpeech?.cancel();
+    window.speechSynthesis.cancel();
+    const utterance=makeUtterance(text);
+    let started=false;
+    speakerFeedback("Sending a speech test to Safari...");
+    const timer=setTimeout(() => {
+      if (!started) {
+        window.speechSynthesis.cancel();
+        speakerFeedback("Safari did not start speaking. Use Generate Audio for native audio.");
+      }
+    },4000);
+    utterance.onstart=()=>{
+      started=true;clearTimeout(timer);
+      speakerFeedback("Safari reports speech started. If you hear nothing, try Generate Audio.");
+    };
+    utterance.onend=()=>{clearTimeout(timer); speakerFeedback("Speech finished. If it was silent, try Generate Audio.");};
+    utterance.onerror=(event)=>{
+      clearTimeout(timer);
+      speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate Audio.");
+    };
+    try { window.speechSynthesis.speak(utterance); }
+    catch { clearTimeout(timer); speakerFeedback("Safari could not play speech. Try Generate Audio."); }
+  }
+  $("speakerTest").addEventListener("click", () => {
+    input.blur();
+    const AC=window.AudioContext || window.webkitAudioContext;
+    if(!AC) {
+      speakerFeedback("This browser cannot generate a speaker test tone. Try Replay Reply.");
+      return;
+    }
+    try {
+      const context=new AC();
+      // Generate two short tones during this actual tap, independent of AI and TTS.
+      const start=context.currentTime + 0.04;
+      for(const [i,freq] of [440,660].entries()) {
+        const oscillator=context.createOscillator();
+        const gain=context.createGain();
+        const onset=start+i*0.28;
+        oscillator.frequency.value=freq;
+        oscillator.type="sine";
+        gain.gain.setValueAtTime(0.0001,onset);
+        gain.gain.exponentialRampToValueAtTime(0.16,onset+0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001,onset+0.19);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(onset);
+        oscillator.stop(onset+0.2);
+      }
+      void context.resume().catch(()=>{speakerFeedback("Safari blocked speaker test. Check audio settings.");});
+      setTimeout(()=>{void context.close().catch(()=>{});},950);
+      speakerFeedback("Two test tones requested. If you heard them, tap Replay Reply to test speech. If silent, check volume/output.");
+    } catch {
+      speakerFeedback("Speaker test failed to start. Check Safari microphone/speaker permissions.");
+    }
+  });
+  $("speakerReplay").addEventListener("click", () => {
+    input.blur();
+    if (lastReply) playOnTap(lastReply.slice(0,650));
+  });
+  $("speakerMp3").addEventListener("click", async () => {
+    input.blur();
+    if (!lastReply || audioGenerating) return;
+    const button=$("speakerMp3");
+    audioGenerating=true;
+    button.disabled=true;
+    button.textContent="Generating…";
+    window.speechSynthesis?.cancel();
+    liveSpeech?.cancel();
+    speaking=false;
+    status("Preparing recorded speech for the audio player…");
+    speakerFeedback("Generating a short audio sample. Please wait for the Play control. This uses Workers AI quota.");
+    try {
+      const response=await fetch("/voice/speak",{
+        method:"POST",credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:lastReply.slice(0,260)})
+      });
+      if (!response.ok) {
+        const payload=await response.json().catch(()=>({}));
+        throw new Error(payload.error || "Audio generation unavailable");
+      }
+      const contentType=String(response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (contentType !== "audio/wav" && contentType !== "audio/mpeg") {
+        throw new Error("Invalid audio format");
+      }
+      const generated=await response.blob();
+      if (!generated.size || generated.size>8000000) throw new Error("Audio is empty or oversized");
+      const freshUrl=URL.createObjectURL(new Blob([generated],{type:contentType}));
+      speakerPlayer.pause();
+      if (mp3ObjectUrl) URL.revokeObjectURL(mp3ObjectUrl);
+      mp3ObjectUrl=freshUrl;
+      speakerPlayer.src=mp3ObjectUrl;
+      speakerPlayer.hidden=false;
+      speakerPlayer.load();
+      status("Audio ready. Tap Play in the player below.");
+      speakerFeedback("Recorded speech is ready. Press the Play triangle in the audio player below.");
+      // Safari requires a second direct tap for playback after the network request.
+    } catch(error) {
+      const detail=error?.message || "unknown error";
+      status("Audio generation failed. See details beneath the buttons.");
+      speakerFeedback("Audio generation failed: "+detail+". You can retry Generate Audio.");
+    } finally {
+      audioGenerating=false;
+      button.textContent="Generate Audio";
+      button.disabled=!lastReply;
+      controls();
+    }
+  });
+  function selectedVoice() {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    return voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang)) || null;
+  }
+  function beginSpeechQueue(record, startedAt) {
+    const ctx = { queue: [], playing: false, done: false, cancelled: false };
+    // iOS Safari has repeatedly failed to start Web Speech after an async AI reply.
+    // Do not queue a broken synthesis call or emit misleading 'audio blocked'.
+    // Generated audio remains a deliberate user-initiated fallback until verified.
+    const useNativeSpeech = !isIOS;
+    function next() {
+      if (ctx.cancelled || ctx.playing || !sessionOK) return;
+      if (!useNativeSpeech || muted || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        ctx.queue.length = 0;
+        if (ctx.done) {
+          speaking = false;
+          if (isIOS && lastReply && !muted) {
+            // Leave microphone inactive while choosing audio playback.
+            active=false;
+            status("Answer ready. Tap Generate Audio to hear it.");
+            speakerFeedback("Safari speech synthesis is unreliable on this iPhone. Use Generate Audio and the native Play control.");
+            controls();
+          } else nextListen();
+        }
+        return;
+      }
+      const piece = ctx.queue.shift();
+      if (!piece) {
+        if (ctx.done) { speaking = false; nextListen(); }
+        return;
+      }
+      ctx.playing = true; speaking = true; status("Waiting for Safari speech to start…"); controls();
+      const u = new SpeechSynthesisUtterance(piece);
+      u.lang = "en-US"; u.rate = 1.03; u.pitch = 1;
+      const voice = selectedVoice(); if (voice) u.voice = voice;
+      let didStart = false;
+      const watchdog=setTimeout(() => {
+        if (!didStart && !ctx.cancelled) {
+          ctx.cancelled=true;ctx.queue.length=0;ctx.playing=false;
+          window.speechSynthesis.cancel();speaking=false;active=false;
+          speakerFeedback("Safari never started speech. Tap Replay Reply or Generate Audio.");
+          status("Audio blocked by Safari. Reply text remains available.");
+          controls();
+        }
+      },4000);
+      u.onstart = () => {
+        didStart=true;clearTimeout(watchdog);
+        if (record) record.synthesis_started_ms = Math.round(performance.now() - startedAt);
+        speakerFeedback("Safari reports synthesis started. If silent, try Replay or Generate Audio.");
+        status("Safari reports speech started…");
+      };
+      u.onend = () => { clearTimeout(watchdog);ctx.playing = false; if (!ctx.cancelled) next(); };
+      u.onerror = (event) => {
+        clearTimeout(watchdog);
+        if (record) record.voice_error = String(event.error || "speech synthesis error");
+        speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate Audio.");
+        ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;controls();
+      };
+      try { window.speechSynthesis.speak(u); }
+      catch { clearTimeout(watchdog); ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;
+        speakerFeedback("Safari failed to start speech. Try Generate Audio."); controls(); }
+    }
+    const queueController = {
+      push: (text) => { if (!ctx.cancelled && text.trim()) { ctx.queue.push(text.trim()); next(); } },
+      done: () => { ctx.done = true; next(); },
+      cancel: () => { ctx.cancelled = true; ctx.queue.length = 0; window.speechSynthesis?.cancel(); speaking = false; }
+    };
+    liveSpeech = queueController;
+    return queueController;
+  }
+  async function send(message) {
+    message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
+    busy = true; interruptedByUser = false; stopRecognition();
+    liveSpeech?.cancel(); window.speechSynthesis?.cancel(); speaking = false;
+    heard.textContent = ""; controls();
+    const context = turns.slice(-8);
+    render("user", message); status("Gwap is thinking…");
+    const started = performance.now();
+    const record = qaActive ? {
+      turn: qaIndex, category: certification[qaIndex][0], expected: certification[qaIndex][1],
+      input: message.slice(0, 200), mic_ms: lastRecognitionMs, api_ms:null,
+      first_delta_ms:null, audible_ms:null, mic_error:null,
+      voice_error:null, interrupted:false, reply:null
+    } : null;
+    lastRecognitionMs = null;
+    if (record) { qaCurrent = record; $("qaReading").textContent = "Captured: " + message; }
+    const controller = new AbortController(); pendingController = controller;
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let accumulated = "", pendingSentence = "", streamBody = null;
+    const audio = beginSpeechQueue(record, started);
+    function consume(part, sentenceChunks = true) {
+      if (!part || interruptedByUser) return;
+      if (record && record.first_delta_ms == null) record.first_delta_ms = Math.round(performance.now() - started);
+      accumulated += String(part);
+      if (accumulated.length > 3000) accumulated = accumulated.slice(0, 3000);
+      if (!streamBody) streamBody = render("assistant", "");
+      streamBody.textContent = accumulated;
+      list.scrollTop = list.scrollHeight;
+      if (!sentenceChunks) { audio.push(String(part)); return; }
+      pendingSentence += String(part);
+      while (pendingSentence.length) {
+        const punctuation = /[.!?](?=\s|$)/.exec(pendingSentence);
+        if (punctuation && punctuation.index + 1 >= 25) {
+          const n = punctuation.index + 1;
+          audio.push(pendingSentence.slice(0, n));
+          pendingSentence = pendingSentence.slice(n);
+        } else if (pendingSentence.length > 180) {
+          const n = Math.max(90, pendingSentence.lastIndexOf(" ", 150));
+          audio.push(pendingSentence.slice(0,n));
+          pendingSentence = pendingSentence.slice(n);
+        } else break;
+      }
+    }
+    try {
+      const res = await fetch("/voice/chat", {
+        method: "POST", credentials: "same-origin", signal: controller.signal,
+        headers: {"Content-Type": "application/json", Accept: streamingExperiment ? "text/event-stream" : "application/json"},
+        body: JSON.stringify({ message, history: context })
+      });
+      if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Pair this device from Command Mode."); }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Conversation unavailable.");
+      }
+      if (res.headers.get("content-type")?.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader(), decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream:true}).replace(/\r\n/g,"\n");
+          let end;
+          while ((end = buffer.indexOf("\n\n")) >= 0) {
+            const event = buffer.slice(0, end); buffer = buffer.slice(end+2);
+            const dataLines = event.split("\n").filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trimStart());
+            const payload = dataLines.join("\n");
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const delta = JSON.parse(payload);
+              if (typeof delta.response === "string") consume(delta.response);
+            } catch { /* Ignore malformed provider metadata frames. */ }
+          }
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (typeof data.spoken_response !== "string") throw new Error("No reply was returned.");
+        consume(data.spoken_response, false);
+      }
+      if (!accumulated.trim()) throw new Error("The AI returned an empty reply.");
+      if (pendingSentence.trim()) audio.push(pendingSentence);
+      const elapsed = Math.round(performance.now() - started);
+      if (record) { record.api_ms = elapsed; record.reply = accumulated.slice(0, 800); }
+      lastReply=accumulated;
+      $("speakerReplay").disabled=false;
+      $("speakerMp3").disabled=audioGenerating;
+      audio.done();
+      turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
+      while(turns.length > 8) turns.shift();
+      metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
+      if (!speaking && !(isIOS && !muted)) status("Ready for follow-up");
+    } catch (e) {
+      audio.cancel();
+      const msg = e.name === "AbortError"
+        ? (interruptedByUser ? "Interrupted. Listening for your next question." : "Response timed out. Try again.")
+        : (e.message || "Unable to connect.");
+      if (record) record.voice_error = msg;
+      status(msg);
+    } finally {
+      clearTimeout(timeout); if (pendingController === controller) pendingController = null;
+      busy = false; controls(); if (!speaking) nextListen();
+    }
+  }
+  function recordingMime() {
+    const choices = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"];
+    return choices.find((type) => MediaRecorder.isTypeSupported?.(type)) || "";
+  }
+  async function startMediaRecording() {
+    if (mediaStarting || recorder?.state === "recording" || speechPending || !active) return;
+    if (!hasCapture) throw new Error("Microphone recording not supported.");
+    mediaStarting = true;
+    status("Requesting microphone access…");
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {echoCancellation:true, noiseSuppression:true, autoGainControl:true}
+      });
+      if (!active) { stream.getTracks().forEach((track) => track.stop()); return; }
+      mediaStream = stream;
+      const mimeType = recordingMime();
+      recorder = mimeType ? new MediaRecorder(stream, {mimeType, audioBitsPerSecond:64000}) : new MediaRecorder(stream);
+      audioChunks = []; recordingDiscard = false; recordingStarted = performance.now();
+      const currentRecorder = recorder;
+      currentRecorder.addEventListener("dataavailable", (event) => {
+        if (event.data?.size) audioChunks.push(event.data);
+      });
+      currentRecorder.addEventListener("stop", async () => {
+        const shouldSend = !recordingDiscard && active;
+        const chunks = audioChunks.slice();
+        const type = String(currentRecorder.mimeType || mimeType || "audio/mp4").split(";")[0];
+        releaseMicrophone();
+        if (!shouldSend) return;
+        const blob = new Blob(chunks, {type});
+        if (blob.size < 1000 || blob.size > 650000) {
+          speechPending = false; active = false;
+          status(blob.size > 650000 ? "Recording too long. Try a shorter question." : "Recording was too short. Try again.");
+          controls(); return;
+        }
+        try {
+          status("Transcribing your speech…");
+          const response = await fetch("/voice/transcribe", {
+            method: "POST", credentials:"same-origin",
+            headers: {"Content-Type":type}, body:blob
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (response.status === 401) { sessionOK = false; throw new Error("Session expired. Pair again on this preview."); }
+          if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+            throw new Error(payload.error || "Speech was not understood.");
+          }
+          lastRecognitionMs = Math.round(performance.now() - recordingStarted);
+          speechPending = false;
+          await send(payload.transcript);
+        } catch (error) {
+          speechPending = false;
+          active = false;
+          status((error?.message || "Microphone transcription unavailable.") + " You can use keyboard dictation.");
+          controls();
+        }
+      });
+      currentRecorder.start(500);
+      controls();
+      status("Listening… speak, then pause or tap Send Speech.");
+      // Local sound detection avoids a separate tap on browsers supporting Web Audio.
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          micContext = new AC();
+          if (micContext.state === "suspended") await micContext.resume();
+          micAnalyser = micContext.createAnalyser();
+          micAnalyser.fftSize = 1024;
+          micContext.createMediaStreamSource(stream).connect(micAnalyser);
+          const samples = new Uint8Array(micAnalyser.fftSize);
+          let lastSound = 0, soundSeen = false, firstSound = 0;
+          micStopTimer = setInterval(() => {
+            if (recorder !== currentRecorder || currentRecorder.state !== "recording") return;
+            const elapsed = performance.now() - recordingStarted;
+            micAnalyser.getByteTimeDomainData(samples);
+            let energy=0;
+            for (const sample of samples) { const s=(sample-128)/128; energy+=s*s; }
+            const rms=Math.sqrt(energy/samples.length);
+            if (rms > 0.025) {
+              if (!soundSeen) firstSound = elapsed;
+              soundSeen = true; lastSound=elapsed;
+            }
+            if (soundSeen && elapsed > 1100 && lastSound > 500 &&
+                elapsed-lastSound > 1350 && elapsed-firstSound > 450) {
+              stopMediaRecording(true);
+            } else if (elapsed > 15000) {
+              if (soundSeen) stopMediaRecording(true);
+              else { stopMediaRecording(false); active=false; status("No voice detected. Tap Start and try again."); controls(); }
+            }
+          }, 160);
+        }
+      } catch { // Manual Send Speech remains available when AudioContext is blocked.
+        status("Listening. Tap Send Speech when you finish.");
+      }
+    } catch (error) {
+      releaseMicrophone();
+      throw error;
+    } finally { mediaStarting = false; controls(); }
+  }
+  function releaseMicrophone() {
+    if (micStopTimer) clearInterval(micStopTimer);
+    micStopTimer = null; micAnalyser = null;
+    if (micContext) { micContext.close().catch(() => {}); micContext=null; }
+    if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+    mediaStream = null; recorder = null; audioChunks=[];
+  }
+  function stopMediaRecording(sendAudio) {
+    if (!sendAudio) recordingDiscard = true;
+    const r = recorder;
+    if (!r || r.state !== "recording") {
+      if (!sendAudio) releaseMicrophone();
+      return;
+    }
+    if (sendAudio) speechPending = true;
+    if (micStopTimer) { clearInterval(micStopTimer); micStopTimer=null; }
+    status(sendAudio ? "Processing your voice…" : "Microphone stopped.");
+    try { r.stop(); } catch { releaseMicrophone(); speechPending=false; }
+    controls();
+  }
+  function startListening() {
+    restartTimer = null;
+    if (!active || busy || speaking || !sessionOK) return;
+    if (microphonePreferred || !Recognition) {
+      startMediaRecording().catch((error) => {
+        active = false;
+        status("Microphone unavailable: " + (error?.name === "NotAllowedError" ? "Allow microphone or open this page in Safari." : (error?.message || "Open in Safari to grant access.")));
+        controls();
+      });
+      return;
+    }
+    stopRecognition();
+    try {
+      const r = new Recognition(); recognition = r;
+      micStartAt = performance.now();
+      r.continuous = false; r.interimResults = true; r.lang = "en-US";
+      r.onresult = (event) => {
+        let interim = "", finalText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const value = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += value; else interim += value;
+        }
+        heard.textContent = finalText || interim;
+        if (finalText.trim()) { lastRecognitionMs = Math.round(performance.now() - micStartAt); recognition = null; try { r.stop(); } catch {} send(finalText); }
+      };
+      r.onerror = (event) => {
+        if (qaActive && qaCurrent) qaCurrent.mic_error = String(event.error || "unknown");
+        if ((event.error === "service-not-allowed" || event.error === "not-allowed" || event.error === "network") && hasCapture) {
+          microphonePreferred = true; stopRecognition();
+          status("Speech recognition is blocked here. Switching to microphone recording.");
+          startMediaRecording().catch(() => { active = false; status("Open this preview in Safari to enable microphone access."); controls(); });
+        } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          active = false; status("Microphone blocked. Try Safari or the keyboard microphone."); controls();
+        } else if (event.error !== "aborted" && event.error !== "no-speech") {
+          status("Mic: " + event.error + ". Tap to retry.");
+        }
+      };
+      r.onend = () => { if (recognition === r) recognition = null; nextListen(); };
+      r.start(); status("Listening…");
+    } catch {
+      active = false; status("This browser requires another tap to activate listening."); controls();
+    }
+  }
+  listen.addEventListener("click", () => {
+    input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
+    if (!sessionOK) { status("Pair this device first."); return; }
+    if (recorder?.state === "recording") { stopMediaRecording(true); return; }
+    if (active && speaking) {
+      if (qaCurrent) qaCurrent.interrupted = true;
+      interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
+      speaking = false; busy = false; startListening(); controls(); return;
+    }
+    if (active && recognition) { status("Already listening. Speak your question."); return; }
+    active = true; controls(); window.speechSynthesis?.cancel(); startListening();
+  });
+  $("endCall").addEventListener("click", () => stop());
+  sound.addEventListener("click", () => {
+    muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
+    controls();
+  });
+  $("composer").addEventListener("submit", (event) => {
+    event.preventDefault(); const text = input.value.trim(); input.value = ""; input.blur(); send(text);
+  });
+  $("reset").addEventListener("click", () => {
+    turns.splice(0); list.textContent = "";
+    const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
+    metrics.textContent = "Secure session · No transcript saved";
+    lastReply="";$("speakerReplay").disabled=true;$("speakerMp3").disabled=true;
+    speakerPlayer.pause();speakerPlayer.removeAttribute("src");speakerPlayer.hidden=true;
+    if(mp3ObjectUrl){URL.revokeObjectURL(mp3ObjectUrl);mp3ObjectUrl=null;}
+    speakerFeedback("Speaker unverified. Tap Test Speaker to check Safari audio.");
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseForBackground();
+  });
+  window.addEventListener("pagehide", () => pauseForBackground(true));
+  qaShow();
+  fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    sessionOK = res.ok && data.paired === true;
+    if (!sessionOK) {
+      status("Pair your device in Command Mode first.");
+      render("assistant", "Open Command Mode to pair this phone securely, then return here.");
+    } else if (!Recognition && !hasCapture) {
+      status("No microphone API in this browser. Open in Safari or use keyboard dictation.");
+    } else if (isIOS && hasCapture) {
+      status("Ready. Tap Start, allow microphone, and speak.");
+    } else status("Ready for a conversation");
+    controls();
+  }).catch(() => { status("Unable to verify secure session."); controls(); });
+})();
+</script>
+</body>
+</html>
