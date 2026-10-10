@@ -5,12 +5,14 @@ on:
       - 'public/voice-lab/**'
       - 'functions/voice/**'
       - 'scripts/verify-voice-lab.mjs'
+      - 'scripts/verify-voice-v04.mjs'
       - '.github/workflows/voice-lab-verify.yml'
   push:
     paths:
       - 'public/voice-lab/**'
       - 'functions/voice/**'
       - 'scripts/verify-voice-lab.mjs'
+      - 'scripts/verify-voice-v04.mjs'
       - '.github/workflows/voice-lab-verify.yml'
 jobs:
   verify:
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/verify-voice-lab.mjs
+      - run: node --test scripts/verify-voice-lab.mjs scripts/verify-voice-v04.mjs
       - run: npm install --no-package-lock --no-audit --no-fund
       - run: npm run build
       - run: test -f _site/voice-lab/index.html

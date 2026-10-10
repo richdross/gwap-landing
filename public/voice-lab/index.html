@@ -29,6 +29,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
+.connection-status{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-2px 0 12px;font-size:12px;color:var(--muted)}.connection-status a{color:var(--lime);text-decoration:underline}.connection-status button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 10px;font-size:12px;min-height:36px}.connection-status button:disabled{opacity:.5}.connection-status [hidden]{display:none}
 .speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
 .tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
@@ -45,10 +46,15 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 </head>
 <body>
 <main>
-<header><div class="brand">GWAP VOICE / V0.3 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
+<header><div class="brand">GWAP VOICE / V0.4 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
 <h1>Conversation</h1>
-<p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
+<p class="sub">One tap to start. Speak, hear GWAP, then continue naturally.</p>
 <div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<div class="connection-status" aria-live="polite">
+  <span id="pairingState">Checking device pairing…</span>
+  <a id="pairingLink" href="/voice/" hidden>Pair this preview</a>
+  <button id="pairingRetry" type="button">Recheck connection</button>
+</div>
 <div class="actions">
 <button class="primary" id="listen" type="button" disabled>Start Conversation</button>
 <button class="secondary" id="endCall" type="button" disabled>End</button>
@@ -59,8 +65,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   <button type="button" id="speakerReplay" disabled>Replay Reply</button>
   <button type="button" id="speakerMp3" disabled>Generate Audio</button>
 </div>
-<div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
-<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
+<div id="speakerNote" role="status" aria-live="polite">Automatic generated speech is enabled when a conversation starts. If Safari blocks playback, use the visible audio player.</div>
+<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP spoken reply"></audio>
 <div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
 <div id="heard" aria-live="polite"></div>
 <section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
@@ -142,6 +148,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
   });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  let sessionRefreshing = false, sessionPromise = null;
   const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
   const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
   let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
@@ -157,11 +164,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
     return body;
   }
+  function hasMicrophone() { return Boolean(Recognition || hasCapture); }
   function controls() {
-    const hasMic = Boolean(Recognition || hasCapture);
+    const hasMic = hasMicrophone();
     listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
-      : speechPending ? "Transcribing…" : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
-    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !speaking);
+      : speechPending ? "Transcribing…" : active && (busy || speaking) ? "Interrupt Gwap" : (active ? "Listening / Resume" : "Start Conversation");
+    // Never leave Start disabled because a tab has an old session check.
+    listen.disabled = speechPending || (busy && !active && !speaking);
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
@@ -173,7 +182,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function stop() {
     interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-    active = false; stopRecognition(); stopMediaRecording(false);
+    interruptGeneratedSpeech(true);
+    active = false; busy=false; stopRecognition(); stopMediaRecording(false);
     window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
   }
@@ -185,6 +195,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     interruptedByUser = true;
     pendingController?.abort();
     liveSpeech?.cancel();
+    interruptGeneratedSpeech(navigating);
+    busy=false;
     active = false;
     stopRecognition();
     stopMediaRecording(false);
@@ -193,7 +205,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     controls();
   }
   function nextListen() {
-    if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
+    if (!active || busy || speaking || waitingForPlayTap || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
@@ -204,6 +216,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let interruptedByUser = false;
   let lastReply = "";
   let audioGenerating = false;
+  let autoAudioContext = null, autoAudioSource = null, autoTtsController = null;
+  let turnVersion = 0, waitingForPlayTap = false, autoAudioActive = false;
+  let autoTtsTurns = 0, nativePlaybackFinish = null;
+  const AUTO_TTS_TURN_LIMIT = 10; // Bounded free-capacity acceptance session.
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
   const speakerPlayer = $("speakerPlayer");
@@ -328,6 +344,164 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       controls();
     }
   });
+
+  // V0.4: audio is unlocked synchronously during the original Start tap.
+  // Later TTS generation uses the same Web Audio context, avoiding Safari's
+  // blocked async speechSynthesis path.
+  function armAudioOnStart() {
+    if (!isIOS || muted || !window.AudioContext && !window.webkitAudioContext) return;
+    if (autoAudioContext) {
+      void autoAudioContext.resume().catch(() => {});
+      return;
+    }
+    try {
+      const AC=window.AudioContext || window.webkitAudioContext;
+      autoAudioContext=new AC();
+      const zero=autoAudioContext.createGain();
+      zero.gain.value=0;
+      const oscillator=autoAudioContext.createOscillator();
+      oscillator.connect(zero);zero.connect(autoAudioContext.destination);
+      oscillator.start();oscillator.stop(autoAudioContext.currentTime+0.015);
+      void autoAudioContext.resume().catch(()=>{});
+      autoAudioActive=true;
+    } catch {
+      autoAudioActive=false;
+      speakerFeedback("Safari audio unlock unavailable; native Play remains available.");
+    }
+  }
+  function interruptGeneratedSpeech(closeContext=false) {
+    turnVersion++;
+    autoTtsController?.abort();
+    autoTtsController=null;
+    if(nativePlaybackFinish){nativePlaybackFinish(false);nativePlaybackFinish=null;}
+    try {autoAudioSource?.stop();} catch {}
+    autoAudioSource=null;
+    speakerPlayer.pause();
+    waitingForPlayTap=false;
+    speaking=false;
+    if(closeContext && autoAudioContext) {
+      void autoAudioContext.close().catch(()=>{});
+      autoAudioContext=null;autoAudioActive=false;
+    }
+  }
+  // Exactly one generated audio request per ordinary turn. This bounds quota.
+  // The AI prompt targets brief spoken replies; longer answers remain in text.
+  function audioDeadline(promise, milliseconds, label) {
+    let timer;
+    return Promise.race([
+      Promise.resolve(promise),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" timed out")),milliseconds);})
+    ]).finally(()=>clearTimeout(timer));
+  }
+  async function speakGeneratedAnswer(text, record, version) {
+    if (!active || muted || !isIOS || version !== turnVersion) return false;
+    if (autoTtsTurns >= AUTO_TTS_TURN_LIMIT) {
+      active=false;waitingForPlayTap=false;
+      status("Voice test limit reached (10 turns). End and restart a new test session.");
+      speakerFeedback("Automatic speech paused to limit Workers AI usage. Written replies remain available.");
+      controls();return false;
+    }
+    autoTtsTurns++;
+    const ttsStart=performance.now();
+    status("GWAP is preparing spoken audio…");
+    speakerFeedback("Generating spoken reply. You can press Interrupt Gwap or End.");
+    const controller=new AbortController();
+    autoTtsController=controller;
+    const timeout=setTimeout(()=>controller.abort(),30000);
+    let bytes, mime;
+    try {
+      const response=await fetch("/voice/speak",{
+        method:"POST",credentials:"same-origin",signal:controller.signal,
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:text.slice(0,650)})
+      });
+      if(version!==turnVersion || controller.signal.aborted) return false;
+      if (!response.ok) {
+        const error=await response.json().catch(()=>({}));
+        throw new Error(error.error || "Audio generation unavailable");
+      }
+      mime=(response.headers.get("content-type") || "").split(";")[0].toLowerCase();
+      if(!["audio/wav","audio/mpeg"].includes(mime)) throw new Error("Unsupported generated audio");
+      bytes=await response.arrayBuffer();
+      if(bytes.byteLength<44 || bytes.byteLength>8000000) throw new Error("Invalid audio size");
+      if(record)record.audio_generation_ms=Math.round(performance.now()-ttsStart);
+    } finally {
+      clearTimeout(timeout);
+      if(autoTtsController===controller)autoTtsController=null;
+    }
+    if(version!==turnVersion || !active) return false;
+    if(mp3ObjectUrl)URL.revokeObjectURL(mp3ObjectUrl);
+    mp3ObjectUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    speakerPlayer.pause();speakerPlayer.src=mp3ObjectUrl;
+    speakerPlayer.hidden=false;speakerPlayer.load();
+    // Web Audio: no new user activation needed when this context was started on Start.
+    if(autoAudioContext && autoAudioActive) {
+      try {
+        if(autoAudioContext.state!=="running")await audioDeadline(autoAudioContext.resume(),4000,"Audio unlock");
+        if(version!==turnVersion || !active)return false;
+        if(autoAudioContext.state==="running"){
+          const decoded=await audioDeadline(autoAudioContext.decodeAudioData(bytes.slice(0)),8000,"Audio decoding");
+          if(version!==turnVersion || !active)return false;
+          await audioDeadline(new Promise((resolve,reject)=>{
+            try {
+              const source=autoAudioContext.createBufferSource();
+              source.buffer=decoded;source.connect(autoAudioContext.destination);
+              autoAudioSource=source;
+              source.onended=()=>{if(autoAudioSource===source)autoAudioSource=null;resolve();};
+              speaking=true;status("Playing GWAP generated voice…");controls();
+              if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+              source.start(0);
+            } catch(error){reject(error);}
+          }),45000,"Audio playback");
+          if(version===turnVersion){
+            speaking=false;
+            status("GWAP finished speaking. Listening for your reply…");
+            controls();
+          }
+          return true;
+        }
+      } catch(error) {
+        try { autoAudioSource?.stop(); } catch {}
+        autoAudioSource=null;speaking=false;
+        speakerFeedback("Web Audio playback unavailable: "+(error?.message || "blocked")+". Trying native player.");
+      }
+    }
+    if(version!==turnVersion || !active)return false;
+    // Fallback uses an HTMLAudioElement. Safari may require an additional Play tap.
+    try {
+      speaking=true;status("Starting native audio playback…");controls();
+      await audioDeadline(speakerPlayer.play(),4500,"Safari native playback");
+      if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+      return await new Promise((resolve)=>{
+        const finish=(ok=true)=>{
+          speakerPlayer.removeEventListener("ended",onEnded);
+          speakerPlayer.removeEventListener("error",onError);
+          if(nativePlaybackFinish===finish)nativePlaybackFinish=null;
+          resolve(ok);
+        };
+        const onEnded=()=>finish(true), onError=()=>finish(false);
+        nativePlaybackFinish=finish;
+        speakerPlayer.addEventListener("ended",onEnded);
+        speakerPlayer.addEventListener("error",onError);
+      });
+    } catch {
+      speaking=false;waitingForPlayTap=true;
+      status("Safari requires one Play tap. The audio is ready below.");
+      speakerFeedback("Tap Play on the native audio player. Once it finishes, GWAP can listen again.");
+      controls();
+      return false;
+    }
+  }
+  speakerPlayer.addEventListener("ended",()=>{
+    if(!active || !waitingForPlayTap)return;
+    waitingForPlayTap=false;speaking=false;
+    status("Audio finished. Listening again…");controls();nextListen();
+  });
+  speakerPlayer.addEventListener("play",()=>{
+    if(waitingForPlayTap && active){
+      speaking=true;status("Playing generated audio…");controls();
+    }
+  });
   function selectedVoice() {
     const voices = window.speechSynthesis?.getVoices?.() || [];
     return voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang)) || null;
@@ -400,6 +574,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   async function send(message) {
     message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
+    const version=++turnVersion;
     busy = true; interruptedByUser = false; stopRecognition();
     liveSpeech?.cancel(); window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; controls();
@@ -483,21 +658,34 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       lastReply=accumulated;
       $("speakerReplay").disabled=false;
       $("speakerMp3").disabled=audioGenerating;
-      audio.done();
       turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
       while(turns.length > 8) turns.shift();
       metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
-      if (!speaking && !(isIOS && !muted)) status("Ready for follow-up");
+      if (isIOS && active && !muted && version===turnVersion) {
+        audio.cancel();
+        await speakGeneratedAnswer(accumulated, record, version);
+      } else {
+        audio.done();
+        if(!speaking)status("Ready for follow-up");
+      }
     } catch (e) {
       audio.cancel();
+      if(version!==turnVersion)return;
       const msg = e.name === "AbortError"
         ? (interruptedByUser ? "Interrupted. Listening for your next question." : "Response timed out. Try again.")
         : (e.message || "Unable to connect.");
       if (record) record.voice_error = msg;
-      status(msg);
+      if(accumulated && isIOS && active && !muted) {
+        active=false;
+        status("Voice generation unavailable. Tap Generate Audio to retry.");
+        speakerFeedback("Audio generation failed: "+msg+". Your answer is available in text.");
+      } else status(msg);
     } finally {
       clearTimeout(timeout); if (pendingController === controller) pendingController = null;
-      busy = false; controls(); if (!speaking) nextListen();
+      if(version===turnVersion) {
+        busy = false; controls();
+        if (!speaking && !waitingForPlayTap) nextListen();
+      }
     }
   }
   function recordingMime() {
@@ -663,25 +851,56 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   listen.addEventListener("click", () => {
     input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
-    if (!sessionOK) { status("Pair this device first."); return; }
+    if (!sessionOK) {
+      status("Checking pairing on this preview…");
+      armAudioOnStart();
+      void checkSession().then(() => {
+        if (!sessionOK) {
+          status("Pair this exact preview using the link above, then tap Start again.");
+          return;
+        }
+        if (!hasMicrophone()) {
+          status("Paired, but no microphone API is available. Open directly in Safari or type.");
+          return;
+        }
+        active=true;controls();startListening();
+      });
+      return;
+    }
+    if (!hasMicrophone()) {
+      status("No microphone API available. Open this link in Safari or use keyboard dictation.");
+      return;
+    }
     if (recorder?.state === "recording") { stopMediaRecording(true); return; }
-    if (active && speaking) {
+    if (active && (speaking || busy || waitingForPlayTap)) {
       if (qaCurrent) qaCurrent.interrupted = true;
       interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-      speaking = false; busy = false; startListening(); controls(); return;
+      interruptGeneratedSpeech();
+      speaking = false; busy = false;
+      status("Interrupted. Listening for your next question…");
+      startListening(); controls(); return;
     }
     if (active && recognition) { status("Already listening. Speak your question."); return; }
+    armAudioOnStart(); // This must run inside the original user tap for Safari.
+    if(!active) autoTtsTurns=0;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
   $("endCall").addEventListener("click", () => stop());
   sound.addEventListener("click", () => {
-    muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
+    muted = !muted;
+    if (muted) {
+      interruptGeneratedSpeech();
+      busy=false;
+      window.speechSynthesis?.cancel(); speaking=false;
+      if(active)nextListen();
+    } else if(active)armAudioOnStart();
     controls();
   });
   $("composer").addEventListener("submit", (event) => {
     event.preventDefault(); const text = input.value.trim(); input.value = ""; input.blur(); send(text);
   });
   $("reset").addEventListener("click", () => {
+    interruptGeneratedSpeech();
     turns.splice(0); list.textContent = "";
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
@@ -694,20 +913,55 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (document.hidden) pauseForBackground();
   });
   window.addEventListener("pagehide", () => pauseForBackground(true));
+  async function checkSession() {
+    if(sessionRefreshing)return sessionPromise ?? Promise.resolve(sessionOK);
+    sessionRefreshing=true;
+    $("pairingState").textContent="Checking pairing on this preview…";
+    $("pairingRetry").disabled=true;
+    sessionPromise = (async () => {
+    const authController=new AbortController();
+    const authTimeout=setTimeout(()=>authController.abort(),8000);
+    try {
+      const response=await fetch("/voice/session",{
+        credentials:"same-origin",cache:"no-store",
+        signal:authController.signal
+      });
+      const data=await response.json().catch(()=>({}));
+      sessionOK=response.ok && data.paired===true;
+      if(sessionOK) {
+        $("pairingState").textContent="Paired · "+(hasMicrophone()?"Mic API available":"Mic API unavailable");
+        $("pairingLink").hidden=true;
+        if(!active)status(hasMicrophone()?"Connected. Tap Start Conversation.":"Connected, but the microphone API is unavailable in this browser.");
+      } else {
+        $("pairingState").textContent="Not paired on this preview hostname";
+        $("pairingLink").hidden=false;
+        if(!active)status("Pair this preview, then return and tap Start.");
+      }
+      return sessionOK;
+    } catch {
+      sessionOK=false;
+      $("pairingState").textContent="Session check failed · network or backend unavailable";
+      $("pairingLink").hidden=false;
+      if(!active)status("Connection check failed. Tap Recheck connection.");
+      return false;
+    } finally {
+      clearTimeout(authTimeout);
+      sessionRefreshing=false;
+      $("pairingRetry").disabled=false;
+      controls();
+    }
+    })();
+    return sessionPromise;
+  }
+  $("pairingRetry").addEventListener("click",()=>{void checkSession();});
+  window.addEventListener("pageshow",()=>{void checkSession();});
+  window.addEventListener("focus",()=>{if(!active)void checkSession();});
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden && !active)void checkSession();
+  });
   qaShow();
-  fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
-    const data = await res.json().catch(() => ({}));
-    sessionOK = res.ok && data.paired === true;
-    if (!sessionOK) {
-      status("Pair your device in Command Mode first.");
-      render("assistant", "Open Command Mode to pair this phone securely, then return here.");
-    } else if (!Recognition && !hasCapture) {
-      status("No microphone API in this browser. Open in Safari or use keyboard dictation.");
-    } else if (isIOS && hasCapture) {
-      status("Ready. Tap Start, allow microphone, and speak.");
-    } else status("Ready for a conversation");
-    controls();
-  }).catch(() => { status("Unable to verify secure session."); controls(); });
+  controls(); // Start responds immediately, even when Render session checks are slow.
+  void checkSession();
 })();
 </script>
 </body>
