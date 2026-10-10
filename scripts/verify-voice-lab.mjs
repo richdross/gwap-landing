@@ -130,3 +130,48 @@ test("ten mock paired conversations cross edge with bounded context, no client-s
     assert.equal(callCount, 20);
   } finally { globalThis.fetch = previousFetch; }
 });
+
+
+test("authenticated edge streams SSE deltas without buffering or exposing bearer token", async () => {
+  const prior = globalThis.fetch;
+  let modelCalls = 0;
+  const encoder = new TextEncoder();
+  globalThis.fetch = async (target, options) => {
+    const uri = new URL(typeof target === "string" ? target : target.toString());
+    if (uri.pathname === "/voice/session") return Response.json({paired:true});
+    assert.equal(uri.pathname, "/api/voice/chat");
+    assert.equal(options.headers.Accept, "text/event-stream");
+    assert.equal(options.headers.Authorization, "Bearer " + env.GWAP_VOICE_FAST_CHAT_TOKEN);
+    modelCalls++;
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: {"response":"The first sentence."}\n\n'));
+        controller.enqueue(encoder.encode('data: {"response":" Here is the second."}\n\n'));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      }
+    });
+    return new Response(stream, {headers:{"Content-Type":"text/event-stream"}});
+  };
+  try {
+    const request = chatRequest({message:"Talk to me",history:[]},{Accept:"text/event-stream"});
+    const response = await onRequest({request,env});
+    assert.equal(response.status,200);
+    assert.match(response.headers.get("content-type"), /text\/event-stream/);
+    assert.equal(response.headers.get("X-Gwap-Voice-Path"), "stream-chat-v0.3");
+    const speech = await response.text();
+    assert.match(speech, /The first sentence/);
+    assert.match(speech, /\[DONE\]/);
+    assert.doesNotMatch(speech, /test-chat-scoped-token/);
+    assert.equal(modelCalls,1);
+  } finally { globalThis.fetch = prior; }
+});
+
+test("mobile lab measures incremental audio-start latency, and supports interruption", () => {
+  assert.match(html, /Accept:\s*"text\/event-stream"/);
+  assert.match(html, /reader\.read\(\)/);
+  assert.match(html, /record\.first_delta_ms/);
+  assert.match(html, /record\.audible_ms/);
+  assert.match(html, /pendingController\?\.abort\(\)/);
+  assert.match(html, /SpeechSynthesisUtterance\(piece\)/);
+});
