@@ -5,7 +5,7 @@ function jsonError(status, error) {
   return Response.json({ ok: false, error }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
-async function boundedBody(request) {
+async function boundedBody(request, field = "message") {
   if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
     return { error: jsonError(415, "Conversation request must be JSON.") };
   }
@@ -30,7 +30,7 @@ async function boundedBody(request) {
   for (const part of chunks) { data.set(part, offset); offset += part.byteLength; }
   try {
     const parsed = JSON.parse(new TextDecoder().decode(data));
-    if (!parsed || typeof parsed !== "object" || typeof parsed.message !== "string") {
+    if (!parsed || typeof parsed !== "object" || typeof parsed[field] !== "string") {
       return { error: jsonError(400, "Conversation message is missing.") };
     }
   } catch { return { error: jsonError(400, "Invalid conversation JSON.") }; }
@@ -182,7 +182,7 @@ async function previewSpeechAudio({request,env,incoming}) {
     url = new URL("/api/voice/speak",String(env?.GWAP_VOICE_FAST_CHAT_URL || ""));
     if (url.protocol !== "https:" || token.length < 32) throw Error("config");
   } catch { return jsonError(503,"MP3 playback service unavailable."); }
-  const incomingBody = await boundedBody(request);
+  const incomingBody = await boundedBody(request, "text");
   if (incomingBody.error) return incomingBody.error;
   const utf8 = new TextDecoder().decode(incomingBody.body);
   if (utf8.length > 1100) return jsonError(413,"Speech too long.");
