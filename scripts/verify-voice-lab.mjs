@@ -376,7 +376,72 @@ test("Safari speaker UI separates synthesis intent from actual user-confirmed au
   assert.match(html,/Waiting for Safari speech to start/);
   assert.match(html,/Safari reports synthesis started/);
   assert.match(html,/speakerPlayer.hidden=false/);
-  assert.match(html,/Audio sample ready. Tap Play/);
+  assert.match(html,/Recorded speech is ready. Press the Play/);
   assert.match(html,/lastReply\.slice\(0,260\)/);
   assert.doesNotMatch(html,/ctx.playing = true; speaking = true; status\("Gwap is speaking/);
+});
+
+
+test("iOS conversation does not auto-start blocked Web Speech and enables native reply audio",async()=>{
+  const script=html.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+  assert.ok(script);
+  const els=new Map();
+  function node(id){
+    if(!els.has(id)){
+      els.set(id,{
+        id,value:"",textContent:"",disabled:false,hidden:false,handlers:{},classList:{toggle(){}},
+        addEventListener(type,callback){this.handlers[type]=callback;},remove(){},append(){},blur(){},
+        pause(){},load(){},removeAttribute(){},scrollTop:0,scrollHeight:0
+      });
+    }
+    return els.get(id);
+  }
+  const document={
+    hidden:false,getElementById:node,
+    createElement:(tag)=>({tagName:tag,textContent:"",className:"",append(){},remove(){},click(){}}),
+    body:{append(){}},addEventListener(){}
+  };
+  let browserSpeakAttempts=0, modelCalls=0, audioCalls=0;
+  const window={
+    speechSynthesis:{cancel(){},speak(){browserSpeakAttempts++;},getVoices(){return[];}},
+    SpeechSynthesisUtterance:class {}, MediaRecorder:undefined,
+    addEventListener(){}
+  };
+  const navigator={userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 26_0) Mobile Safari"};
+  const u=class extends URL {};
+  u.createObjectURL=()=>"blob:gwap-test-audio";
+  u.revokeObjectURL=()=>{};
+  const fetch=async(path)=>{
+    if(path==="/voice/session")return Response.json({paired:true});
+    if(path==="/voice/chat"){
+      modelCalls++;
+      return Response.json({spoken_response:"GWAP is responding with the customer acquisition plan."});
+    }
+    if(path==="/voice/speak"){
+      audioCalls++;
+      return new Response(new Uint8Array(250).fill(65),{headers:{"Content-Type":"audio/wav"}});
+    }
+    throw Error("Unexpected mocked route: "+path);
+  };
+  vm.runInNewContext(script,{
+    document,window,navigator,MediaRecorder:undefined,
+    location:{search:""},URLSearchParams,URL:u,Response,AbortController,Blob,TextDecoder,
+    Uint8Array,performance,setInterval,clearInterval,setTimeout,clearTimeout,fetch
+  },{timeout:1500});
+  await new Promise(r=>setImmediate(r));
+  node("message").value="Are you working?";
+  node("composer").handlers.submit({preventDefault(){}});
+  await new Promise(r=>setTimeout(r,20));
+  assert.equal(modelCalls,1);
+  assert.equal(browserSpeakAttempts,0,"iPhone must not try unreliable automatic Safari Web Speech");
+  assert.equal(node("speakerMp3").disabled,false,"Generate Audio must enable once response exists");
+  assert.equal(node("speakerMp3").textContent,"");
+  assert.match(node("status").textContent,/Generate Audio/);
+  assert.ok(!node("listen").disabled);
+  await node("speakerMp3").handlers.click();
+  assert.equal(audioCalls,1);
+  assert.equal(node("speakerPlayer").src,"blob:gwap-test-audio");
+  assert.equal(node("speakerPlayer").hidden,false);
+  assert.equal(node("speakerMp3").disabled,false);
+  assert.match(node("speakerNote").textContent,/Press the Play/);
 });
