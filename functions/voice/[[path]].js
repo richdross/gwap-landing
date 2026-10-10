@@ -171,10 +171,60 @@ async function transcribeAudio({ request, env, incoming }) {
   } catch { return jsonError(503, "Unable to transcribe recording."); }
 }
 
+async function previewSpeechAudio({request,env,incoming}) {
+  if (request.method !== "POST") return jsonError(405,"Method not allowed.");
+  if (request.headers.get("origin") !== incoming.origin) return jsonError(403,"Same-origin required.");
+  const cookie = request.headers.get("cookie") || "";
+  if (!cookie.includes("gwap_voice_device=")) return jsonError(401,"Device pairing required.");
+  const token = String(env?.GWAP_VOICE_FAST_CHAT_TOKEN || "").trim();
+  let url;
+  try {
+    url = new URL("/api/voice/speak",String(env?.GWAP_VOICE_FAST_CHAT_URL || ""));
+    if (url.protocol !== "https:" || token.length < 32) throw Error("config");
+  } catch { return jsonError(503,"MP3 playback service unavailable."); }
+  const incomingBody = await boundedBody(request);
+  if (incomingBody.error) return incomingBody.error;
+  const utf8 = new TextDecoder().decode(incomingBody.body);
+  if (utf8.length > 1100) return jsonError(413,"Speech too long.");
+  let payload;
+  try { payload=JSON.parse(utf8); } catch { return jsonError(400,"Invalid speech JSON."); }
+  if (typeof payload?.text !== "string" || !payload.text.trim() || payload.text.length > 700) {
+    return jsonError(400,"Choose a short reply, up to 700 characters.");
+  }
+  try {
+    const session = await fetch(new URL("/voice/session",VOICE_ORIGIN),{
+      method:"GET",headers:{Cookie:cookie},redirect:"manual",
+      signal:AbortSignal.timeout(6500)
+    });
+    if (!session.ok || (await session.json()).paired !== true) {
+      return jsonError(401,"Device session expired.");
+    }
+  } catch { return jsonError(503,"Unable to verify paired device."); }
+  try {
+    const upstream=await fetch(url,{
+      method:"POST",redirect:"manual",
+      headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},
+      body:JSON.stringify({text:payload.text}),
+      signal:AbortSignal.timeout(25000)
+    });
+    if (!upstream.ok || !upstream.headers.get("content-type")?.includes("audio/mpeg")) {
+      return jsonError(503,"Audio generation unavailable. Use Test Speaker instead.");
+    }
+    const data=await upstream.arrayBuffer();
+    if (data.byteLength < 40 || data.byteLength > 1500000) {
+      return jsonError(502,"Invalid audio response.");
+    }
+    return new Response(data,{
+      headers:{"Content-Type":"audio/mpeg","Cache-Control":"no-store","Content-Disposition":"inline"}
+    });
+  } catch { return jsonError(503,"Audio request failed. Try again."); }
+}
+
 export async function onRequest({ request, env }) {
   const incoming = new URL(request.url);
   if (incoming.pathname === "/voice/chat") return fastChat({ request, env, incoming });
   if (incoming.pathname === "/voice/transcribe") return transcribeAudio({ request, env, incoming });
+  if (incoming.pathname === "/voice/speak") return previewSpeechAudio({request,env,incoming});
   const upstream = new URL(incoming.pathname + incoming.search, VOICE_ORIGIN);
 
   // Browser requests to a Pages preview carry its unique Origin header.
