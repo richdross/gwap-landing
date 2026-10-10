@@ -29,6 +29,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
+.connection-status{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-2px 0 12px;font-size:12px;color:var(--muted)}.connection-status a{color:var(--lime);text-decoration:underline}.connection-status button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 10px;font-size:12px;min-height:36px}.connection-status button:disabled{opacity:.5}.connection-status [hidden]{display:none}
 .speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
 .tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
@@ -49,6 +50,11 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <h1>Conversation</h1>
 <p class="sub">One tap to start. Speak, hear GWAP, then continue naturally.</p>
 <div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<div class="connection-status" aria-live="polite">
+  <span id="pairingState">Checking device pairing…</span>
+  <a id="pairingLink" href="/voice/" hidden>Pair this preview</a>
+  <button id="pairingRetry" type="button">Recheck connection</button>
+</div>
 <div class="actions">
 <button class="primary" id="listen" type="button" disabled>Start Conversation</button>
 <button class="secondary" id="endCall" type="button" disabled>End</button>
@@ -142,6 +148,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
   });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  let sessionRefreshing = false;
   const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
   const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
   let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
@@ -157,11 +164,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
     return body;
   }
+  function hasMicrophone() { return Boolean(Recognition || hasCapture); }
   function controls() {
-    const hasMic = Boolean(Recognition || hasCapture);
+    const hasMic = hasMicrophone();
     listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
       : speechPending ? "Transcribing…" : active && (busy || speaking) ? "Interrupt Gwap" : (active ? "Listening / Resume" : "Start Conversation");
-    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !active && !speaking);
+    // Never leave Start disabled because a tab has an old session check.
+    listen.disabled = speechPending || (busy && !active && !speaking);
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
@@ -842,7 +851,26 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   listen.addEventListener("click", () => {
     input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
-    if (!sessionOK) { status("Pair this device first."); return; }
+    if (!sessionOK) {
+      status("Checking pairing on this preview…");
+      armAudioOnStart();
+      void checkSession().then(() => {
+        if (!sessionOK) {
+          status("Pair this exact preview using the link above, then tap Start again.");
+          return;
+        }
+        if (!hasMicrophone()) {
+          status("Paired, but no microphone API is available. Open directly in Safari or type.");
+          return;
+        }
+        active=true;controls();startListening();
+      });
+      return;
+    }
+    if (!hasMicrophone()) {
+      status("No microphone API available. Open this link in Safari or use keyboard dictation.");
+      return;
+    }
     if (recorder?.state === "recording") { stopMediaRecording(true); return; }
     if (active && (speaking || busy || waitingForPlayTap)) {
       if (qaCurrent) qaCurrent.interrupted = true;
@@ -885,20 +913,45 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (document.hidden) pauseForBackground();
   });
   window.addEventListener("pagehide", () => pauseForBackground(true));
+  async function checkSession() {
+    if(sessionRefreshing)return sessionOK;
+    sessionRefreshing=true;
+    $("pairingState").textContent="Checking pairing on this preview…";
+    $("pairingRetry").disabled=true;
+    try {
+      const response=await fetch("/voice/session",{credentials:"same-origin",cache:"no-store"});
+      const data=await response.json().catch(()=>({}));
+      sessionOK=response.ok && data.paired===true;
+      if(sessionOK) {
+        $("pairingState").textContent="Paired · "+(hasMicrophone()?"Mic API available":"Mic API unavailable");
+        $("pairingLink").hidden=true;
+        if(!active)status(hasMicrophone()?"Connected. Tap Start Conversation.":"Connected, but the microphone API is unavailable in this browser.");
+      } else {
+        $("pairingState").textContent="Not paired on this preview hostname";
+        $("pairingLink").hidden=false;
+        if(!active)status("Pair this preview, then return and tap Start.");
+      }
+      return sessionOK;
+    } catch {
+      sessionOK=false;
+      $("pairingState").textContent="Session check failed · network or backend unavailable";
+      $("pairingLink").hidden=false;
+      if(!active)status("Connection check failed. Tap Recheck connection.");
+      return false;
+    } finally {
+      sessionRefreshing=false;
+      $("pairingRetry").disabled=false;
+      controls();
+    }
+  }
+  $("pairingRetry").addEventListener("click",()=>{void checkSession();});
+  window.addEventListener("pageshow",()=>{void checkSession();});
+  window.addEventListener("focus",()=>{if(!active)void checkSession();});
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden && !active)void checkSession();
+  });
   qaShow();
-  fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
-    const data = await res.json().catch(() => ({}));
-    sessionOK = res.ok && data.paired === true;
-    if (!sessionOK) {
-      status("Pair your device in Command Mode first.");
-      render("assistant", "Open Command Mode to pair this phone securely, then return here.");
-    } else if (!Recognition && !hasCapture) {
-      status("No microphone API in this browser. Open in Safari or use keyboard dictation.");
-    } else if (isIOS && hasCapture) {
-      status("Ready. Tap Start, allow microphone, and speak.");
-    } else status("Ready for a conversation");
-    controls();
-  }).catch(() => { status("Unable to verify secure session."); controls(); });
+  void checkSession();
 })();
 </script>
 </body>
