@@ -376,6 +376,7 @@ test("Safari speaker UI separates synthesis intent from actual user-confirmed au
   assert.match(html,/Waiting for Safari speech to start/);
   assert.match(html,/Safari reports synthesis started/);
   assert.match(html,/speakerPlayer.hidden=false/);
-  assert.match(html,/Audio ready. Tap Play/);
+  assert.match(html,/Audio sample ready. Tap Play/);
+  assert.match(html,/lastReply\.slice\(0,260\)/);
   assert.doesNotMatch(html,/ctx.playing = true; speaking = true; status\("Gwap is speaking/);
 });
