@@ -137,6 +137,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const k = document.createElement("small"); k.textContent = role === "user" ? "You" : "Gwap";
     const body = document.createElement("span"); body.textContent = content;
     item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
+    return body;
   }
   function controls() {
     listen.textContent = speaking ? "Interrupt Gwap" : (active ? "Stop Conversation" : "Start Conversation");
@@ -150,6 +151,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (recognition) { try { recognition.abort(); } catch {} recognition = null; }
   }
   function stop() {
+    interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
     active = false; stopRecognition(); window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; status("Ready for a question"); controls();
   }
@@ -158,27 +160,53 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
-  function talk(text, record, startedAt) {
-    if (muted || !("speechSynthesis" in window)) { nextListen(); return; }
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US"; utterance.rate = 1.03; utterance.pitch = 1;
-    const voices = speechSynthesis.getVoices();
-    const voice = voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang));
-    if (voice) utterance.voice = voice;
-    speaking = true; status("Gwap is speaking…");
-    utterance.onstart = () => {
-      if (record && typeof startedAt === "number") record.audible_ms = Math.round(performance.now() - startedAt);
+  // Streamed text is displayed immediately and spoken in sentence-sized increments.
+  let pendingController = null;
+  let liveSpeech = null;
+  let interruptedByUser = false;
+  function selectedVoice() {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    return voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang)) || null;
+  }
+  function beginSpeechQueue(record, startedAt) {
+    const ctx = { queue: [], playing: false, done: false, cancelled: false };
+    liveSpeech = ctx;
+    function next() {
+      if (ctx.cancelled || ctx.playing || !sessionOK) return;
+      if (muted || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        ctx.queue.length = 0;
+        if (ctx.done) { speaking = false; nextListen(); }
+        return;
+      }
+      const piece = ctx.queue.shift();
+      if (!piece) {
+        if (ctx.done) { speaking = false; nextListen(); }
+        return;
+      }
+      ctx.playing = true; speaking = true; status("Gwap is speaking…"); controls();
+      const u = new SpeechSynthesisUtterance(piece);
+      u.lang = "en-US"; u.rate = 1.03; u.pitch = 1;
+      const voice = selectedVoice(); if (voice) u.voice = voice;
+      u.onstart = () => {
+        if (record && record.audible_ms == null) record.audible_ms = Math.round(performance.now() - startedAt);
+      };
+      u.onend = () => { ctx.playing = false; if (!ctx.cancelled) next(); };
+      u.onerror = (event) => {
+        if (record) record.voice_error = String(event.error || "speech synthesis error");
+        ctx.playing = false; next();
+      };
+      window.speechSynthesis.speak(u);
+    }
+    return {
+      push: (text) => { if (!ctx.cancelled && text.trim()) { ctx.queue.push(text.trim()); next(); } },
+      done: () => { ctx.done = true; next(); },
+      cancel: () => { ctx.cancelled = true; ctx.queue.length = 0; window.speechSynthesis?.cancel(); speaking = false; }
     };
-    utterance.onend = () => { speaking = false; nextListen(); };
-    utterance.onerror = (e) => {
-      if (record) record.voice_error = String(e.error || "speech-synthesis");
-      speaking = false; nextListen();
-    };
-    speechSynthesis.cancel(); speechSynthesis.speak(utterance);
   }
   async function send(message) {
     message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
-    busy = true; stopRecognition(); window.speechSynthesis?.cancel(); speaking = false;
+    busy = true; interruptedByUser = false; stopRecognition();
+    liveSpeech?.cancel(); window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; controls();
     const context = turns.slice(-8);
     render("user", message); status("Gwap is thinking…");
@@ -186,34 +214,92 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     const record = qaActive ? {
       turn: qaIndex, category: certification[qaIndex][0], expected: certification[qaIndex][1],
       input: message.slice(0, 200), mic_ms: lastRecognitionMs, api_ms:null,
-      audible_ms:null, mic_error:null, voice_error:null, interrupted:false, reply:null
+      first_delta_ms:null, audible_ms:null, mic_error:null,
+      voice_error:null, interrupted:false, reply:null
     } : null;
     lastRecognitionMs = null;
     if (record) { qaCurrent = record; $("qaReading").textContent = "Captured: " + message; }
-    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 25000);
+    const controller = new AbortController(); pendingController = controller;
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let accumulated = "", pendingSentence = "", streamBody = null;
+    const audio = beginSpeechQueue(record, started);
+    function consume(part) {
+      if (!part || interruptedByUser) return;
+      if (record && record.first_delta_ms == null) record.first_delta_ms = Math.round(performance.now() - started);
+      accumulated += String(part);
+      if (accumulated.length > 3000) accumulated = accumulated.slice(0, 3000);
+      if (!streamBody) streamBody = render("assistant", "");
+      streamBody.textContent = accumulated;
+      list.scrollTop = list.scrollHeight;
+      pendingSentence += String(part);
+      while (pendingSentence.length) {
+        const punctuation = /[.!?](?=\s|$)/.exec(pendingSentence);
+        if (punctuation && punctuation.index + 1 >= 25) {
+          const n = punctuation.index + 1;
+          audio.push(pendingSentence.slice(0, n));
+          pendingSentence = pendingSentence.slice(n);
+        } else if (pendingSentence.length > 180) {
+          const n = Math.max(90, pendingSentence.lastIndexOf(" ", 150));
+          audio.push(pendingSentence.slice(0,n));
+          pendingSentence = pendingSentence.slice(n);
+        } else break;
+      }
+    }
     try {
       const res = await fetch("/voice/chat", {
         method: "POST", credentials: "same-origin", signal: controller.signal,
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", Accept: "text/event-stream"},
         body: JSON.stringify({ message, history: context })
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Return to Command Mode to pair."); }
-      if (!res.ok || typeof data.spoken_response !== "string") throw new Error(data.error || "Conversation unavailable.");
+      if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Pair this device from Command Mode."); }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Conversation unavailable.");
+      }
+      if (res.headers.get("content-type")?.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader(), decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, {stream:true}).replace(/\r\n/g,"\n");
+          let end;
+          while ((end = buffer.indexOf("\n\n")) >= 0) {
+            const event = buffer.slice(0, end); buffer = buffer.slice(end+2);
+            const dataLines = event.split("\n").filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trimStart());
+            const payload = dataLines.join("\n");
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const delta = JSON.parse(payload);
+              if (typeof delta.response === "string") consume(delta.response);
+            } catch { /* Ignore malformed provider metadata frames. */ }
+          }
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (typeof data.spoken_response !== "string") throw new Error("No reply was returned.");
+        consume(data.spoken_response);
+      }
+      if (!accumulated.trim()) throw new Error("The AI returned an empty reply.");
+      if (pendingSentence.trim()) audio.push(pendingSentence);
+      audio.done();
       const elapsed = Math.round(performance.now() - started);
-      if (record) { record.api_ms = elapsed; record.reply = data.spoken_response.slice(0, 800); }
-      turns.push({ role: "user", content: message.slice(0,750) },
-                 { role: "assistant", content: data.spoken_response.slice(0,750) });
-      while (turns.length > 8) turns.shift();
-      render("assistant", data.spoken_response);
-      metrics.textContent = "Reply: " + (elapsed / 1000).toFixed(1) + "s";
-      status("Answer ready");
-      talk(data.spoken_response, record, started);
+      if (record) { record.api_ms = elapsed; record.reply = accumulated.slice(0, 800); }
+      turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
+      while(turns.length > 8) turns.shift();
+      metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
+      if (!speaking) status("Ready for follow-up");
     } catch (e) {
-      const msg = e.name === "AbortError" ? "The response timed out. Try again." : (e.message || "Unable to connect.");
+      audio.cancel();
+      const msg = e.name === "AbortError"
+        ? (interruptedByUser ? "Interrupted. Listening for your next question." : "Response timed out. Try again.")
+        : (e.message || "Unable to connect.");
       if (record) record.voice_error = msg;
-      status(msg); nextListen();
-    } finally { clearTimeout(timeout); busy = false; controls(); if (!speaking) nextListen(); }
+      status(msg);
+    } finally {
+      clearTimeout(timeout); if (pendingController === controller) pendingController = null;
+      busy = false; controls(); if (!speaking) nextListen();
+    }
   }
   function startListening() {
     restartTimer = null;
@@ -247,7 +333,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
   }
   listen.addEventListener("click", () => {
-    if (active && speaking) { if (qaCurrent) qaCurrent.interrupted = true; window.speechSynthesis?.cancel(); speaking = false; startListening(); controls(); return; }
+    if (active && speaking) { if (qaCurrent) qaCurrent.interrupted = true; interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel(); speaking = false; busy = false; startListening(); controls(); return; }
     if (active) { stop(); return; }
     if (!sessionOK) return;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
