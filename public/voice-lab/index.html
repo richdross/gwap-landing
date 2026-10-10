@@ -203,6 +203,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let liveSpeech = null;
   let interruptedByUser = false;
   let lastReply = "";
+  let audioGenerating = false;
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
   const speakerPlayer = $("speakerPlayer");
@@ -280,12 +281,16 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   });
   $("speakerMp3").addEventListener("click", async () => {
     input.blur();
-    if (!lastReply) return;
+    if (!lastReply || audioGenerating) return;
     const button=$("speakerMp3");
+    audioGenerating=true;
     button.disabled=true;
+    button.textContent="Generating…";
     window.speechSynthesis?.cancel();
     liveSpeech?.cancel();
-    speakerFeedback("Generating a short audio sample through GWAP Cloud Agent. This uses Workers AI quota.");
+    speaking=false;
+    status("Preparing recorded speech for the audio player…");
+    speakerFeedback("Generating a short audio sample. Please wait for the Play control. This uses Workers AI quota.");
     try {
       const response=await fetch("/voice/speak",{
         method:"POST",credentials:"same-origin",
@@ -296,22 +301,32 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         const payload=await response.json().catch(()=>({}));
         throw new Error(payload.error || "Audio generation unavailable");
       }
-      const contentType=String(response.headers.get("content-type") || "");
-      if (!contentType.includes("audio/wav") && !contentType.includes("audio/mpeg")) {
+      const contentType=String(response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (contentType !== "audio/wav" && contentType !== "audio/mpeg") {
         throw new Error("Invalid audio format");
       }
-      const audio=await response.blob();
-      if (!audio.size || audio.size>8000000) throw new Error("Audio is empty or oversized");
-      if (mp3ObjectUrl) URL.revokeObjectURL(mp3ObjectUrl);
-      mp3ObjectUrl=URL.createObjectURL(audio);
+      const generated=await response.blob();
+      if (!generated.size || generated.size>8000000) throw new Error("Audio is empty or oversized");
+      const freshUrl=URL.createObjectURL(new Blob([generated],{type:contentType}));
       speakerPlayer.pause();
+      if (mp3ObjectUrl) URL.revokeObjectURL(mp3ObjectUrl);
+      mp3ObjectUrl=freshUrl;
       speakerPlayer.src=mp3ObjectUrl;
       speakerPlayer.hidden=false;
-      speakerFeedback("Audio sample ready. Tap Play below. This reads only the first part of the reply.");
-      // Do not claim autoplay; mobile Safari may require explicit user action.
+      speakerPlayer.load();
+      status("Audio ready. Tap Play in the player below.");
+      speakerFeedback("Recorded speech is ready. Press the Play triangle in the audio player below.");
+      // Safari requires a second direct tap for playback after the network request.
     } catch(error) {
-      speakerFeedback("Audio generation failed: "+(error?.message || "unknown error")+". You can still read the reply.");
-    } finally {button.disabled=!lastReply;}
+      const detail=error?.message || "unknown error";
+      status("Audio generation failed. See details beneath the buttons.");
+      speakerFeedback("Audio generation failed: "+detail+". You can retry Generate Audio.");
+    } finally {
+      audioGenerating=false;
+      button.textContent="Generate Audio";
+      button.disabled=!lastReply;
+      controls();
+    }
   });
   function selectedVoice() {
     const voices = window.speechSynthesis?.getVoices?.() || [];
@@ -319,12 +334,23 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function beginSpeechQueue(record, startedAt) {
     const ctx = { queue: [], playing: false, done: false, cancelled: false };
+    // iOS Safari has repeatedly failed to start Web Speech after an async AI reply.
+    // Do not queue a broken synthesis call or emit misleading 'audio blocked'.
+    // Generated audio remains a deliberate user-initiated fallback until verified.
+    const useNativeSpeech = !isIOS;
     liveSpeech = ctx;
     function next() {
       if (ctx.cancelled || ctx.playing || !sessionOK) return;
-      if (muted || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      if (!useNativeSpeech || muted || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
         ctx.queue.length = 0;
-        if (ctx.done) { speaking = false; nextListen(); }
+        if (ctx.done) {
+          speaking = false;
+          if (isIOS && lastReply && !muted) {
+            status("Answer ready. Tap Generate Audio to hear it.");
+            speakerFeedback("Safari speech synthesis did not work reliably on this iPhone. Use Generate Audio and the native Play control.");
+          }
+          nextListen();
+        }
         return;
       }
       const piece = ctx.queue.shift();
@@ -449,16 +475,16 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       }
       if (!accumulated.trim()) throw new Error("The AI returned an empty reply.");
       if (pendingSentence.trim()) audio.push(pendingSentence);
-      audio.done();
       const elapsed = Math.round(performance.now() - started);
       if (record) { record.api_ms = elapsed; record.reply = accumulated.slice(0, 800); }
       lastReply=accumulated;
       $("speakerReplay").disabled=false;
-      $("speakerMp3").disabled=false;
-            turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
+      $("speakerMp3").disabled=audioGenerating;
+      audio.done();
+      turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
       while(turns.length > 8) turns.shift();
       metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
-      if (!speaking) status("Ready for follow-up");
+      if (!speaking && !(isIOS && !muted)) status("Ready for follow-up");
     } catch (e) {
       audio.cancel();
       const msg = e.name === "AbortError"
