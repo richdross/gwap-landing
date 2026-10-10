@@ -71,16 +71,28 @@ async function fastChat({ request, env, incoming }) {
   const body = await boundedBody(request);
   if (body.error) return body.error;
 
+  const streaming = request.headers.get("accept")?.toLowerCase().includes("text/event-stream") === true;
   try {
     const upstream = await fetch(target, {
       method: "POST",
-      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json", ...(streaming ? {Accept:"text/event-stream"} : {}) },
       body: body.body, redirect: "manual", signal: AbortSignal.timeout(25000)
     });
     // Keep untrusted upstream headers and all secrets out of browser responses.
     if (!upstream.ok) {
       if (upstream.status === 429) return jsonError(429, "Conversation rate limit reached.");
       return jsonError(503, "Conversation temporarily unavailable.");
+    }
+    if (streaming) {
+      if (!upstream.body || !upstream.headers.get("content-type")?.includes("text/event-stream")) {
+        return jsonError(502, "Conversation stream unavailable.");
+      }
+      return new Response(upstream.body, { headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-store, no-transform",
+        "X-Accel-Buffering": "no",
+        "X-Gwap-Voice-Path": "stream-chat-v0.3"
+      } });
     }
     const payload = await upstream.json();
     if (typeof payload?.spoken_response !== "string" || !payload.spoken_response.trim()) {
