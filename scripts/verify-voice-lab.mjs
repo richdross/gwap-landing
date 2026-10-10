@@ -172,7 +172,8 @@ test("mobile lab measures incremental audio-start latency, and supports interrup
   assert.match(html, /streamingExperiment \? "text\/event-stream" : "application\/json"/);
   assert.match(html, /reader\.read\(\)/);
   assert.match(html, /record\.first_delta_ms/);
-  assert.match(html, /record\.audible_ms/);
+  assert.match(html, /record\.synthesis_started_ms/);
+  assert.match(html, /audible_ms:null/);
   assert.match(html, /pendingController\?\.abort\(\)/);
   assert.match(html, /SpeechSynthesisUtterance\(piece\)/);
 });
