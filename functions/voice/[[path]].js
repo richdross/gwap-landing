@@ -106,9 +106,75 @@ async function fastChat({ request, env, incoming }) {
   }
 }
 
+async function transcribeAudio({ request, env, incoming }) {
+  if (request.method !== "POST") return jsonError(405, "Method not allowed.");
+  const origin = request.headers.get("origin");
+  if (origin !== incoming.origin) return jsonError(403, "Same-origin microphone request required.");
+  const cookie = request.headers.get("cookie") || "";
+  if (!cookie.includes("gwap_voice_device=")) return jsonError(401, "Voice device pairing required.");
+  const mime = String(request.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  if (!["audio/mp4","audio/webm","audio/ogg","audio/wav","audio/x-wav","audio/mpeg","audio/mp3"].includes(mime)) {
+    return jsonError(415, "Unsupported voice recording format.");
+  }
+  if (Number(request.headers.get("content-length")) > 650000) return jsonError(413, "Recording too large.");
+  const configured = String(env?.GWAP_VOICE_FAST_CHAT_URL || "").trim();
+  const token = String(env?.GWAP_VOICE_FAST_CHAT_TOKEN || "").trim();
+  let target;
+  try {
+    target = new URL("/api/voice/transcribe", configured);
+    if (target.protocol !== "https:" || token.length < 32) throw new Error("configuration");
+  } catch { return jsonError(503, "Speech service is not configured."); }
+  try {
+    const check = await fetch(new URL("/voice/session", VOICE_ORIGIN), {
+      method: "GET", headers: { Cookie: cookie }, redirect: "manual", signal: AbortSignal.timeout(6500)
+    });
+    if (!check.ok || (await check.json()).paired !== true) {
+      return jsonError(401, "Voice device session expired.");
+    }
+  } catch { return jsonError(503, "Unable to verify voice session."); }
+  if (!request.body) return jsonError(400, "No audio was received.");
+  const reader = request.body.getReader(), chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const {done,value} = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > 650000) {
+        await reader.cancel();
+        return jsonError(413, "Recording too large.");
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  if (total < 1000) return jsonError(400, "Recording too short.");
+  const audio = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { audio.set(chunk, offset); offset += chunk.length; }
+  try {
+    const upstream = await fetch(target, {
+      method: "POST", headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": mime
+      }, body: audio, redirect: "manual", signal: AbortSignal.timeout(20000)
+    });
+    if (!upstream.ok) {
+      if (upstream.status === 422) return jsonError(422, "No clear speech detected. Try again.");
+      if (upstream.status === 415) return jsonError(415, "This audio format is not supported.");
+      return jsonError(503, "Speech transcription temporarily unavailable.");
+    }
+    const payload = await upstream.json();
+    if (!payload || typeof payload.transcript !== "string") return jsonError(502, "Invalid transcription result.");
+    return Response.json({ok:true, transcript:payload.transcript.slice(0,1800)}, {
+      headers:{"Cache-Control":"no-store","X-Gwap-Voice-Path":"speech-fallback-v0.3"}
+    });
+  } catch { return jsonError(503, "Unable to transcribe recording."); }
+}
+
 export async function onRequest({ request, env }) {
   const incoming = new URL(request.url);
   if (incoming.pathname === "/voice/chat") return fastChat({ request, env, incoming });
+  if (incoming.pathname === "/voice/transcribe") return transcribeAudio({ request, env, incoming });
   const upstream = new URL(incoming.pathname + incoming.search, VOICE_ORIGIN);
 
   // Browser requests to a Pages preview carry its unique Origin header.
