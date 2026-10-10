@@ -1,7 +1,102 @@
 const VOICE_ORIGIN = "https://gwap-backend.onrender.com";
+const CHAT_MAX_BYTES = 8192;
 
-export async function onRequest({ request }) {
+function jsonError(status, error) {
+  return Response.json({ ok: false, error }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
+async function boundedBody(request) {
+  if (request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
+    return { error: jsonError(415, "Conversation request must be JSON.") };
+  }
+  const reader = request.body?.getReader();
+  if (!reader) return { error: jsonError(400, "Conversation request is empty.") };
+  let count = 0;
+  const chunks = [];
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      count += value.byteLength;
+      if (count > CHAT_MAX_BYTES) {
+        await reader.cancel();
+        return { error: jsonError(413, "Conversation request is too large.") };
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const data = new Uint8Array(count);
+  let offset = 0;
+  for (const part of chunks) { data.set(part, offset); offset += part.byteLength; }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(data));
+    if (!parsed || typeof parsed !== "object" || typeof parsed.message !== "string") {
+      return { error: jsonError(400, "Conversation message is missing.") };
+    }
+  } catch { return { error: jsonError(400, "Invalid conversation JSON.") }; }
+  return { body: data };
+}
+
+async function fastChat({ request, env, incoming }) {
+  if (request.method !== "POST") return jsonError(405, "Method not allowed.");
+  const origin = request.headers.get("origin");
+  if (origin && origin !== incoming.origin) return jsonError(403, "Cross-origin request rejected.");
+  const cookie = request.headers.get("cookie") || "";
+  if (!cookie.includes("gwap_voice_device=")) return jsonError(401, "Voice device pairing required.");
+
+  const configured = String(env?.GWAP_VOICE_FAST_CHAT_URL || "").trim();
+  const token = String(env?.GWAP_VOICE_FAST_CHAT_TOKEN || "").trim();
+  let target;
+  try {
+    target = new URL("/api/voice/chat", configured);
+    if (target.protocol !== "https:" || !target.hostname || token.length < 32) throw Error("configuration");
+  } catch {
+    return jsonError(503, "Voice conversation is not configured.");
+  }
+
+  // Check the existing HttpOnly paired-device session; never expose the model token to a browser.
+  let paired;
+  try {
+    const check = await fetch(new URL("/voice/session", VOICE_ORIGIN), {
+      method: "GET", headers: { Cookie: cookie }, redirect: "manual",
+      signal: AbortSignal.timeout(6500)
+    });
+    if (!check.ok) return jsonError(401, "Voice device session expired.");
+    const state = await check.json();
+    paired = state.paired === true;
+  } catch {
+    return jsonError(503, "Unable to verify voice session.");
+  }
+  if (!paired) return jsonError(401, "Voice device pairing required.");
+  const body = await boundedBody(request);
+  if (body.error) return body.error;
+
+  try {
+    const upstream = await fetch(target, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+      body: body.body, redirect: "manual", signal: AbortSignal.timeout(25000)
+    });
+    // Keep untrusted upstream headers and all secrets out of browser responses.
+    if (!upstream.ok) {
+      if (upstream.status === 429) return jsonError(429, "Conversation rate limit reached.");
+      return jsonError(503, "Conversation temporarily unavailable.");
+    }
+    const payload = await upstream.json();
+    if (typeof payload?.spoken_response !== "string" || !payload.spoken_response.trim()) {
+      return jsonError(502, "Voice model returned no speech.");
+    }
+    return Response.json({
+      ok: true, mode: "conversation", spoken_response: payload.spoken_response.slice(0, 3000)
+    }, { headers: { "Cache-Control": "no-store", "X-Gwap-Voice-Path": "fast-chat-v0.3" } });
+  } catch {
+    return jsonError(503, "Voice conversation connection failed.");
+  }
+}
+
+export async function onRequest({ request, env }) {
   const incoming = new URL(request.url);
+  if (incoming.pathname === "/voice/chat") return fastChat({ request, env, incoming });
   const upstream = new URL(incoming.pathname + incoming.search, VOICE_ORIGIN);
 
   const headers = new Headers(request.headers);
@@ -21,7 +116,7 @@ export async function onRequest({ request }) {
   const upstreamResponse = await fetch(new Request(upstream.toString(), init));
   const responseHeaders = new Headers(upstreamResponse.headers);
   responseHeaders.set("Cache-Control", "no-store");
-  responseHeaders.set("X-Gwap-Voice-Proxy", "v0.2.1");
+  responseHeaders.set("X-Gwap-Voice-Proxy", "v0.3-lab");
 
   return new Response(upstreamResponse.body, {
     status: upstreamResponse.status,
