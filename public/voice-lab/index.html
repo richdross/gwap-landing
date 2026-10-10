@@ -29,6 +29,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
+.tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
 .qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
 .qa summary{font-weight:750;cursor:pointer;color:var(--muted);font-size:13px}
@@ -52,6 +53,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <button class="secondary" id="endCall" type="button" disabled>End</button>
 <button class="secondary" id="sound" type="button">Voice: On</button>
 </div>
+<div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
 <div id="heard" aria-live="polite"></div>
 <section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
 <form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
@@ -116,6 +118,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   $("qaStart").addEventListener("click", () => {
     $("reset").click();
+    const placeholder = $("empty"); if (placeholder) placeholder.textContent = "Test ready. Use Start Conversation above, speak the prompt, and mark each turn Pass or Fail.";
+    input.blur();
     qaActive = true; qaIndex = 0; qaRecords = []; qaCurrent = null;
     qaShow(); $("qa").open = true; status("Speak turn one aloud to start the test.");
   });
@@ -148,8 +152,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   function controls() {
     const hasMic = Boolean(Recognition || hasCapture);
     listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
-      : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
-    listen.disabled = !sessionOK || !hasMic || (busy && !speaking);
+      : speechPending ? "Transcribing…" : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
+    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !speaking);
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
