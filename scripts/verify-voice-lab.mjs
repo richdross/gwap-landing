@@ -168,7 +168,7 @@ test("authenticated edge streams SSE deltas without buffering or exposing bearer
 });
 
 test("mobile lab measures incremental audio-start latency, and supports interruption", () => {
-  assert.match(html, /Accept:\s*"text\/event-stream"/);
+  assert.match(html, /streamingExperiment \? "text\/event-stream" : "application\/json"/);
   assert.match(html, /reader\.read\(\)/);
   assert.match(html, /record\.first_delta_ms/);
   assert.match(html, /record\.audible_ms/);
