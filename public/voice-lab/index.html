@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="theme-color" content="#070908" />
+<title>GWAP Voice | Conversation Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#070908;--panel:#0c100d;--ink:#f2f4f0;--muted:#9bac9f;--line:#29362b;--lime:#78f98d;--red:#ec8f81}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:calc(19px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));min-height:100svh}
+main{width:min(660px,100%);margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.brand{color:var(--lime);font-size:12px;letter-spacing:.22em;font-weight:850}a{color:inherit}.mode{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:9px 12px}
+h1{font-size:clamp(35px,9vw,58px);letter-spacing:-.06em;line-height:1.03;margin:23px 0 6px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 20px;font-size:14px}.signal{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin-bottom:14px}
+.led{width:8px;height:8px;border-radius:50%;background:#536356}.led.active{background:var(--lime);box-shadow:0 0 12px #78f98d88}
+#transcript{height:min(47svh,470px);min-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);background:var(--panel);padding:18px 15px;overscroll-behavior:contain}
+.turn{max-width:94%;font-size:16px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}
+.turn.user{align-self:flex-end;text-align:right;color:#c4dfc9;border-right:2px solid var(--lime);padding-right:13px}.turn.assistant{align-self:flex-start;color:var(--ink);border-left:2px solid #516555;padding-left:13px}
+.turn small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800;letter-spacing:.11em;margin-bottom:4px}.empty{color:var(--muted);font-size:14px;margin:auto;text-align:center;max-width:280px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}button{font:inherit;cursor:pointer;border-radius:0}
+.primary{background:var(--lime);border:1px solid var(--lime);color:#0b190d;font-weight:850;padding:15px 10px;min-height:58px}
+.secondary{background:#111813;color:var(--ink);border:1px solid var(--line);font-weight:750;padding:15px 10px;min-height:58px}
+.primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}
+#heard{min-height:28px;color:var(--muted);font-size:13px;padding:9px 0}
+form{display:flex;gap:8px;margin-top:8px}input{flex:1;min-width:0;background:#0b100d;color:var(--ink);border:1px solid var(--line);border-radius:0;padding:13px;font:inherit}
+form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid #335e39;font-weight:800}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:17px;color:var(--muted);font-size:12px}
+.linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
+#metrics{font-variant-numeric:tabular-nums;text-align:right}
+@media(max-width:360px){.actions{grid-template-columns:1fr}.foot{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand">GWAP VOICE / V0.3 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
+<h1>Conversation</h1>
+<p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
+<div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
+<div id="heard" aria-live="polite"></div>
+<div class="actions">
+<button class="primary" id="listen" type="button" disabled>Start Conversation</button>
+<button class="secondary" id="sound" type="button">Voice: On</button>
+</div>
+<form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
+<div class="foot"><button class="linklike" id="reset" type="button">Clear conversation</button><span id="metrics">Secure session · No transcript saved</span></div>
+</main>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const list = $("transcript"), state = $("status"), led = $("led"), listen = $("listen");
+  const sound = $("sound"), heard = $("heard"), metrics = $("metrics"), input = $("message");
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const turns = [];
+  let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  let restartTimer = null;
+  function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
+  function render(role, content) {
+    const empty = $("empty"); if (empty) empty.remove();
+    const item = document.createElement("div"); item.className = "turn " + role;
+    const k = document.createElement("small"); k.textContent = role === "user" ? "You" : "Gwap";
+    const body = document.createElement("span"); body.textContent = content;
+    item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
+  }
+  function controls() {
+    listen.textContent = active ? "Stop Conversation" : "Start Conversation";
+    listen.disabled = !sessionOK || !Recognition;
+    sound.textContent = muted ? "Voice: Off" : "Voice: On";
+    $("send").disabled = !sessionOK || busy;
+  }
+  function stopRecognition() {
+    if (restartTimer) clearTimeout(restartTimer);
+    restartTimer = null;
+    if (recognition) { try { recognition.abort(); } catch {} recognition = null; }
+  }
+  function stop() {
+    active = false; stopRecognition(); window.speechSynthesis?.cancel(); speaking = false;
+    heard.textContent = ""; status("Ready for a question"); controls();
+  }
+  function nextListen() {
+    if (!active || busy || speaking || !sessionOK || !Recognition || document.hidden) return;
+    if (restartTimer) clearTimeout(restartTimer);
+    restartTimer = setTimeout(startListening, 350);
+  }
+  function talk(text) {
+    if (!active || muted || !("speechSynthesis" in window)) { nextListen(); return; }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US"; utterance.rate = 1.03; utterance.pitch = 1;
+    const voices = speechSynthesis.getVoices();
+    const voice = voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang));
+    if (voice) utterance.voice = voice;
+    speaking = true; status("Gwap is speaking…");
+    utterance.onend = utterance.onerror = () => { speaking = false; nextListen(); };
+    speechSynthesis.cancel(); speechSynthesis.speak(utterance);
+  }
+  async function send(message) {
+    message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
+    busy = true; stopRecognition(); window.speechSynthesis?.cancel(); speaking = false;
+    heard.textContent = ""; controls();
+    const context = turns.slice(-8);
+    render("user", message); status("Gwap is thinking…");
+    const started = performance.now();
+    const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 25000);
+    try {
+      const res = await fetch("/voice/chat", {
+        method: "POST", credentials: "same-origin", signal: controller.signal,
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ message, history: context })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) { sessionOK = false; throw new Error("Session expired. Return to Command Mode to pair."); }
+      if (!res.ok || typeof data.spoken_response !== "string") throw new Error(data.error || "Conversation unavailable.");
+      const elapsed = Math.round(performance.now() - started);
+      turns.push({ role: "user", content: message.slice(0,750) },
+                 { role: "assistant", content: data.spoken_response.slice(0,750) });
+      while (turns.length > 8) turns.shift();
+      render("assistant", data.spoken_response);
+      metrics.textContent = "Reply: " + (elapsed / 1000).toFixed(1) + "s";
+      status("Answer ready");
+      talk(data.spoken_response);
+    } catch (e) {
+      const msg = e.name === "AbortError" ? "The response timed out. Try again." : (e.message || "Unable to connect.");
+      status(msg); nextListen();
+    } finally { clearTimeout(timeout); busy = false; controls(); if (!speaking) nextListen(); }
+  }
+  function startListening() {
+    restartTimer = null;
+    if (!active || busy || speaking || !sessionOK || !Recognition) return;
+    stopRecognition();
+    try {
+      const r = new Recognition(); recognition = r;
+      r.continuous = false; r.interimResults = true; r.lang = "en-US";
+      r.onresult = (event) => {
+        let interim = "", finalText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const value = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += value; else interim += value;
+        }
+        heard.textContent = finalText || interim;
+        if (finalText.trim()) { recognition = null; try { r.stop(); } catch {} send(finalText); }
+      };
+      r.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          active = false; status("Microphone access denied. You can still type below."); controls();
+        } else if (event.error !== "aborted" && event.error !== "no-speech") {
+          status("Mic: " + event.error + ". Tap to retry.");
+        }
+      };
+      r.onend = () => { if (recognition === r) recognition = null; nextListen(); };
+      r.start(); status("Listening…");
+    } catch {
+      active = false; status("This browser requires another tap to activate listening."); controls();
+    }
+  }
+  listen.addEventListener("click", () => {
+    if (active) { stop(); return; }
+    if (!sessionOK) return;
+    active = true; controls(); window.speechSynthesis?.cancel(); startListening();
+  });
+  sound.addEventListener("click", () => {
+    muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
+    controls();
+  });
+  $("composer").addEventListener("submit", (event) => {
+    event.preventDefault(); const text = input.value.trim(); input.value = ""; send(text);
+  });
+  $("reset").addEventListener("click", () => {
+    turns.splice(0); list.textContent = "";
+    const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
+    metrics.textContent = "Secure session · No transcript saved";
+  });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });
+  fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    sessionOK = res.ok && data.paired === true;
+    if (!sessionOK) {
+      status("Pair your device in Command Mode first.");
+      render("assistant", "Open Command Mode to pair this phone securely, then return here.");
+    } else if (!Recognition) {
+      status("Speech recognition is unavailable here. Text conversation still works.");
+    } else status("Ready for a conversation");
+    controls();
+  }).catch(() => { status("Unable to verify secure session."); controls(); });
+})();
+</script>
+</body>
+</html>
