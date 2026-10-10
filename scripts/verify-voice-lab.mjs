@@ -212,3 +212,63 @@ test("preview pairing proxy validates browser origin, removes Origin for Render,
     assert.equal(intercepted,1,"rejected origins must never reach Render");
   } finally {globalThis.fetch=originalFetch;}
 });
+
+
+test("iPhone recording fallback captures microphone data and uses the scoped transcription bridge", async () => {
+  const host = "https://gwapgang.com";
+  const saved = globalThis.fetch;
+  let calls=0;
+  globalThis.fetch = async (u, options) => {
+    const path = new URL(typeof u === "string" ? u : u.toString()).pathname;
+    calls++;
+    if (path === "/voice/session") return Response.json({paired:true});
+    assert.equal(path, "/api/voice/transcribe");
+    assert.equal(options.headers.Authorization, "Bearer " + env.GWAP_VOICE_FAST_CHAT_TOKEN);
+    assert.equal(options.headers["Content-Type"], "audio/mp4");
+    assert.ok(options.body instanceof Uint8Array);
+    assert.equal(options.body.length,1400);
+    return Response.json({transcript:"We should find paying customers."});
+  };
+  try {
+    const response=await onRequest({
+      request:new Request(host+"/voice/transcribe",{
+        method:"POST",headers:{
+          Origin:host,Cookie:"gwap_voice_device=paired-test","Content-Type":"audio/mp4"
+        },body:new Uint8Array(1400).fill(8)
+      }), env
+    });
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).transcript,"We should find paying customers.");
+    assert.equal(calls,2);
+  } finally {globalThis.fetch=saved;}
+});
+
+test("recording fallback rejects cross-site calls and excessive recordings before AI invocation",async () => {
+  const host="https://gwapgang.com";
+  const original=globalThis.fetch;
+  let calls=0;globalThis.fetch=async()=>{calls++;return Response.json({paired:true});};
+  try {
+    for(const [origin,audio,sizeCode] of [
+      ["https://attacker.example",new Uint8Array(1200),403],
+      [host,new Uint8Array(650010),413]
+    ]) {
+      const result=await onRequest({request:new Request(host+"/voice/transcribe",{
+        method:"POST",
+        headers:{Origin:origin,Cookie:"gwap_voice_device=paired-test","Content-Type":"audio/mp4"},
+        body:audio
+      }), env});
+      assert.equal(result.status,sizeCode);
+    }
+    assert.equal(calls,0,"Oversized and cross-site recordings must not reach providers");
+  }finally {globalThis.fetch=original;}
+});
+
+test("mobile UI supports both Web Speech and recording fallback with visible controls",()=>{
+  assert.match(html, /getUserMedia/);
+  assert.match(html, /new MediaRecorder/);
+  assert.match(html, /\/voice\/transcribe/);
+  assert.match(html, /stopMediaRecording\(true\)/);
+  assert.match(html, /id="endCall"/);
+  assert.match(html, /recorder\?\.state === "recording"/);
+  assert.ok(html.indexOf('id="listen"')<html.indexOf('id="transcript"'), "Start control must precede large transcript");
+});
