@@ -325,3 +325,50 @@ test("mocked Safari permission visibility transition preserves recording",async(
   assert.equal(stops,1);
   assert.match(node("status").textContent,/paused/);
 });
+
+test("scoped MP3 preview route requires pairing, same origin, and bounded text", async () => {
+  const host="https://gwapgang.com", old=globalThis.fetch;
+  let calls=0;
+  globalThis.fetch=async (url,options)=>{
+    calls++;
+    const path=new URL(typeof url==="string"?url:url.toString()).pathname;
+    if(path==="/voice/session") return Response.json({paired:true});
+    assert.equal(path,"/api/voice/speak");
+    assert.equal(options.headers.Authorization,"Bearer "+env.GWAP_VOICE_FAST_CHAT_TOKEN);
+    assert.deepEqual(JSON.parse(options.body),{text:"Gwap says hello."});
+    return new Response(new Uint8Array(250).fill(41),{headers:{"Content-Type":"audio/mpeg"}});
+  };
+  try {
+    let request=new Request(host+"/voice/speak",{method:"POST",headers:{
+      Origin:host,Cookie:"gwap_voice_device=paired-test","Content-Type":"application/json"
+    },body:JSON.stringify({text:"Gwap says hello."})});
+    const ok=await onRequest({request,env});
+    assert.equal(ok.status,200);
+    assert.equal(ok.headers.get("Content-Type"),"audio/mpeg");
+    assert.equal(ok.headers.get("Cache-Control"),"no-store");
+    assert.equal((await ok.arrayBuffer()).byteLength,250);
+    assert.equal(calls,2);
+    request=new Request(host+"/voice/speak",{method:"POST",headers:{
+      Origin:"https://bad.example",Cookie:"gwap_voice_device=paired-test","Content-Type":"application/json"
+    },body:JSON.stringify({text:"Gwap says hello."})});
+    assert.equal((await onRequest({request,env})).status,403);
+    request=new Request(host+"/voice/speak",{method:"POST",headers:{
+      Origin:host,Cookie:"gwap_voice_device=paired-test","Content-Type":"application/json"
+    },body:JSON.stringify({text:"x".repeat(701)})});
+    assert.equal((await onRequest({request,env})).status,400);
+    assert.equal(calls,2,"Rejected speech must never reach AI");
+  } finally { globalThis.fetch=old; }
+});
+
+test("Safari speaker UI separates synthesis intent from actual user-confirmed audio",()=>{
+  assert.match(html,/id="speakerTest"/);
+  assert.match(html,/id="speakerReplay"/);
+  assert.match(html,/id="speakerMp3"/);
+  assert.match(html,/id="speakerPlayer" controls/);
+  assert.match(html,/Safari never started speech/);
+  assert.match(html,/Waiting for Safari speech to start/);
+  assert.match(html,/Safari reports synthesis started/);
+  assert.match(html,/speakerPlayer.hidden=false/);
+  assert.match(html,/MP3 ready. Tap Play/);
+  assert.doesNotMatch(html,/ctx.playing = true; speaking = true; status\("Gwap is speaking/);
+});
