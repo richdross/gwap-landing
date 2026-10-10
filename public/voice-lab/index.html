@@ -377,6 +377,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   // Exactly one generated audio request per ordinary turn. This bounds quota.
   // The AI prompt targets brief spoken replies; longer answers remain in text.
+  function audioDeadline(promise, milliseconds, label) {
+    let timer;
+    return Promise.race([
+      Promise.resolve(promise),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" timed out")),milliseconds);})
+    ]).finally(()=>clearTimeout(timer));
+  }
   async function speakGeneratedAnswer(text, record, version) {
     if (!active || muted || !isIOS || version !== turnVersion) return false;
     if (autoTtsTurns >= AUTO_TTS_TURN_LIMIT) {
@@ -421,12 +428,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     // Web Audio: no new user activation needed when this context was started on Start.
     if(autoAudioContext && autoAudioActive) {
       try {
-        if(autoAudioContext.state!=="running")await autoAudioContext.resume();
+        if(autoAudioContext.state!=="running")await audioDeadline(autoAudioContext.resume(),4000,"Audio unlock");
         if(version!==turnVersion || !active)return false;
         if(autoAudioContext.state==="running"){
-          const decoded=await autoAudioContext.decodeAudioData(bytes.slice(0));
+          const decoded=await audioDeadline(autoAudioContext.decodeAudioData(bytes.slice(0)),8000,"Audio decoding");
           if(version!==turnVersion || !active)return false;
-          await new Promise((resolve,reject)=>{
+          await audioDeadline(new Promise((resolve,reject)=>{
             try {
               const source=autoAudioContext.createBufferSource();
               source.buffer=decoded;source.connect(autoAudioContext.destination);
@@ -436,7 +443,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
               if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
               source.start(0);
             } catch(error){reject(error);}
-          });
+          }),45000,"Audio playback");
           if(version===turnVersion){
             speaking=false;
             status("GWAP finished speaking. Listening for your reply…");
@@ -452,7 +459,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     // Fallback uses an HTMLAudioElement. Safari may require an additional Play tap.
     try {
       speaking=true;status("Starting native audio playback…");controls();
-      await speakerPlayer.play();
+      await audioDeadline(speakerPlayer.play(),4500,"Safari native playback");
       if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
       return await new Promise((resolve)=>{
         const finish=(ok=true)=>{
