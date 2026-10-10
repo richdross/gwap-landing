@@ -209,6 +209,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let audioGenerating = false;
   let autoAudioContext = null, autoAudioSource = null, autoTtsController = null;
   let turnVersion = 0, waitingForPlayTap = false, autoAudioActive = false;
+  let autoTtsTurns = 0, nativePlaybackFinish = null;
+  const AUTO_TTS_TURN_LIMIT = 10; // Bounded free-capacity acceptance session.
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
   const speakerPlayer = $("speakerPlayer");
@@ -362,6 +364,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     turnVersion++;
     autoTtsController?.abort();
     autoTtsController=null;
+    if(nativePlaybackFinish){nativePlaybackFinish(false);nativePlaybackFinish=null;}
     try {autoAudioSource?.stop();} catch {}
     autoAudioSource=null;
     speakerPlayer.pause();
@@ -376,6 +379,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   // The AI prompt targets brief spoken replies; longer answers remain in text.
   async function speakGeneratedAnswer(text, record, version) {
     if (!active || muted || !isIOS || version !== turnVersion) return false;
+    if (autoTtsTurns >= AUTO_TTS_TURN_LIMIT) {
+      active=false;waitingForPlayTap=false;
+      status("Voice test limit reached (10 turns). End and restart a new test session.");
+      speakerFeedback("Automatic speech paused to limit Workers AI usage. Written replies remain available.");
+      controls();return false;
+    }
+    autoTtsTurns++;
     const ttsStart=performance.now();
     status("GWAP is preparing spoken audio…");
     speakerFeedback("Generating spoken reply. You can press Interrupt Gwap or End.");
@@ -445,9 +455,16 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       await speakerPlayer.play();
       if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
       return await new Promise((resolve)=>{
-        const finish=()=>{speakerPlayer.removeEventListener("ended",finish);speakerPlayer.removeEventListener("error",finish);resolve(true);};
-        speakerPlayer.addEventListener("ended",finish);
-        speakerPlayer.addEventListener("error",finish);
+        const finish=(ok=true)=>{
+          speakerPlayer.removeEventListener("ended",onEnded);
+          speakerPlayer.removeEventListener("error",onError);
+          if(nativePlaybackFinish===finish)nativePlaybackFinish=null;
+          resolve(ok);
+        };
+        const onEnded=()=>finish(true), onError=()=>finish(false);
+        nativePlaybackFinish=finish;
+        speakerPlayer.addEventListener("ended",onEnded);
+        speakerPlayer.addEventListener("error",onError);
       });
     } catch {
       speaking=false;waitingForPlayTap=true;
@@ -828,6 +845,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
     if (active && recognition) { status("Already listening. Speak your question."); return; }
     armAudioOnStart(); // This must run inside the original user tap for Safari.
+    if(!active) autoTtsTurns=0;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
   $("endCall").addEventListener("click", () => stop());
@@ -835,6 +853,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     muted = !muted;
     if (muted) {
       interruptGeneratedSpeech();
+      busy=false;
       window.speechSynthesis?.cancel(); speaking=false;
       if(active)nextListen();
     } else if(active)armAudioOnStart();
