@@ -29,6 +29,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
+.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
 .tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
 .qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
@@ -53,6 +54,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <button class="secondary" id="endCall" type="button" disabled>End</button>
 <button class="secondary" id="sound" type="button">Voice: On</button>
 </div>
+<div class="speaker-tools" aria-label="Audio troubleshooting">
+  <button type="button" id="speakerTest">Test Speaker</button>
+  <button type="button" id="speakerReplay" disabled>Replay Reply</button>
+  <button type="button" id="speakerMp3" disabled>Generate MP3</button>
+</div>
+<div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
+<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
 <div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
 <div id="heard" aria-live="polite"></div>
 <section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
@@ -194,6 +202,86 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let pendingController = null;
   let liveSpeech = null;
   let interruptedByUser = false;
+  let lastReply = "";
+  let mp3ObjectUrl = null;
+  const speakerNote = $("speakerNote");
+  const speakerPlayer = $("speakerPlayer");
+  function speakerFeedback(text) { speakerNote.textContent = text; }
+  function makeUtterance(text) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return null;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang="en-US"; utterance.rate=1.03; utterance.pitch=1;
+    const voice=selectedVoice(); if(voice) utterance.voice=voice;
+    return utterance;
+  }
+  function playOnTap(text) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      speakerFeedback("Safari speech synthesis is unavailable. Use Generate MP3.");
+      return;
+    }
+    liveSpeech?.cancel();
+    window.speechSynthesis.cancel();
+    const utterance=makeUtterance(text);
+    let started=false;
+    speakerFeedback("Sending a speech test to Safari...");
+    const timer=setTimeout(() => {
+      if (!started) {
+        window.speechSynthesis.cancel();
+        speakerFeedback("Safari did not start speaking. Use Generate MP3 for native audio.");
+      }
+    },4000);
+    utterance.onstart=()=>{
+      started=true;clearTimeout(timer);
+      speakerFeedback("Safari reports speech started. If you hear nothing, try Generate MP3.");
+    };
+    utterance.onend=()=>{clearTimeout(timer); speakerFeedback("Speech finished. If it was silent, try Generate MP3.");};
+    utterance.onerror=(event)=>{
+      clearTimeout(timer);
+      speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate MP3.");
+    };
+    try { window.speechSynthesis.speak(utterance); }
+    catch { clearTimeout(timer); speakerFeedback("Safari could not play speech. Try Generate MP3."); }
+  }
+  $("speakerTest").addEventListener("click", () => {
+    input.blur();
+    playOnTap("Gwap speaker test. If you hear this, your iPhone can play my voice.");
+  });
+  $("speakerReplay").addEventListener("click", () => {
+    input.blur();
+    if (lastReply) playOnTap(lastReply.slice(0,650));
+  });
+  $("speakerMp3").addEventListener("click", async () => {
+    input.blur();
+    if (!lastReply) return;
+    const button=$("speakerMp3");
+    button.disabled=true;
+    window.speechSynthesis?.cancel();
+    liveSpeech?.cancel();
+    speakerFeedback("Generating MP3 through GWAP Cloud Agent. This uses Workers AI quota.");
+    try {
+      const response=await fetch("/voice/speak",{
+        method:"POST",credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:lastReply.slice(0,650)})
+      });
+      if (!response.ok) {
+        const payload=await response.json().catch(()=>({}));
+        throw new Error(payload.error || "Audio generation unavailable");
+      }
+      if (!response.headers.get("content-type")?.includes("audio/mpeg")) throw new Error("Invalid audio format");
+      const audio=await response.blob();
+      if (!audio.size || audio.size>1500000) throw new Error("Audio is empty or oversized");
+      if (mp3ObjectUrl) URL.revokeObjectURL(mp3ObjectUrl);
+      mp3ObjectUrl=URL.createObjectURL(audio);
+      speakerPlayer.pause();
+      speakerPlayer.src=mp3ObjectUrl;
+      speakerPlayer.hidden=false;
+      speakerFeedback("MP3 ready. Tap Play in the audio control below.");
+      // Do not claim autoplay; mobile Safari may require explicit user action.
+    } catch(error) {
+      speakerFeedback("MP3 generation failed: "+(error?.message || "unknown error")+". You can still read the reply.");
+    } finally {button.disabled=!lastReply;}
+  });
   function selectedVoice() {
     const voices = window.speechSynthesis?.getVoices?.() || [];
     return voices.find((v) => /samantha/i.test(v.name)) || voices.find((v) => /^en-US$/i.test(v.lang)) || null;
@@ -213,19 +301,36 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         if (ctx.done) { speaking = false; nextListen(); }
         return;
       }
-      ctx.playing = true; speaking = true; status("Gwap is speaking…"); controls();
+      ctx.playing = true; speaking = true; status("Waiting for Safari speech to start…"); controls();
       const u = new SpeechSynthesisUtterance(piece);
       u.lang = "en-US"; u.rate = 1.03; u.pitch = 1;
       const voice = selectedVoice(); if (voice) u.voice = voice;
+      let didStart = false;
+      const watchdog=setTimeout(() => {
+        if (!didStart && !ctx.cancelled) {
+          ctx.cancelled=true;ctx.queue.length=0;ctx.playing=false;
+          window.speechSynthesis.cancel();speaking=false;active=false;
+          speakerFeedback("Safari never started speech. Tap Replay Reply or Generate MP3.");
+          status("Audio blocked by Safari. Reply text remains available.");
+          controls();
+        }
+      },4000);
       u.onstart = () => {
-        if (record && record.audible_ms == null) record.audible_ms = Math.round(performance.now() - startedAt);
+        didStart=true;clearTimeout(watchdog);
+        if (record) record.synthesis_started_ms = Math.round(performance.now() - startedAt);
+        speakerFeedback("Safari reports synthesis started. If silent, try Replay or Generate MP3.");
+        status("Safari reports speech started…");
       };
-      u.onend = () => { ctx.playing = false; if (!ctx.cancelled) next(); };
+      u.onend = () => { clearTimeout(watchdog);ctx.playing = false; if (!ctx.cancelled) next(); };
       u.onerror = (event) => {
+        clearTimeout(watchdog);
         if (record) record.voice_error = String(event.error || "speech synthesis error");
-        ctx.playing = false; next();
+        speakerFeedback("Safari speech error: "+String(event.error || "unknown")+". Try Generate MP3.");
+        ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;controls();
       };
-      window.speechSynthesis.speak(u);
+      try { window.speechSynthesis.speak(u); }
+      catch { clearTimeout(watchdog); ctx.cancelled=true;ctx.playing=false;speaking=false;active=false;
+        speakerFeedback("Safari failed to start speech. Try Generate MP3."); controls(); }
     }
     return {
       push: (text) => { if (!ctx.cancelled && text.trim()) { ctx.queue.push(text.trim()); next(); } },
@@ -316,7 +421,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       audio.done();
       const elapsed = Math.round(performance.now() - started);
       if (record) { record.api_ms = elapsed; record.reply = accumulated.slice(0, 800); }
-      turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
+      lastReply=accumulated;
+      $("speakerReplay").disabled=false;
+      $("speakerMp3").disabled=false;
+            turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
       while(turns.length > 8) turns.shift();
       metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
       if (!speaking) status("Ready for follow-up");
@@ -517,6 +625,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     turns.splice(0); list.textContent = "";
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
+    lastReply="";$("speakerReplay").disabled=true;$("speakerMp3").disabled=true;
+    speakerPlayer.pause();speakerPlayer.removeAttribute("src");speakerPlayer.hidden=true;
+    if(mp3ObjectUrl){URL.revokeObjectURL(mp3ObjectUrl);mp3ObjectUrl=null;}
+    speakerFeedback("Speaker unverified. Tap Test Speaker to check Safari audio.");
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) pauseForBackground();
