@@ -346,10 +346,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         if (ctx.done) {
           speaking = false;
           if (isIOS && lastReply && !muted) {
+            // Leave microphone inactive while choosing audio playback.
+            active=false;
             status("Answer ready. Tap Generate Audio to hear it.");
-            speakerFeedback("Safari speech synthesis did not work reliably on this iPhone. Use Generate Audio and the native Play control.");
-          }
-          nextListen();
+            speakerFeedback("Safari speech synthesis is unreliable on this iPhone. Use Generate Audio and the native Play control.");
+            controls();
+          } else nextListen();
         }
         return;
       }
