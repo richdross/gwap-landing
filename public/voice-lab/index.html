@@ -14,21 +14,21 @@ main{width:min(660px,100%);margin:0 auto}header{display:flex;align-items:center;
 h1{font-size:clamp(35px,9vw,58px);letter-spacing:-.06em;line-height:1.03;margin:23px 0 6px;font-weight:800}
 .sub{color:var(--muted);margin:0 0 20px;font-size:14px}.signal{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin-bottom:14px}
 .led{width:8px;height:8px;border-radius:50%;background:#536356}.led.active{background:var(--lime);box-shadow:0 0 12px #78f98d88}
-#transcript{height:min(47svh,470px);min-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);background:var(--panel);padding:18px 15px;overscroll-behavior:contain}
+#transcript{height:min(38svh,380px);min-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);background:var(--panel);padding:18px 15px;overscroll-behavior:contain}
 .turn{max-width:94%;font-size:16px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}
 .turn.user{align-self:flex-end;text-align:right;color:#c4dfc9;border-right:2px solid var(--lime);padding-right:13px}.turn.assistant{align-self:flex-start;color:var(--ink);border-left:2px solid #516555;padding-left:13px}
 .turn small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800;letter-spacing:.11em;margin-bottom:4px}.empty{color:var(--muted);font-size:14px;margin:auto;text-align:center;max-width:280px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}button{font:inherit;cursor:pointer;border-radius:0}
-.primary{background:var(--lime);border:1px solid var(--lime);color:#0b190d;font-weight:850;padding:15px 10px;min-height:58px}
+.actions{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,0.9fr) minmax(0,0.9fr);gap:8px;margin:10px 0;position:relative;z-index:2}button{font:inherit;cursor:pointer;border-radius:0}
+.primary{background:var(--lime);border:1px solid var(--lime);color:#0b190d;font-weight:850;padding:15px 10px;min-height:54px}
 .secondary{background:#111813;color:var(--ink);border:1px solid var(--line);font-weight:750;padding:15px 10px;min-height:58px}
-.primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}
+.primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}#endCall{font-size:13px}.actions{scroll-margin-top:18px}
 #heard{min-height:28px;color:var(--muted);font-size:13px;padding:9px 0}
 form{display:flex;gap:8px;margin-top:8px}input{flex:1;min-width:0;background:#0b100d;color:var(--ink);border:1px solid var(--line);border-radius:0;padding:13px;font:inherit}
 form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid #335e39;font-weight:800}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:17px;color:var(--muted);font-size:12px}
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
-@media(max-width:360px){.actions{grid-template-columns:1fr}.foot{flex-wrap:wrap}}
+@media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
 
 .qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
 .qa summary{font-weight:750;cursor:pointer;color:var(--muted);font-size:13px}
@@ -47,12 +47,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <h1>Conversation</h1>
 <p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
 <div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
-<section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
-<div id="heard" aria-live="polite"></div>
 <div class="actions">
 <button class="primary" id="listen" type="button" disabled>Start Conversation</button>
+<button class="secondary" id="endCall" type="button" disabled>End</button>
 <button class="secondary" id="sound" type="button">Voice: On</button>
 </div>
+<div id="heard" aria-live="polite"></div>
+<section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
 <form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
 <div class="foot"><button class="linklike" id="reset" type="button">Clear conversation</button><span id="metrics">Secure session · No transcript saved</span></div>
 <details class="qa" id="qa">
@@ -129,6 +130,11 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
   });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
+  const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+  let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
+  let microphonePreferred = isIOS && hasCapture;
+  let micAnalyser = null, micContext = null, micFrame = 0, micStopTimer = null;
   let restartTimer = null;
   function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
   function render(role, content) {
@@ -140,8 +146,11 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     return body;
   }
   function controls() {
-    listen.textContent = speaking ? "Interrupt Gwap" : (active ? "Stop Conversation" : "Start Conversation");
-    listen.disabled = !sessionOK || !Recognition;
+    const hasMic = Boolean(Recognition || hasCapture);
+    listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
+      : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
+    listen.disabled = !sessionOK || !hasMic || (busy && !speaking);
+    $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
   }
@@ -152,11 +161,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function stop() {
     interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-    active = false; stopRecognition(); window.speechSynthesis?.cancel(); speaking = false;
-    heard.textContent = ""; status("Ready for a question"); controls();
+    active = false; stopRecognition(); stopMediaRecording(false);
+    window.speechSynthesis?.cancel(); speaking = false;
+    heard.textContent = ""; status("Conversation ended. Tap Start to talk again."); controls();
   }
   function nextListen() {
-    if (!active || busy || speaking || !sessionOK || !Recognition || document.hidden) return;
+    if (!active || busy || speaking || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
@@ -305,7 +315,15 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   function startListening() {
     restartTimer = null;
-    if (!active || busy || speaking || !sessionOK || !Recognition) return;
+    if (!active || busy || speaking || !sessionOK) return;
+    if (microphonePreferred || !Recognition) {
+      startMediaRecording().catch((error) => {
+        active = false;
+        status("Microphone unavailable: " + (error?.name === "NotAllowedError" ? "Allow microphone or open this page in Safari." : (error?.message || "Open in Safari to grant access.")));
+        controls();
+      });
+      return;
+    }
     stopRecognition();
     try {
       const r = new Recognition(); recognition = r;
@@ -322,8 +340,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       };
       r.onerror = (event) => {
         if (qaActive && qaCurrent) qaCurrent.mic_error = String(event.error || "unknown");
-        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          active = false; status("Microphone access denied. You can still type below."); controls();
+        if ((event.error === "service-not-allowed" || event.error === "not-allowed" || event.error === "network") && hasCapture) {
+          microphonePreferred = true; stopRecognition();
+          status("Speech recognition is blocked here. Switching to microphone recording.");
+          startMediaRecording().catch(() => { active = false; status("Open this preview in Safari to enable microphone access."); controls(); });
+        } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          active = false; status("Microphone blocked. Try Safari or the keyboard microphone."); controls();
         } else if (event.error !== "aborted" && event.error !== "no-speech") {
           status("Mic: " + event.error + ". Tap to retry.");
         }
@@ -335,17 +357,24 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
   }
   listen.addEventListener("click", () => {
-    if (active && speaking) { if (qaCurrent) qaCurrent.interrupted = true; interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel(); speaking = false; busy = false; startListening(); controls(); return; }
-    if (active) { stop(); return; }
-    if (!sessionOK) return;
+    input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
+    if (!sessionOK) { status("Pair this device first."); return; }
+    if (recorder?.state === "recording") { stopMediaRecording(true); return; }
+    if (active && speaking) {
+      if (qaCurrent) qaCurrent.interrupted = true;
+      interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
+      speaking = false; busy = false; startListening(); controls(); return;
+    }
+    if (active && recognition) { status("Already listening. Speak your question."); return; }
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
+  $("endCall").addEventListener("click", () => stop());
   sound.addEventListener("click", () => {
     muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
     controls();
   });
   $("composer").addEventListener("submit", (event) => {
-    event.preventDefault(); const text = input.value.trim(); input.value = ""; send(text);
+    event.preventDefault(); const text = input.value.trim(); input.value = ""; input.blur(); send(text);
   });
   $("reset").addEventListener("click", () => {
     turns.splice(0); list.textContent = "";
@@ -360,8 +389,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (!sessionOK) {
       status("Pair your device in Command Mode first.");
       render("assistant", "Open Command Mode to pair this phone securely, then return here.");
-    } else if (!Recognition) {
-      status("Speech recognition is unavailable here. Text conversation still works.");
+    } else if (!Recognition && !hasCapture) {
+      status("No microphone API in this browser. Open in Safari or use keyboard dictation.");
+    } else if (isIOS && hasCapture) {
+      status("Ready. Tap Start, allow microphone, and speak.");
     } else status("Ready for a conversation");
     controls();
   }).catch(() => { status("Unable to verify secure session."); controls(); });
