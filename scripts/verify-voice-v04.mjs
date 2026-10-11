@@ -14,7 +14,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired
   function node(id){
     if(!elements.has(id)){
       elements.set(id,{
-        id,disabled:false,value:"",textContent:"",hidden:false,src:"",style:{},
+        id,disabled:false,value:"",textContent:"",hidden:false,src:"",style:{},dataset:{},
         handlers:{},classList:{toggle(){}},scrollTop:0,scrollHeight:0,
         addEventListener(k,f){this.handlers[k]=f;},removeEventListener(k,f){if(this.handlers[k]===f)delete this.handlers[k];},
         append(){},remove(){},blur(){},click(){this.handlers.click?.();},
