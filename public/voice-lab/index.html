@@ -30,7 +30,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
 .connection-status{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-2px 0 12px;font-size:12px;color:var(--muted)}.connection-status a{color:var(--lime);text-decoration:underline}.connection-status button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 10px;font-size:12px;min-height:36px}.connection-status button:disabled{opacity:.5}.connection-status [hidden]{display:none}
-.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
+ .audio-tools{margin:8px 0 6px;color:var(--muted)}.audio-tools summary{cursor:pointer;font-size:12px;min-height:34px;display:flex;align-items:center}.audio-tools[open] summary{color:var(--lime)}.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
 .tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
 .qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
@@ -60,11 +60,11 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 <button class="secondary" id="endCall" type="button" disabled>End</button>
 <button class="secondary" id="sound" type="button">Voice: On</button>
 </div>
-<div class="speaker-tools" aria-label="Audio troubleshooting">
+<details id="audioTools" class="audio-tools"><summary>Audio tools and recovery</summary><div class="speaker-tools" aria-label="Audio troubleshooting">
   <button type="button" id="speakerTest">Test Speaker</button>
   <button type="button" id="speakerReplay" disabled>Replay Reply</button>
   <button type="button" id="speakerMp3" disabled>Generate Audio</button>
-</div>
+</div></details>
 <div id="speakerNote" role="status" aria-live="polite">Automatic generated speech is enabled when a conversation starts. If Safari blocks playback, use the visible audio player.</div>
 <audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP spoken reply"></audio>
 <div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
@@ -191,6 +191,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
+    $("speakerMp3").disabled = !lastReply || audioGenerating || active;
   }
   function stopRecognition() {
     if (restartTimer) clearTimeout(restartTimer);
@@ -203,7 +204,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     interruptGeneratedSpeech(true);
     active = false; busy=false; stopRecognition(); stopMediaRecording(false);
     window.speechSynthesis?.cancel(); speaking = false;
-    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
+    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again.","paused"); speakerFeedback("Conversation ended. Microphone and playback stopped."); controls();
   }
   function pauseForBackground(navigating = false) {
     // iOS may briefly report hidden while presenting the microphone permission prompt.
@@ -422,7 +423,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     autoTtsTurns++;
     const ttsStart=performance.now();
     status("GWAP is preparing spoken audio…");
-    speakerFeedback("Generating spoken reply. You can press Interrupt Gwap or End.");
+    speakerFeedback("Preparing the next spoken answer. Interrupt or End remains available.");
     const controller=new AbortController();
     autoTtsController=controller;
     const timeout=setTimeout(()=>controller.abort(),30000);
@@ -466,14 +467,15 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
               source.buffer=decoded;source.connect(autoAudioContext.destination);
               autoAudioSource=source;
               source.onended=()=>{if(autoAudioSource===source)autoAudioSource=null;resolve();};
-              speaking=true;status("Playing GWAP generated voice…");controls();
+              speaking=true;status("Playing GWAP generated voice…","speaking");speakerFeedback("Playing GWAP voice. The microphone resumes automatically when the reply finishes.");controls();
               if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
               source.start(0);
             } catch(error){reject(error);}
           }),45000,"Audio playback");
           if(version===turnVersion){
             speaking=false;
-            status("GWAP finished speaking. Listening for your reply…");
+            status("GWAP finished speaking. Listening for your reply…","listening");
+            speakerFeedback("Voice reply completed. Waiting for your next question.");
             controls();
           }
           return true;
@@ -487,10 +489,10 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if(version!==turnVersion || !active)return false;
     // Fallback uses an HTMLAudioElement. Safari may require an additional Play tap.
     try {
-      speaking=true;status("Starting native audio playback…");controls();
+      speaking=true;status("Starting native audio playback…","speaking");speakerFeedback("Playing GWAP voice through native audio.");controls();
       await audioDeadline(speakerPlayer.play(),4500,"Safari native playback");
       if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
-      return await new Promise((resolve)=>{
+      const completed = await new Promise((resolve)=>{
         const finish=(ok=true)=>{
           speakerPlayer.removeEventListener("ended",onEnded);
           speakerPlayer.removeEventListener("error",onError);
@@ -502,6 +504,9 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
         speakerPlayer.addEventListener("ended",onEnded);
         speakerPlayer.addEventListener("error",onError);
       });
+      if(version===turnVersion && completed){speaking=false;status("Voice reply finished. Listening again…","listening");speakerFeedback("Voice reply completed. Listening for the next question.");controls();}
+      if(!completed)throw new Error("Native audio playback did not finish");
+      return completed;
     } catch {
       speaking=false;waitingForPlayTap=true;
       status("Safari requires one Play tap. The audio is ready below.");
@@ -513,7 +518,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   speakerPlayer.addEventListener("ended",()=>{
     if(!active || !waitingForPlayTap)return;
     waitingForPlayTap=false;speaking=false;
-    status("Audio finished. Listening again…");controls();nextListen();
+    status("Audio finished. Listening again…","listening");speakerFeedback("Audio finished. Microphone restarting…");controls();nextListen();
   });
   speakerPlayer.addEventListener("play",()=>{
     if(waitingForPlayTap && active){
@@ -928,14 +933,17 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     event.preventDefault(); const text = input.value.trim(); input.value = ""; dismissKeyboard(); send(text);
   });
   $("reset").addEventListener("click", () => {
-    interruptGeneratedSpeech();
+    interruptGeneratedSpeech(true);
+    interruptedByUser=true;pendingController?.abort();stopRecognition();stopMediaRecording(false);
+    active=false;busy=false;speechPending=false;
     turns.splice(0); list.textContent = "";
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
     lastReply="";$("speakerReplay").disabled=true;$("speakerMp3").disabled=true;
     speakerPlayer.pause();speakerPlayer.removeAttribute("src");speakerPlayer.hidden=true;
     if(mp3ObjectUrl){URL.revokeObjectURL(mp3ObjectUrl);mp3ObjectUrl=null;}
-    speakerFeedback("Speaker unverified. Tap Test Speaker to check Safari audio.");
+    speakerFeedback("Conversation cleared. Audio and microphone stopped.");
+    status("Conversation cleared. Tap Start Conversation.","ready");controls();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) pauseForBackground();
