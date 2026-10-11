@@ -7,7 +7,7 @@ const html=readFileSync(new URL("../public/voice-lab/index.html",import.meta.url
 const script=html.split("<script>")[1]?.split("</script>")[0];
 assert.ok(script);
 
-function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired=true}={}){
+function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired=true,voiceChannel=null}={}){
   const elements=new Map(),windowEvents={},documentEvents={};
   let now=0, recordingStart=0, paired=initiallyPaired, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
   let intervalFn=null, timeouts=new Set(), activeRecording=null;
@@ -93,6 +93,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired
     window,navigator,document,MediaRecorder:Recorder,
     location:{search:""},URL:TestUrl,URLSearchParams,Response,AbortController,
     Blob,TextDecoder,Uint8Array,performance:{now:()=>now},
+    BroadcastChannel:voiceChannel || undefined,
     setInterval:(f)=>{intervalFn=f;return 77;},
     clearInterval:()=>{intervalFn=null;},
     setTimeout:timer,clearTimeout:clearTimer,fetch
@@ -136,7 +137,7 @@ test("one tap: start -> auto silence-stop -> transcribe -> AI -> generated WAV -
     assert.equal(paths.filter(x=>x==="/voice/speak").length,1,"one bounded TTS request per turn");
     assert.equal(phone.playbackCount,1,"decoded audio must start without a second user gesture");
     assert.equal(phone.browserSpeechCalls,0,"must never use broken iOS speechSynthesis");
-    assert.equal(phone.node("speakerPlayer").hidden,false);
+    assert.equal(phone.node("speakerPlayer").hidden,true,"Do not expose native playback controls alongside active Web Audio");
     assert.equal(phone.node("speakerPlayer").src,"blob:gwap-audio");
     assert.ok(phone.players.length>=2,"new microphone recording should start after spoken reply");
     assert.match(phone.node("status").textContent,/Listening/);
@@ -254,4 +255,36 @@ test("polished preview keeps audio troubleshooting secondary, not a replacement 
   assert.match(html,/id="listen"/);
   assert.match(html,/AUTO_TTS_TURN_LIMIT = 10/);
   assert.match(html,/pendingController\?\.abort\(\);stopRecognition\(\);stopMediaRecording\(false\)/);
+});
+
+test("same-origin second voice tab claims exclusive audio/microphone ownership",async()=>{
+  const endpoints=[];
+  class FakeChannel {
+    constructor(name){this.name=name;this.onmessage=null;endpoints.push(this);}
+    postMessage(data){
+      for(const other of endpoints) if(other!==this && other.name===this.name)other.onmessage?.({data});
+    }
+    close(){}
+  }
+  const first=createPhone({voiceChannel:FakeChannel});
+  const second=createPhone({voiceChannel:FakeChannel});
+  try{
+    await first.settle();await second.settle();
+    first.node("listen").handlers.click();await first.settle();
+    assert.equal(first.node("endCall").disabled,false);
+    second.node("listen").handlers.click();
+    await first.settle();await second.settle();
+    assert.equal(first.node("endCall").disabled,true,"Other tab must release microphone when second claims ownership");
+    assert.match(first.node("status").textContent,/Another GWAP Voice tab has taken control/);
+    assert.equal(second.node("endCall").disabled,false);
+    assert.equal(second.node("phaseLabel").dataset.phase,"listening");
+  }finally{await first.cleanup();await second.cleanup();}
+});
+
+test("exclusive playback does not expose duplicate native-player controls during automatic speech",()=>{
+  assert.match(html,/function silenceOtherPlayback\(\)/);
+  assert.match(html,/speakerPlayer.hidden=true;/);
+  assert.match(html,/speakerPlayer.hidden=false;\s*try/);
+  assert.match(html,/gwap-voice-v04-single-speaker/);
+  assert.match(html,/claimPlaybackTab\(\)/);
 });
