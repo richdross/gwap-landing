@@ -238,6 +238,28 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let autoAudioContext = null, autoAudioSource = null, autoTtsController = null;
   let turnVersion = 0, waitingForPlayTap = false, autoAudioActive = false;
   let autoTtsTurns = 0, nativePlaybackFinish = null;
+  // One microphone/audio owner per browser origin. No identifiers or tokens persist.
+  const voiceInstanceId=String(Date.now())+"-"+Math.random().toString(36).slice(2);
+  let tabChannel=null;
+  try{
+    if(typeof BroadcastChannel!=="undefined"){
+      tabChannel=new BroadcastChannel("gwap-voice-v04-single-speaker");
+      tabChannel.onmessage=(event)=>{
+        if(event?.data?.type!=="claim" || event.data.instance===voiceInstanceId)return;
+        if(active || speaking || recorder?.state==="recording"){
+          stop();
+          status("Another GWAP Voice tab has taken control. Tap Start here to switch back.","paused");
+        }
+      };
+    }
+  }catch{tabChannel=null;}
+  function claimPlaybackTab(){try{tabChannel?.postMessage({type:"claim",instance:voiceInstanceId});}catch{}}
+  function silenceOtherPlayback(){
+    window.speechSynthesis?.cancel();
+    speakerPlayer.pause();
+    try{autoAudioSource?.stop();}catch{}
+    autoAudioSource=null;
+  }
   const AUTO_TTS_TURN_LIMIT = 10; // Bounded free-capacity acceptance session.
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
@@ -312,7 +334,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   });
   $("speakerReplay").addEventListener("click", () => {
     input.blur();
-    if (lastReply) playOnTap(lastReply.slice(0,650));
+    if (lastReply && !active) playOnTap(lastReply.slice(0,650));
   });
   $("speakerMp3").addEventListener("click", async () => {
     input.blur();
@@ -395,7 +417,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if(nativePlaybackFinish){nativePlaybackFinish(false);nativePlaybackFinish=null;}
     try {autoAudioSource?.stop();} catch {}
     autoAudioSource=null;
-    speakerPlayer.pause();
+    silenceOtherPlayback();
     waitingForPlayTap=false;
     speaking=false;
     if(closeContext && autoAudioContext) {
@@ -449,10 +471,13 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       if(autoTtsController===controller)autoTtsController=null;
     }
     if(version!==turnVersion || !active) return false;
+    silenceOtherPlayback(); // Only one active playback source per turn.
     if(mp3ObjectUrl)URL.revokeObjectURL(mp3ObjectUrl);
     mp3ObjectUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
-    speakerPlayer.pause();speakerPlayer.src=mp3ObjectUrl;
-    speakerPlayer.hidden=false;speakerPlayer.load();
+    speakerPlayer.src=mp3ObjectUrl;
+    // Do NOT expose a second playable copy while Web Audio is speaking.
+    speakerPlayer.hidden=true;
+    speakerPlayer.load();
     // Web Audio: no new user activation needed when this context was started on Start.
     if(autoAudioContext && autoAudioActive) {
       try {
@@ -487,7 +512,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       }
     }
     if(version!==turnVersion || !active)return false;
-    // Fallback uses an HTMLAudioElement. Safari may require an additional Play tap.
+    // Fallback uses the native player exclusively; the Web Audio path is stopped.
+    speakerPlayer.hidden=false;
     try {
       speaking=true;status("Starting native audio playback…","speaking");speakerFeedback("Playing GWAP voice through native audio.");controls();
       await audioDeadline(speakerPlayer.play(),4500,"Safari native playback");
@@ -887,7 +913,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
           status("Paired, but no microphone API is available. Open directly in Safari or type.");
           return;
         }
-        active=true;controls();startListening();
+        claimPlaybackTab();active=true;controls();startListening();
       });
       return;
     }
@@ -906,6 +932,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
     if (active && recognition) { status("Already listening. Speak your question."); return; }
     armAudioOnStart(); // This must run inside the original user tap for Safari.
+    claimPlaybackTab();
     if(!active) autoTtsTurns=0;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
