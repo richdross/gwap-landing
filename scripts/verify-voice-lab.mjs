@@ -389,7 +389,7 @@ test("iOS conversation does not auto-start blocked Web Speech and enables native
   function node(id){
     if(!els.has(id)){
       els.set(id,{
-        id,value:"",textContent:"",disabled:false,hidden:false,handlers:{},classList:{toggle(){}},
+        id,value:"",textContent:"",disabled:false,hidden:false,dataset:{},handlers:{},classList:{toggle(){}},
         addEventListener(type,callback){this.handlers[type]=callback;},remove(){},append(){},blur(){},
         pause(){},load(){},removeAttribute(){},scrollTop:0,scrollHeight:0
       });
