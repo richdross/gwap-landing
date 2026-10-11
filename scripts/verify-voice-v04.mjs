@@ -11,13 +11,14 @@ function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired
   const elements=new Map(),windowEvents={},documentEvents={};
   let now=0, recordingStart=0, paired=initiallyPaired, apiCalls=[], players=[], audioStartCount=0, browserTts=0, micStopCount=0;
   let intervalFn=null, timeouts=new Set(), activeRecording=null;
+  const bodyClasses=new Set();
   function node(id){
     if(!elements.has(id)){
       elements.set(id,{
         id,disabled:false,value:"",textContent:"",hidden:false,src:"",style:{},dataset:{},
         handlers:{},classList:{toggle(){}},scrollTop:0,scrollHeight:0,
         addEventListener(k,f){this.handlers[k]=f;},removeEventListener(k,f){if(this.handlers[k]===f)delete this.handlers[k];},
-        append(){},remove(){},blur(){},click(){this.handlers.click?.();},
+        append(){},remove(){},blur(){this.handlers.blur?.();},click(){this.handlers.click?.();},
         pause(){},load(){},removeAttribute(){},play(){return Promise.resolve();}
       });
     }
@@ -65,7 +66,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired
   const document={
     hidden:false,getElementById:node,createElement:(tag)=>({
       tagName:tag,textContent:"",className:"",append(){},remove(){},click(){}
-    }),body:{append(){}},addEventListener(k,f){documentEvents[k]=f;}
+    }),body:{append(){},classList:{add(v){bodyClasses.add(v);},remove(v){bodyClasses.delete(v);},contains(v){return bodyClasses.has(v);}}},addEventListener(k,f){documentEvents[k]=f;}
   };
   const navigator={
     userAgent:"Mozilla/5.0 (iPhone; CPU iPhone OS 26_0) Mobile Safari",
@@ -100,6 +101,7 @@ function createPhone({holdPlayback=false,blockAudioContext=false,initiallyPaired
   const settle=async()=>{for(let i=0;i<14;i++)await new Promise(r=>setImmediate(r));};
   return {
     node,window,document,settle,apiCalls,players,resources,
+    isKeyboardVisible:()=>bodyClasses.has("keyboard-visible"),
     get currentRecorder(){return activeRecording;},
     get playbackCount(){return audioStartCount;},
     get browserSpeechCalls(){return browserTts;},
@@ -138,6 +140,8 @@ test("one tap: start -> auto silence-stop -> transcribe -> AI -> generated WAV -
     assert.equal(phone.node("speakerPlayer").src,"blob:gwap-audio");
     assert.ok(phone.players.length>=2,"new microphone recording should start after spoken reply");
     assert.match(phone.node("status").textContent,/Listening/);
+    assert.equal(phone.node("phaseLabel").dataset.phase,"listening");
+    assert.doesNotMatch(phone.node("speakerNote").textContent,/Generating spoken reply/,"stale playback status must be cleared");
     // No additional click: a second spoken question should also go end-to-end.
     for(const t of [3450,3700,4200,5600])phone.tick(t);
     await phone.settle();
@@ -159,6 +163,7 @@ test("interrupt stops generated playback and reopens the microphone; End release
     await phone.settle();
     assert.equal(phone.playbackCount,1);
     assert.match(phone.node("status").textContent,/Playing GWAP generated voice/);
+    assert.equal(phone.node("phaseLabel").dataset.phase,"speaking");
     assert.equal(phone.node("listen").disabled,false);
     assert.match(phone.node("listen").textContent,/Interrupt/);
     phone.node("listen").handlers.click();
@@ -167,6 +172,7 @@ test("interrupt stops generated playback and reopens the microphone; End release
     phone.node("endCall").handlers.click();
     await phone.settle();
     assert.equal(phone.node("endCall").disabled,true);
+    assert.equal(phone.node("phaseLabel").dataset.phase,"paused");
     assert.match(phone.node("status").textContent,/Conversation ended/);
     assert.ok(phone.resources.some(x=>x.state==="closed"),"End must close the audio context");
   }finally{await phone.cleanup();}
@@ -214,4 +220,38 @@ test("a paired browser without microphone APIs shows actionable status instead o
   assert.match(html,/listen.disabled = speechPending/);
   assert.match(html,/window.addEventListener\("pageshow"/);
   assert.match(html,/cache:"no-store"/);
+});
+
+test("iPhone keyboard dismissal and Clear cleanly reset voice session and media",async()=>{
+  const phone=createPhone();
+  try{
+    await phone.settle();
+    phone.node("message").handlers.focus();
+    assert.equal(phone.isKeyboardVisible(),true);
+    assert.equal(phone.node("dismissKeyboard").hidden,false);
+    phone.node("listen").handlers.click();
+    await phone.settle();
+    assert.equal(phone.isKeyboardVisible(),false,"starting voice must dismiss keyboard");
+    assert.equal(phone.node("dismissKeyboard").hidden,true);
+    assert.equal(phone.players.length,1);
+    const count=phone.apiCalls.filter(x=>x.path==="/voice/chat").length;
+    phone.node("reset").handlers.click();
+    await phone.settle();
+    assert.equal(phone.node("endCall").disabled,true,"Clear must end active recording");
+    assert.equal(phone.node("phaseLabel").dataset.phase,"ready");
+    assert.match(phone.node("status").textContent,/Conversation cleared/);
+    assert.equal(phone.isKeyboardVisible(),false);
+    assert.equal(phone.node("speakerPlayer").hidden,true);
+    assert.equal(phone.apiCalls.filter(x=>x.path==="/voice/chat").length,count,"Clear must not generate replies");
+    assert.ok(phone.resources.some(x=>x.state==="closed"),"Clear must close audio resources");
+  }finally{await phone.cleanup();}
+});
+
+test("polished preview keeps audio troubleshooting secondary, not a replacement for one-tap conversation",()=>{
+  assert.match(html,/id="audioTools" class="audio-tools"/);
+  assert.match(html,/id="dismissKeyboard" hidden/);
+  assert.match(html,/id="phaseLabel"/);
+  assert.match(html,/id="listen"/);
+  assert.match(html,/AUTO_TTS_TURN_LIMIT = 10/);
+  assert.match(html,/pendingController\?\.abort\(\);stopRecognition\(\);stopMediaRecording\(false\)/);
 });
