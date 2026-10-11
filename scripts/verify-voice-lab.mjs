@@ -290,9 +290,9 @@ test("iOS microphone permission prompt cannot cancel an in-flight recording star
 test("mocked Safari permission visibility transition preserves recording",async()=>{
   const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   const nodes=new Map(),de={},we={};
-  function node(id){if(!nodes.has(id))nodes.set(id,{id,value:"",textContent:"",disabled:false,
+  function node(id){if(!nodes.has(id))nodes.set(id,{id,value:"",textContent:"",disabled:false,dataset:{},
     classList:{toggle(){}},events:{},addEventListener(k,cb){this.events[k]=cb;},
-    append(){},remove(){},blur(){},scrollTop:0,scrollHeight:0});return nodes.get(id);}
+    append(){},remove(){},blur(){},pause(){},scrollTop:0,scrollHeight:0});return nodes.get(id);}
   let allowMic;
   const permission=new Promise(r=>allowMic=r);
   let starts=0,stops=0;
@@ -389,7 +389,7 @@ test("iOS conversation does not auto-start blocked Web Speech and enables native
   function node(id){
     if(!els.has(id)){
       els.set(id,{
-        id,value:"",textContent:"",disabled:false,hidden:false,handlers:{},classList:{toggle(){}},
+        id,value:"",textContent:"",disabled:false,hidden:false,dataset:{},handlers:{},classList:{toggle(){}},
         addEventListener(type,callback){this.handlers[type]=callback;},remove(){},append(){},blur(){},
         pause(){},load(){},removeAttribute(){},scrollTop:0,scrollHeight:0
       });
@@ -436,8 +436,10 @@ test("iOS conversation does not auto-start blocked Web Speech and enables native
   assert.equal(browserSpeakAttempts,0,"iPhone must not try unreliable automatic Safari Web Speech");
   assert.equal(node("speakerMp3").disabled,false,"Generate Audio must enable once response exists");
   assert.equal(node("speakerMp3").textContent,"");
-  assert.match(node("status").textContent,/Generate Audio/);
-  assert.equal(node("listen").disabled,true,"Mock has no microphone API; typed answers still work");
+  assert.match(node("status").textContent,/Ready for follow-up/);
+  assert.equal(node("listen").disabled,false,"Start remains tappable and explains missing microphone capabilities");
+  node("listen").handlers.click();
+  assert.match(node("status").textContent,/No microphone API/);
   await node("speakerMp3").handlers.click();
   assert.equal(audioCalls,1);
   assert.equal(node("speakerPlayer").src,"blob:gwap-test-audio");

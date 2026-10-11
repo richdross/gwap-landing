@@ -12,7 +12,7 @@
 main{width:min(660px,100%);margin:0 auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:22px;border-bottom:1px solid var(--line)}
 .brand{color:var(--lime);font-size:12px;letter-spacing:.22em;font-weight:850}a{color:inherit}.mode{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:9px 12px}
 h1{font-size:clamp(35px,9vw,58px);letter-spacing:-.06em;line-height:1.03;margin:23px 0 6px;font-weight:800}
-.sub{color:var(--muted);margin:0 0 20px;font-size:14px}.signal{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin-bottom:14px}
+.sub{color:var(--muted);margin:0 0 20px;font-size:14px}.signal{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin-bottom:14px;flex-wrap:wrap}#phaseLabel{font-size:10px;letter-spacing:.1em;border:1px solid var(--line);color:var(--lime);padding:3px 6px;font-weight:800}#phaseLabel[data-phase="paused"]{color:var(--muted)}#phaseLabel[data-phase="error"]{color:var(--red)}
 .led{width:8px;height:8px;border-radius:50%;background:#536356}.led.active{background:var(--lime);box-shadow:0 0 12px #78f98d88}
 #transcript{height:min(38svh,380px);min-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);background:var(--panel);padding:18px 15px;overscroll-behavior:contain}
 .turn{max-width:94%;font-size:16px;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -24,12 +24,13 @@ h1{font-size:clamp(35px,9vw,58px);letter-spacing:-.06em;line-height:1.03;margin:
 .primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}#endCall{font-size:13px}.actions{scroll-margin-top:18px}
 #heard{min-height:28px;color:var(--muted);font-size:13px;padding:9px 0}
 form{display:flex;gap:8px;margin-top:8px}input{flex:1;min-width:0;background:#0b100d;color:var(--ink);border:1px solid var(--line);border-radius:0;padding:13px;font:inherit}
-form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid #335e39;font-weight:800}
+form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid #335e39;font-weight:800}#dismissKeyboard{padding:0 11px;background:#101812;color:var(--ink);border:1px solid var(--line)}#dismissKeyboard[hidden]{display:none}body.keyboard-visible #transcript{height:min(24svh,220px);min-height:120px}body.keyboard-visible .speaker-tools{display:none}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:17px;color:var(--muted);font-size:12px}
 .linklike{background:none;border:0;color:var(--muted);padding:5px 0;text-decoration:underline}
 #metrics{font-variant-numeric:tabular-nums;text-align:right}
 @media(max-width:360px){.actions{grid-template-columns:minmax(0,2fr) 1fr 1fr}.actions button{padding:10px 4px;font-size:12px}.foot{flex-wrap:wrap}}
-.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
+.connection-status{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-2px 0 12px;font-size:12px;color:var(--muted)}.connection-status a{color:var(--lime);text-decoration:underline}.connection-status button{background:transparent;border:1px solid var(--line);color:var(--ink);padding:6px 10px;font-size:12px;min-height:36px}.connection-status button:disabled{opacity:.5}.connection-status [hidden]{display:none}
+ .audio-tools{margin:8px 0 6px;color:var(--muted)}.audio-tools summary{cursor:pointer;font-size:12px;min-height:34px;display:flex;align-items:center}.audio-tools[open] summary{color:var(--lime)}.speaker-tools{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}.speaker-tools button{font-size:12px;background:#142118;color:var(--ink);border:1px solid var(--line);padding:11px;min-height:44px;flex:1}.speaker-tools button:disabled{opacity:.4}#speakerMp3:not(:disabled){background:var(--lime);color:#08150b;border-color:var(--lime);font-weight:800}#speakerNote{color:var(--muted);font-size:12px;min-height:20px;margin:6px 0}#speakerPlayer{display:block;width:100%;margin:8px 0 12px}#speakerPlayer[hidden]{display:none}
 .tip{font-size:12px;color:var(--muted);margin:4px 0 12px} .tip a{color:var(--lime);text-decoration:underline}
 
 .qa{margin-top:18px;border-top:1px solid var(--line);padding:14px 0 4px}
@@ -45,26 +46,31 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
 </head>
 <body>
 <main>
-<header><div class="brand">GWAP VOICE / V0.3 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
+<header><div class="brand">GWAP VOICE / V0.4 LAB</div><a class="mode" href="/voice/">COMMAND MODE ↗</a></header>
 <h1>Conversation</h1>
-<p class="sub">Speak naturally. Ask follow-ups. Interrupt whenever you need to.</p>
-<div class="signal"><span id="led" class="led"></span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<p class="sub">One tap to start. Speak, hear GWAP, then continue naturally.</p>
+<div class="signal"><span id="led" class="led"></span><span id="phaseLabel" aria-hidden="true">READY</span><span id="status" role="status" aria-live="polite">Checking secure session…</span></div>
+<div class="connection-status" aria-live="polite">
+  <span id="pairingState">Checking device pairing…</span>
+  <a id="pairingLink" href="/voice/" hidden>Pair this preview</a>
+  <button id="pairingRetry" type="button">Recheck connection</button>
+</div>
 <div class="actions">
 <button class="primary" id="listen" type="button" disabled>Start Conversation</button>
 <button class="secondary" id="endCall" type="button" disabled>End</button>
 <button class="secondary" id="sound" type="button">Voice: On</button>
 </div>
-<div class="speaker-tools" aria-label="Audio troubleshooting">
+<details id="audioTools" class="audio-tools"><summary>Audio tools and recovery</summary><div class="speaker-tools" aria-label="Audio troubleshooting">
   <button type="button" id="speakerTest">Test Speaker</button>
   <button type="button" id="speakerReplay" disabled>Replay Reply</button>
   <button type="button" id="speakerMp3" disabled>Generate Audio</button>
-</div>
-<div id="speakerNote" role="status" aria-live="polite">Speaker unverified. Tap Test Speaker to check Safari audio.</div>
-<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP MP3 reply"></audio>
+</div></details>
+<div id="speakerNote" role="status" aria-live="polite">Automatic generated speech is enabled when a conversation starts. If Safari blocks playback, use the visible audio player.</div>
+<audio id="speakerPlayer" controls preload="none" hidden aria-label="Generated GWAP spoken reply"></audio>
 <div class="tip">On iPhone: microphone access works best in Safari. If this preview opens inside ChatGPT, use the browser menu to open it in Safari.</div>
 <div id="heard" aria-live="polite"></div>
 <section id="transcript" aria-label="Conversation transcript" aria-live="polite"><p class="empty" id="empty">Your conversation appears here. Tap Start Conversation to begin.</p></section>
-<form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800"/><button type="submit" id="send">Send</button></form>
+<form id="composer" autocomplete="off"><input id="message" aria-label="Type a question" placeholder="Or type a question…" maxlength="1800" enterkeyhint="send"/><button type="submit" id="send">Send</button><button type="button" id="dismissKeyboard" hidden>Done</button></form>
 <div class="foot"><button class="linklike" id="reset" type="button">Clear conversation</button><span id="metrics">Secure session · No transcript saved</span></div>
 <details class="qa" id="qa">
 <summary>10-turn iPhone acceptance test</summary>
@@ -142,13 +148,31 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 500);
   });
   let recognition = null, active = false, busy = false, speaking = false, muted = false, sessionOK = false;
+  let sessionRefreshing = false, sessionPromise = null;
+  function dismissKeyboard(){ input.blur();document.body?.classList?.remove("keyboard-visible");$("dismissKeyboard").hidden=true; }
   const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
   const hasCapture = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
   let recorder = null, mediaStream = null, recordingStarted = 0, audioChunks = [], recordingDiscard = false;
   let microphonePreferred = isIOS && hasCapture;
   let micAnalyser = null, micContext = null, micStopTimer = null, speechPending = false, mediaStarting = false;
   let restartTimer = null;
-  function status(text) { state.textContent = text; led.classList.toggle("active", active && sessionOK); }
+  function setPhase(phase) {
+    const label=$("phaseLabel");
+    const names={ready:"READY",listening:"LISTENING",thinking:"PROCESSING",speaking:"SPEAKING",paused:"PAUSED",error:"ATTENTION"};
+    label.dataset.phase=phase;
+    label.textContent=names[phase] || "READY";
+  }
+  function status(text, explicitPhase) {
+    state.textContent=text;
+    led.classList.toggle("active", active && sessionOK);
+    if(explicitPhase)setPhase(explicitPhase);
+    else if(/\b(listening|microphone access|start recording)\b/i.test(text))setPhase("listening");
+    else if(/\b(playing|speaking|speech started)\b/i.test(text))setPhase("speaking");
+    else if(/\b(transcrib|generating|preparing|processing|thinking|checking|verifying)\w*/i.test(text))setPhase("thinking");
+    else if(/\b(blocked|failed|error|expired|unavailable|timed out)\b/i.test(text))setPhase("error");
+    else if(/\b(paused|interrupted|ended|stopped|limit reached)\b/i.test(text))setPhase("paused");
+    else setPhase("ready");
+  }
   function render(role, content) {
     const empty = $("empty"); if (empty) empty.remove();
     const item = document.createElement("div"); item.className = "turn " + role;
@@ -157,14 +181,17 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     item.append(k, body); list.append(item); list.scrollTop = list.scrollHeight;
     return body;
   }
+  function hasMicrophone() { return Boolean(Recognition || hasCapture); }
   function controls() {
-    const hasMic = Boolean(Recognition || hasCapture);
+    const hasMic = hasMicrophone();
     listen.textContent = recorder && recorder.state === "recording" ? "Send Speech"
-      : speechPending ? "Transcribing…" : speaking ? "Interrupt Gwap" : (active ? "Resume Listening" : "Start Conversation");
-    listen.disabled = !sessionOK || !hasMic || speechPending || (busy && !speaking);
+      : speechPending ? "Transcribing…" : active && (busy || speaking) ? "Interrupt Gwap" : (active ? "Listening / Resume" : "Start Conversation");
+    // Never leave Start disabled because a tab has an old session check.
+    listen.disabled = speechPending || (busy && !active && !speaking);
     $("endCall").disabled = !active;
     sound.textContent = muted ? "Voice: Off" : "Voice: On";
     $("send").disabled = !sessionOK || busy;
+    $("speakerMp3").disabled = !lastReply || audioGenerating || active;
   }
   function stopRecognition() {
     if (restartTimer) clearTimeout(restartTimer);
@@ -172,10 +199,12 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     if (recognition) { try { recognition.abort(); } catch {} recognition = null; }
   }
   function stop() {
+    dismissKeyboard();
     interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-    active = false; stopRecognition(); stopMediaRecording(false);
+    interruptGeneratedSpeech(true);
+    active = false; busy=false; stopRecognition(); stopMediaRecording(false);
     window.speechSynthesis?.cancel(); speaking = false;
-    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again."); controls();
+    heard.textContent = ""; status("Conversation ended by End. Tap Start to talk again.","paused"); speakerFeedback("Conversation ended. Microphone and playback stopped."); controls();
   }
   function pauseForBackground(navigating = false) {
     // iOS may briefly report hidden while presenting the microphone permission prompt.
@@ -185,6 +214,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     interruptedByUser = true;
     pendingController?.abort();
     liveSpeech?.cancel();
+    interruptGeneratedSpeech(navigating);
+    busy=false;
     active = false;
     stopRecognition();
     stopMediaRecording(false);
@@ -193,7 +224,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     controls();
   }
   function nextListen() {
-    if (!active || busy || speaking || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
+    if (!active || busy || speaking || waitingForPlayTap || speechPending || mediaStarting || recorder?.state === "recording" || !sessionOK || document.hidden || (!Recognition && !hasCapture)) return;
     if (restartTimer) clearTimeout(restartTimer);
     restartTimer = setTimeout(startListening, 350);
   }
@@ -204,6 +235,32 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   let interruptedByUser = false;
   let lastReply = "";
   let audioGenerating = false;
+  let autoAudioContext = null, autoAudioSource = null, autoTtsController = null;
+  let turnVersion = 0, waitingForPlayTap = false, autoAudioActive = false;
+  let autoTtsTurns = 0, nativePlaybackFinish = null;
+  // One microphone/audio owner per browser origin. No identifiers or tokens persist.
+  const voiceInstanceId=String(Date.now())+"-"+Math.random().toString(36).slice(2);
+  let tabChannel=null;
+  try{
+    if(typeof BroadcastChannel!=="undefined"){
+      tabChannel=new BroadcastChannel("gwap-voice-v04-single-speaker");
+      tabChannel.onmessage=(event)=>{
+        if(event?.data?.type!=="claim" || event.data.instance===voiceInstanceId)return;
+        if(active || speaking || recorder?.state==="recording"){
+          stop();
+          status("Another GWAP Voice tab has taken control. Tap Start here to switch back.","paused");
+        }
+      };
+    }
+  }catch{tabChannel=null;}
+  function claimPlaybackTab(){try{tabChannel?.postMessage({type:"claim",instance:voiceInstanceId});}catch{}}
+  function silenceOtherPlayback(){
+    window.speechSynthesis?.cancel();
+    speakerPlayer.pause();
+    try{autoAudioSource?.stop();}catch{}
+    autoAudioSource=null;
+  }
+  const AUTO_TTS_TURN_LIMIT = 10; // Bounded free-capacity acceptance session.
   let mp3ObjectUrl = null;
   const speakerNote = $("speakerNote");
   const speakerPlayer = $("speakerPlayer");
@@ -277,7 +334,7 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   });
   $("speakerReplay").addEventListener("click", () => {
     input.blur();
-    if (lastReply) playOnTap(lastReply.slice(0,650));
+    if (lastReply && !active) playOnTap(lastReply.slice(0,650));
   });
   $("speakerMp3").addEventListener("click", async () => {
     input.blur();
@@ -326,6 +383,172 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       button.textContent="Generate Audio";
       button.disabled=!lastReply;
       controls();
+    }
+  });
+
+  // V0.4: audio is unlocked synchronously during the original Start tap.
+  // Later TTS generation uses the same Web Audio context, avoiding Safari's
+  // blocked async speechSynthesis path.
+  function armAudioOnStart() {
+    if (!isIOS || muted || !window.AudioContext && !window.webkitAudioContext) return;
+    if (autoAudioContext) {
+      void autoAudioContext.resume().catch(() => {});
+      return;
+    }
+    try {
+      const AC=window.AudioContext || window.webkitAudioContext;
+      autoAudioContext=new AC();
+      const zero=autoAudioContext.createGain();
+      zero.gain.value=0;
+      const oscillator=autoAudioContext.createOscillator();
+      oscillator.connect(zero);zero.connect(autoAudioContext.destination);
+      oscillator.start();oscillator.stop(autoAudioContext.currentTime+0.015);
+      void autoAudioContext.resume().catch(()=>{});
+      autoAudioActive=true;
+    } catch {
+      autoAudioActive=false;
+      speakerFeedback("Safari audio unlock unavailable; native Play remains available.");
+    }
+  }
+  function interruptGeneratedSpeech(closeContext=false) {
+    turnVersion++;
+    autoTtsController?.abort();
+    autoTtsController=null;
+    if(nativePlaybackFinish){nativePlaybackFinish(false);nativePlaybackFinish=null;}
+    try {autoAudioSource?.stop();} catch {}
+    autoAudioSource=null;
+    silenceOtherPlayback();
+    waitingForPlayTap=false;
+    speaking=false;
+    if(closeContext && autoAudioContext) {
+      void autoAudioContext.close().catch(()=>{});
+      autoAudioContext=null;autoAudioActive=false;
+    }
+  }
+  // Exactly one generated audio request per ordinary turn. This bounds quota.
+  // The AI prompt targets brief spoken replies; longer answers remain in text.
+  function audioDeadline(promise, milliseconds, label) {
+    let timer;
+    return Promise.race([
+      Promise.resolve(promise),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+" timed out")),milliseconds);})
+    ]).finally(()=>clearTimeout(timer));
+  }
+  async function speakGeneratedAnswer(text, record, version) {
+    if (!active || muted || !isIOS || version !== turnVersion) return false;
+    if (autoTtsTurns >= AUTO_TTS_TURN_LIMIT) {
+      active=false;waitingForPlayTap=false;
+      status("Voice test limit reached (10 turns). End and restart a new test session.");
+      speakerFeedback("Automatic speech paused to limit Workers AI usage. Written replies remain available.");
+      controls();return false;
+    }
+    autoTtsTurns++;
+    const ttsStart=performance.now();
+    status("GWAP is preparing spoken audio…");
+    speakerFeedback("Preparing the next spoken answer. Interrupt or End remains available.");
+    const controller=new AbortController();
+    autoTtsController=controller;
+    const timeout=setTimeout(()=>controller.abort(),30000);
+    let bytes, mime;
+    try {
+      const response=await fetch("/voice/speak",{
+        method:"POST",credentials:"same-origin",signal:controller.signal,
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text:text.slice(0,650)})
+      });
+      if(version!==turnVersion || controller.signal.aborted) return false;
+      if (!response.ok) {
+        const error=await response.json().catch(()=>({}));
+        throw new Error(error.error || "Audio generation unavailable");
+      }
+      mime=(response.headers.get("content-type") || "").split(";")[0].toLowerCase();
+      if(!["audio/wav","audio/mpeg"].includes(mime)) throw new Error("Unsupported generated audio");
+      bytes=await response.arrayBuffer();
+      if(bytes.byteLength<44 || bytes.byteLength>8000000) throw new Error("Invalid audio size");
+      if(record)record.audio_generation_ms=Math.round(performance.now()-ttsStart);
+    } finally {
+      clearTimeout(timeout);
+      if(autoTtsController===controller)autoTtsController=null;
+    }
+    if(version!==turnVersion || !active) return false;
+    silenceOtherPlayback(); // Only one active playback source per turn.
+    if(mp3ObjectUrl)URL.revokeObjectURL(mp3ObjectUrl);
+    mp3ObjectUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    speakerPlayer.src=mp3ObjectUrl;
+    // Do NOT expose a second playable copy while Web Audio is speaking.
+    speakerPlayer.hidden=true;
+    speakerPlayer.load();
+    // Web Audio: no new user activation needed when this context was started on Start.
+    if(autoAudioContext && autoAudioActive) {
+      try {
+        if(autoAudioContext.state!=="running")await audioDeadline(autoAudioContext.resume(),4000,"Audio unlock");
+        if(version!==turnVersion || !active)return false;
+        if(autoAudioContext.state==="running"){
+          const decoded=await audioDeadline(autoAudioContext.decodeAudioData(bytes.slice(0)),8000,"Audio decoding");
+          if(version!==turnVersion || !active)return false;
+          await audioDeadline(new Promise((resolve,reject)=>{
+            try {
+              const source=autoAudioContext.createBufferSource();
+              source.buffer=decoded;source.connect(autoAudioContext.destination);
+              autoAudioSource=source;
+              source.onended=()=>{if(autoAudioSource===source)autoAudioSource=null;resolve();};
+              speaking=true;status("Playing GWAP generated voice…","speaking");speakerFeedback("Playing GWAP voice. The microphone resumes automatically when the reply finishes.");controls();
+              if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+              source.start(0);
+            } catch(error){reject(error);}
+          }),45000,"Audio playback");
+          if(version===turnVersion){
+            speaking=false;
+            status("GWAP finished speaking. Listening for your reply…","listening");
+            speakerFeedback("Voice reply completed. Waiting for your next question.");
+            controls();
+          }
+          return true;
+        }
+      } catch(error) {
+        try { autoAudioSource?.stop(); } catch {}
+        autoAudioSource=null;speaking=false;
+        speakerFeedback("Web Audio playback unavailable: "+(error?.message || "blocked")+". Trying native player.");
+      }
+    }
+    if(version!==turnVersion || !active)return false;
+    // Fallback uses the native player exclusively; the Web Audio path is stopped.
+    speakerPlayer.hidden=false;
+    try {
+      speaking=true;status("Starting native audio playback…","speaking");speakerFeedback("Playing GWAP voice through native audio.");controls();
+      await audioDeadline(speakerPlayer.play(),4500,"Safari native playback");
+      if(record)record.audio_start_requested_ms=Math.round(performance.now()-ttsStart);
+      const completed = await new Promise((resolve)=>{
+        const finish=(ok=true)=>{
+          speakerPlayer.removeEventListener("ended",onEnded);
+          speakerPlayer.removeEventListener("error",onError);
+          if(nativePlaybackFinish===finish)nativePlaybackFinish=null;
+          resolve(ok);
+        };
+        const onEnded=()=>finish(true), onError=()=>finish(false);
+        nativePlaybackFinish=finish;
+        speakerPlayer.addEventListener("ended",onEnded);
+        speakerPlayer.addEventListener("error",onError);
+      });
+      if(version===turnVersion && completed){speaking=false;status("Voice reply finished. Listening again…","listening");speakerFeedback("Voice reply completed. Listening for the next question.");controls();}
+      if(!completed)throw new Error("Native audio playback did not finish");
+      return completed;
+    } catch {
+      speaking=false;waitingForPlayTap=true;
+      status("Safari requires one Play tap. The audio is ready below.");
+      speakerFeedback("Tap Play on the native audio player. Once it finishes, GWAP can listen again.");
+      controls();
+      return false;
+    }
+  }
+  speakerPlayer.addEventListener("ended",()=>{
+    if(!active || !waitingForPlayTap)return;
+    waitingForPlayTap=false;speaking=false;
+    status("Audio finished. Listening again…","listening");speakerFeedback("Audio finished. Microphone restarting…");controls();nextListen();
+  });
+  speakerPlayer.addEventListener("play",()=>{
+    if(waitingForPlayTap && active){
+      speaking=true;status("Playing generated audio…");controls();
     }
   });
   function selectedVoice() {
@@ -400,6 +623,8 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
   }
   async function send(message) {
     message = String(message || "").trim(); if (!message || busy || !sessionOK) return;
+    const version=++turnVersion;
+    dismissKeyboard();
     busy = true; interruptedByUser = false; stopRecognition();
     liveSpeech?.cancel(); window.speechSynthesis?.cancel(); speaking = false;
     heard.textContent = ""; controls();
@@ -483,21 +708,34 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
       lastReply=accumulated;
       $("speakerReplay").disabled=false;
       $("speakerMp3").disabled=audioGenerating;
-      audio.done();
       turns.push({role:"user", content:message.slice(0,750)}, {role:"assistant", content:accumulated.slice(0,750)});
       while(turns.length > 8) turns.shift();
       metrics.textContent = "Response: " + (elapsed/1000).toFixed(1) + "s";
-      if (!speaking && !(isIOS && !muted)) status("Ready for follow-up");
+      if (isIOS && active && !muted && version===turnVersion) {
+        audio.cancel();
+        await speakGeneratedAnswer(accumulated, record, version);
+      } else {
+        audio.done();
+        if(!speaking)status("Ready for follow-up");
+      }
     } catch (e) {
       audio.cancel();
+      if(version!==turnVersion)return;
       const msg = e.name === "AbortError"
         ? (interruptedByUser ? "Interrupted. Listening for your next question." : "Response timed out. Try again.")
         : (e.message || "Unable to connect.");
       if (record) record.voice_error = msg;
-      status(msg);
+      if(accumulated && isIOS && active && !muted) {
+        active=false;
+        status("Voice generation unavailable. Tap Generate Audio to retry.");
+        speakerFeedback("Audio generation failed: "+msg+". Your answer is available in text.");
+      } else status(msg);
     } finally {
       clearTimeout(timeout); if (pendingController === controller) pendingController = null;
-      busy = false; controls(); if (!speaking) nextListen();
+      if(version===turnVersion) {
+        busy = false; controls();
+        if (!speaking && !waitingForPlayTap) nextListen();
+      }
     }
   }
   function recordingMime() {
@@ -662,52 +900,131 @@ form button{padding:0 18px;background:#16271a;color:var(--lime);border:1px solid
     }
   }
   listen.addEventListener("click", () => {
-    input.blur(); // Release iPhone's on-screen keyboard before showing the microphone state.
-    if (!sessionOK) { status("Pair this device first."); return; }
+    dismissKeyboard(); // Release iPhone keyboard before voice interaction.
+    if (!sessionOK) {
+      status("Checking pairing on this preview…");
+      armAudioOnStart();
+      void checkSession().then(() => {
+        if (!sessionOK) {
+          status("Pair this exact preview using the link above, then tap Start again.");
+          return;
+        }
+        if (!hasMicrophone()) {
+          status("Paired, but no microphone API is available. Open directly in Safari or type.");
+          return;
+        }
+        claimPlaybackTab();active=true;controls();startListening();
+      });
+      return;
+    }
+    if (!hasMicrophone()) {
+      status("No microphone API available. Open this link in Safari or use keyboard dictation.");
+      return;
+    }
     if (recorder?.state === "recording") { stopMediaRecording(true); return; }
-    if (active && speaking) {
+    if (active && (speaking || busy || waitingForPlayTap)) {
       if (qaCurrent) qaCurrent.interrupted = true;
       interruptedByUser = true; pendingController?.abort(); liveSpeech?.cancel();
-      speaking = false; busy = false; startListening(); controls(); return;
+      interruptGeneratedSpeech();
+      speaking = false; busy = false;
+      status("Interrupted. Listening for your next question…");
+      startListening(); controls(); return;
     }
     if (active && recognition) { status("Already listening. Speak your question."); return; }
+    armAudioOnStart(); // This must run inside the original user tap for Safari.
+    claimPlaybackTab();
+    if(!active) autoTtsTurns=0;
     active = true; controls(); window.speechSynthesis?.cancel(); startListening();
   });
   $("endCall").addEventListener("click", () => stop());
+  $("dismissKeyboard").addEventListener("click",()=>dismissKeyboard());
+  input.addEventListener("focus",()=>{
+    document.body?.classList?.add("keyboard-visible");
+    $("dismissKeyboard").hidden=false;
+  });
+  input.addEventListener("blur",()=>{
+    document.body?.classList?.remove("keyboard-visible");
+    $("dismissKeyboard").hidden=true;
+  });
   sound.addEventListener("click", () => {
-    muted = !muted; if (muted) { window.speechSynthesis?.cancel(); speaking = false; nextListen(); }
+    muted = !muted;
+    if (muted) {
+      interruptGeneratedSpeech();
+      busy=false;
+      window.speechSynthesis?.cancel(); speaking=false;
+      if(active)nextListen();
+    } else if(active)armAudioOnStart();
     controls();
   });
   $("composer").addEventListener("submit", (event) => {
-    event.preventDefault(); const text = input.value.trim(); input.value = ""; input.blur(); send(text);
+    event.preventDefault(); const text = input.value.trim(); input.value = ""; dismissKeyboard(); send(text);
   });
   $("reset").addEventListener("click", () => {
+    interruptGeneratedSpeech(true);
+    interruptedByUser=true;pendingController?.abort();stopRecognition();stopMediaRecording(false);
+    active=false;busy=false;speechPending=false;
     turns.splice(0); list.textContent = "";
     const p = document.createElement("p"); p.className = "empty"; p.id = "empty"; p.textContent = "Conversation cleared."; list.append(p);
     metrics.textContent = "Secure session · No transcript saved";
     lastReply="";$("speakerReplay").disabled=true;$("speakerMp3").disabled=true;
     speakerPlayer.pause();speakerPlayer.removeAttribute("src");speakerPlayer.hidden=true;
     if(mp3ObjectUrl){URL.revokeObjectURL(mp3ObjectUrl);mp3ObjectUrl=null;}
-    speakerFeedback("Speaker unverified. Tap Test Speaker to check Safari audio.");
+    speakerFeedback("Conversation cleared. Audio and microphone stopped.");
+    status("Conversation cleared. Tap Start Conversation.","ready");controls();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) pauseForBackground();
   });
   window.addEventListener("pagehide", () => pauseForBackground(true));
+  async function checkSession() {
+    if(sessionRefreshing)return sessionPromise ?? Promise.resolve(sessionOK);
+    sessionRefreshing=true;
+    $("pairingState").textContent="Checking pairing on this preview…";
+    $("pairingRetry").disabled=true;
+    sessionPromise = (async () => {
+    const authController=new AbortController();
+    const authTimeout=setTimeout(()=>authController.abort(),8000);
+    try {
+      const response=await fetch("/voice/session",{
+        credentials:"same-origin",cache:"no-store",
+        signal:authController.signal
+      });
+      const data=await response.json().catch(()=>({}));
+      sessionOK=response.ok && data.paired===true;
+      if(sessionOK) {
+        $("pairingState").textContent="Paired · "+(hasMicrophone()?"Mic API available":"Mic API unavailable");
+        $("pairingLink").hidden=true;
+        if(!active)status(hasMicrophone()?"Connected. Tap Start Conversation.":"Connected, but the microphone API is unavailable in this browser.");
+      } else {
+        $("pairingState").textContent="Not paired on this preview hostname";
+        $("pairingLink").hidden=false;
+        if(!active)status("Pair this preview, then return and tap Start.");
+      }
+      return sessionOK;
+    } catch {
+      sessionOK=false;
+      $("pairingState").textContent="Session check failed · network or backend unavailable";
+      $("pairingLink").hidden=false;
+      if(!active)status("Connection check failed. Tap Recheck connection.");
+      return false;
+    } finally {
+      clearTimeout(authTimeout);
+      sessionRefreshing=false;
+      $("pairingRetry").disabled=false;
+      controls();
+    }
+    })();
+    return sessionPromise;
+  }
+  $("pairingRetry").addEventListener("click",()=>{void checkSession();});
+  window.addEventListener("pageshow",()=>{void checkSession();});
+  window.addEventListener("focus",()=>{if(!active)void checkSession();});
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden && !active)void checkSession();
+  });
   qaShow();
-  fetch("/voice/session", {credentials: "same-origin"}).then(async (res) => {
-    const data = await res.json().catch(() => ({}));
-    sessionOK = res.ok && data.paired === true;
-    if (!sessionOK) {
-      status("Pair your device in Command Mode first.");
-      render("assistant", "Open Command Mode to pair this phone securely, then return here.");
-    } else if (!Recognition && !hasCapture) {
-      status("No microphone API in this browser. Open in Safari or use keyboard dictation.");
-    } else if (isIOS && hasCapture) {
-      status("Ready. Tap Start, allow microphone, and speak.");
-    } else status("Ready for a conversation");
-    controls();
-  }).catch(() => { status("Unable to verify secure session."); controls(); });
+  controls(); // Start responds immediately, even when Render session checks are slow.
+  void checkSession();
 })();
 </script>
 </body>
