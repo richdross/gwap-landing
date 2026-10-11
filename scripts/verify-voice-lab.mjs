@@ -290,7 +290,7 @@ test("iOS microphone permission prompt cannot cancel an in-flight recording star
 test("mocked Safari permission visibility transition preserves recording",async()=>{
   const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   const nodes=new Map(),de={},we={};
-  function node(id){if(!nodes.has(id))nodes.set(id,{id,value:"",textContent:"",disabled:false,
+  function node(id){if(!nodes.has(id))nodes.set(id,{id,value:"",textContent:"",disabled:false,dataset:{},
     classList:{toggle(){}},events:{},addEventListener(k,cb){this.events[k]=cb;},
     append(){},remove(){},blur(){},pause(){},scrollTop:0,scrollHeight:0});return nodes.get(id);}
   let allowMic;
