@@ -49,14 +49,19 @@ async function accessToken() {
 }
 
 async function analyticsRequest(token, method, body) {
-  const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:${method}`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`GA4 ${method} HTTP ${response.status}: ${data?.error?.message || "unknown"}`);
-  return data;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:${method}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) return data;
+    if (![502, 503, 504].includes(response.status) || attempt === 2) {
+      throw new Error(`GA4 ${method} HTTP ${response.status}: ${data?.error?.message || "unknown"}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** attempt));
+  }
 }
 
 async function ingest(payload) {
