@@ -17,6 +17,7 @@ const css = '<style id="gwap-growth-entry-style">\n' +
 '#gwap-growth-entry-v1 .gwap-growth-text{font-size:clamp(14px,1.35vw,17px);line-height:1.5;margin:5px 0 0;color:#d0d5cc}\n' +
 '#gwap-growth-entry-v1 .gwap-growth-cta{min-width:0;max-width:100%;overflow-wrap:anywhere;display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 20px;white-space:normal;text-align:center;background:#caff00;color:#090c05;text-decoration:none;font-size:12px;font-weight:900;letter-spacing:.04em;border-radius:2px}\n' +
 '#gwap-growth-entry-v1 .gwap-growth-cta:hover,#gwap-growth-entry-v1 .gwap-growth-cta:focus-visible{background:#e0ff6e;outline:2px solid #fff;outline-offset:2px}\n' +
+'@media(max-width:700px){html,body{max-width:100%;overflow-x:hidden}}\n' +
 '@media(max-width:620px){#gwap-growth-entry-v1{padding:17px 18px}#gwap-growth-entry-v1 .gwap-growth-cta{width:100%}}\n</style>';
 const panel = '<section id="gwap-growth-entry-v1" aria-label="Free Growth Diagnostic">\n' +
 '  <div class="gwap-growth-copy">\n' +
