@@ -8,7 +8,7 @@ if (home.includes("gwap-growth-entry-v1")) process.exit(0);
 const analytics = start.match(/<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-[A-Z0-9]+"><\/script>\s*<script>[\s\S]*?<\/script>/i)?.[0];
 if (!analytics || !analytics.includes("G-MZF7SR86XK")) throw new Error("Shared GA4 bootstrap missing");
 if (/<script[^>]+src=["']https:\/\/www\.googletagmanager\.com\/gtag\/js/i.test(home) || /G-[A-Z0-9]{8,}/.test(home)) throw new Error("Homepage may already have GA4; check manually");
-if (!/<\/head>/i.test(home) || !/<\/header>/i.test(home)) throw new Error("Homepage markup anchor missing");
+if (!/<\/head>/i.test(home) || !/<body\b[^>]*>/i.test(home)) throw new Error("Homepage markup anchor missing");
 const css = '<style id="gwap-growth-entry-style">\n' +
 '#gwap-growth-entry-v1{box-sizing:border-box;position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:15px clamp(18px,5vw,72px);background:#0a0c09;border-top:1px solid #242a20;border-bottom:1px solid #39432b;color:#eeeee7;font-family:Arial,Helvetica,sans-serif}\n' +
 '#gwap-growth-entry-v1 *{box-sizing:border-box}\n' +
@@ -26,7 +26,11 @@ const panel = '<section id="gwap-growth-entry-v1" aria-label="Free Growth Diagno
 '  <a class="gwap-growth-cta" href="/revenue-leak-score/" data-gwap-track="gwap_route_selected" data-gwap-offer="revenue_leak_score" data-gwap-placement="home_growth_entry">Run Your Free Growth Diagnostic →</a>\n' +
 '</section>';
 home = home.replace(/<\/head>/i, css + "\n" + analytics + "\n</head>");
-home = home.replace(/<\/header>/i, (match) => match + "\n" + panel);
+if (/<\/header>/i.test(home)) {
+  home = home.replace(/<\/header>/i, (match) => match + "\n" + panel);
+} else {
+  home = home.replace(/<body\b[^>]*>/i, (match) => match + "\n" + panel);
+}
 if (!home.includes('id="gwap-growth-entry-v1"') || !home.includes('href="/revenue-leak-score/"')) throw new Error("CTA insertion failed");
 fs.writeFileSync(homePath, home);
 console.log("GWAP_HOME_CONVERSION_READY: CTA + GA4");
