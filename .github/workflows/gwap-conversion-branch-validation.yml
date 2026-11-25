@@ -4,6 +4,8 @@ on:
     paths:
       - 'start.njk'
       - 'index.html'
+      - 'package.json'
+      - 'scripts/enhance-homepage-conversion.mjs'
       - '.github/workflows/gwap-conversion-branch-validation.yml'
   workflow_dispatch:
 permissions:
@@ -41,6 +43,9 @@ jobs:
           assert(original.includes('.nav{display:flex;flex-wrap:wrap;gap:12px 18px;width:100%}'),'Mobile nav rule missing');
           assert(startpage.diagnosticLinks.length>=1,'Start page diagnostic link missing');
           assert(startpage.hasGA4,'Start GA4 bootstrap missing');
+          assert(homepage.hasGA4,'Homepage GA4 bootstrap missing');
+          assert(homepage.diagnosticLinks.length>=1,'Homepage diagnostic CTA missing');
+          assert(home.includes('id="gwap-growth-entry-v1"'),'Homepage conversion CTA section missing');
           console.log(JSON.stringify({home:homepage,start:startpage},null,2));
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,[
             '## GWAP Conversion Branch Validation',
