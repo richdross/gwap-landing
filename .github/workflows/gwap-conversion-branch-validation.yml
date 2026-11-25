@@ -1,0 +1,61 @@
+name: GWAP Conversion Branch Validation
+on:
+  pull_request:
+    paths:
+      - 'start.njk'
+      - 'index.html'
+      - 'package.json'
+      - 'scripts/enhance-homepage-conversion.mjs'
+      - '.github/workflows/gwap-conversion-branch-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated branch preview
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Audit built homepage and Start Here
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const assert = require('node:assert/strict');
+          const home=fs.readFileSync('_site/index.html','utf8');
+          const start=fs.readFileSync('_site/start/index.html','utf8');
+          const diagnostic='/revenue-leak-score/';
+          const extract=(html,path)=>{
+            const links=[...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
+              .map(x=>({href:x[1],label:x[2].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,100)}));
+            const found=links.filter(x=>x.href.includes(path));
+            return {totalAnchors:links.length,diagnosticLinks:found,hasGA4:html.includes('G-MZF7SR86XK')};
+          };
+          const homepage=extract(home,diagnostic), startpage=extract(start,diagnostic);
+          const original=fs.readFileSync('start.njk','utf8');
+          assert(original.includes('.nav{display:flex;flex-wrap:wrap;gap:12px 18px;width:100%}'),'Mobile nav rule missing');
+          assert(startpage.diagnosticLinks.length>=1,'Start page diagnostic link missing');
+          assert(startpage.hasGA4,'Start GA4 bootstrap missing');
+          assert(homepage.hasGA4,'Homepage GA4 bootstrap missing');
+          assert(homepage.diagnosticLinks.length>=1,'Homepage diagnostic CTA missing');
+          assert(home.includes('id="gwap-growth-entry-v1"'),'Homepage conversion CTA section missing');
+          console.log(JSON.stringify({home:homepage,start:startpage},null,2));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,[
+            '## GWAP Conversion Branch Validation',
+            '- Eleventy build: PASS',
+            '- Mobile navigation CSS: PASS (static assertion; visual browser review still required)',
+            '- Start GA4 bootstrap: PASS',
+            '- Homepage GA4 bootstrap: '+(homepage.hasGA4?'PRESENT':'NOT FOUND — investigate'),
+            '- Start diagnostic link: '+startpage.diagnosticLinks.length,
+            '- Homepage diagnostic link: '+homepage.diagnosticLinks.length,
+            '- Homepage diagnostic call-to-action: '+(homepage.diagnosticLinks.length?'PRESENT':'MISSING — requires improvement'),
+            ''
+          ].join('\n'));
+          NODE

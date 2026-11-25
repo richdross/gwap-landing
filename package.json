@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "node scripts/generate-voice-icons.mjs && npm run editorial:qa && eleventy",
+    "build": "node scripts/generate-voice-icons.mjs && npm run editorial:qa && eleventy && node scripts/enhance-homepage-conversion.mjs",
     "serve": "eleventy --serve",
     "editorial:qa": "node scripts/editorial-qa.mjs"
   },
