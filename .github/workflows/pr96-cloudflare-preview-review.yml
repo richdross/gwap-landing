@@ -1,0 +1,91 @@
+name: GWAP PR96 Cloudflare Preview Browser Review
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/seo-conversion-mobile-nav-20261125
+    paths:
+      - '.github/workflows/pr96-cloudflare-preview-review.yml'
+permissions:
+  contents: read
+jobs:
+  browser-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Review deployed Cloudflare preview
+        env:
+          PREVIEW_URL: https://d8ff093b.gwap-landing.pages.dev
+        run: |
+          mkdir -p preview-evidence
+          node --input-type=module <<'NODE'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs';
+          const base=process.env.PREVIEW_URL;
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const results=[];
+          let failures=0;
+          for(const [width,height] of [[375,812],[390,844],[620,900],[1440,900]]){
+            const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
+            await ctx.route(/google-analytics\.com|googletagmanager\.com/,r=>r.abort());
+            const page=await ctx.newPage();
+            for(const target of ['/','/start/']){
+              const name=target==='/'?'home':'start';
+              try{
+                const resp=await page.goto(base+target,{waitUntil:'domcontentloaded',timeout:25000});
+                await page.screenshot({path:'preview-evidence/'+name+'-'+width+'.png',fullPage:true,timeout:20000});
+                const data=await page.evaluate(({name})=>{
+                  const cta=document.querySelector('a[href="/revenue-leak-score/"]');
+                  const rect=cta?.getBoundingClientRect();
+                  const nav=name==='start'?document.querySelector('.nav'):null;
+                  return {
+                    title:document.title,
+                    bodyWidth:document.documentElement.scrollWidth,
+                    viewportWidth:window.innerWidth,
+                    ctaFound:!!cta,
+                    ctaVisible:!!rect&&rect.width>0&&rect.height>0&&getComputedStyle(cta).visibility!=='hidden',
+                    ctaText:cta?.textContent.trim()||'',
+                    navVisible:name==='start' ? !!nav && getComputedStyle(nav).display!=='none' : null,
+                    ga4Bootstrap:document.documentElement.outerHTML.includes('G-MZF7SR86XK'),
+                    ga4TagCount:document.querySelectorAll('script[src*="gtag/js?id=G-MZF7SR86XK"]').length,
+                  };
+                },{name});
+                const pass=resp?.ok()&&data.ctaFound&&data.ctaVisible&&data.ga4Bootstrap&&data.ga4TagCount===1&&data.bodyWidth<=width+2&&(target!=='/start/'||data.navVisible);
+                if(!pass)failures++;
+                results.push({target,width,http:resp?.status(),pass,...data});
+              }catch(e){failures++;results.push({target,width,pass:false,error:String(e).slice(0,350)});}
+            }
+            if(width===390){
+              try{
+                await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:25000});
+                await page.locator('#gwap-growth-entry-v1 a').click({timeout:12000});
+                await page.waitForURL('**/revenue-leak-score/',{timeout:15000});
+                const got=await page.evaluate(()=>({path:location.pathname,events:(window.dataLayer||[]).filter(x=>x&&x[0]==='event').map(x=>x[1])}));
+                const pass=got.path==='/revenue-leak-score/'&&got.events.includes('gwap_route_selected');
+                if(!pass)failures++;
+                results.push({test:'cta-click-navigation-and-attribution',pass,...got});
+              }catch(e){failures++;results.push({test:'cta-click-navigation-and-attribution',pass:false,error:String(e).slice(0,350)});}
+            }
+            await ctx.close();
+          }
+          await browser.close();
+          fs.writeFileSync('preview-evidence/results.json',JSON.stringify({base,failures,results},null,2));
+          console.log(JSON.stringify({base,failures,results},null,2));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Cloudflare PR #96 Preview Review\n\n'+results.map(r=>'- '+(r.test||r.target+' @ '+r.width+'px')+': **'+(r.pass?'PASS':'FAIL')+'**'+(r.error?' — '+r.error:'')+'\n').join('')+'\n');
+          if(failures)process.exitCode=1;
+          NODE
+      - name: Save screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr96-cloudflare-browser-evidence
+          path: preview-evidence/
+          retention-days: 14
