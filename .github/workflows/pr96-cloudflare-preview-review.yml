@@ -23,7 +23,7 @@ jobs:
           google-chrome --version
       - name: Review deployed Cloudflare preview
         env:
-          PREVIEW_URL: https://d8ff093b.gwap-landing.pages.dev
+          PREVIEW_URL: https://bc2cf401.gwapgang.pages.dev
         run: |
           mkdir -p preview-evidence
           node --input-type=module <<'NODE'
