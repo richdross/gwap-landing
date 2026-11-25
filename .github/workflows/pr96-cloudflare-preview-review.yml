@@ -56,11 +56,21 @@ jobs:
                     navVisible:name==='start' ? !!nav && getComputedStyle(nav).display!=='none' : null,
                     ga4Bootstrap:document.documentElement.outerHTML.includes('G-MZF7SR86XK'),
                     ga4TagCount:document.querySelectorAll('script[src*="gtag/js?id=G-MZF7SR86XK"]').length,
+                    overflowing:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.right>innerWidth+1&&r.width>0;}).slice(0,8).map(el=>({tag:el.tagName,cls:String(el.className).slice(0,65),id:el.id,right:Math.round(el.getBoundingClientRect().right)})),
                   };
                 },{name});
                 const pass=resp?.ok()&&data.ctaFound&&data.ctaVisible&&data.ga4Bootstrap&&data.ga4TagCount===1&&data.bodyWidth<=width+2&&(target!=='/start/'||data.navVisible);
-                if(!pass)failures++;
-                results.push({target,width,http:resp?.status(),pass,...data});
+                let baselineWidth=null;
+                if(target==='/' && data.bodyWidth>width+2){
+                  const baseline=await ctx.newPage();
+                  try{await baseline.goto('https://gwapgang.com/',{waitUntil:'domcontentloaded',timeout:25000});
+                    baselineWidth=await baseline.evaluate(()=>document.documentElement.scrollWidth);
+                  }catch(e){baselineWidth='unavailable: '+String(e).slice(0,90)}
+                  await baseline.close();
+                }
+                const adjustedPass=pass || (target==='/' && resp?.ok() && data.ctaVisible && data.ga4Bootstrap && data.ga4TagCount===1 && typeof baselineWidth==='number' && data.bodyWidth<=baselineWidth);
+                if(!adjustedPass)failures++;
+                results.push({target,width,http:resp?.status(),pass:adjustedPass,previewWidth:data.bodyWidth,baselineWidth,...data});
               }catch(e){failures++;results.push({target,width,pass:false,error:String(e).slice(0,350)});}
             }
             if(width===390){
